@@ -117398,6 +117398,339 @@ match_id,striker,batting_team,bowling_team,venue,start_date,format,runs,balls_fa
 1358412,UT Khawaja,Australia,India,"Kennington Oval, London",2023-06-07,Test,13,49,2,0,1,26.53,2023
 1358412,UT Yadav,India,Australia,"Kennington Oval, London",2023-06-07,Test,6,23,1,0,1,26.09,2023
 1358412,V Kohli,India,Australia,"Kennington Oval, London",2023-06-07,Test,63,109,9,0,1,57.8,2023
+1358929,A Gardner,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,0,1,0,0,1,0.0,2023
+1358929,A Sutherland,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,6,14,0,0,1,42.86,2023
+1358929,AC Kerr,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,45,24,6,1,0,187.5,2023
+1358929,BL Mooney,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,0,3,0,0,1,0.0,2023
+1358929,D Hemalatha,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,29,23,1,2,0,126.09,2023
+1358929,G Wareham,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,8,11,2,0,1,72.73,2023
+1358929,H Deol,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,0,2,0,0,1,0.0,2023
+1358929,H Kaur,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,65,30,14,0,1,216.67,2023
+1358929,HK Matthews,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,47,31,3,4,1,151.61,2023
+1358929,IECM Wong,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,6,1,0,1,0,600.0,2023
+1358929,M Joshi,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,6,19,0,0,1,31.58,2023
+1358929,MC Patel,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,10,9,2,0,1,111.11,2023
+1358929,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,23,18,5,0,1,127.78,2023
+1358929,P Vastrakar,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,15,8,3,0,1,187.5,2023
+1358929,S Meghana,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,2,4,0,0,1,50.0,2023
+1358929,S Rana,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,1,2,0,0,1,50.0,2023
+1358929,TP Kanwar,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,0,3,0,0,1,0.0,2023
+1358929,YH Bhatia,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-04,WPL,1,8,0,0,1,12.5,2023
+1358930,DD Kasat,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,9,11,1,0,1,81.82,2023
+1358930,EA Perry,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,31,19,5,0,1,163.16,2023
+1358930,HC Knight,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,34,21,2,2,1,161.9,2023
+1358930,JI Rodrigues,Delhi Capitals,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-05,WPL,22,15,3,0,0,146.67,2023
+1358930,KS Ahuja,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,0,1,0,0,1,0.0,2023
+1358930,M Kapp,Delhi Capitals,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-05,WPL,39,17,3,3,0,229.41,2023
+1358930,ML Schutt,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,30,19,5,0,0,157.89,2023
+1358930,MM Lanning,Delhi Capitals,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-05,WPL,72,43,14,0,1,167.44,2023
+1358930,Preeti Bose,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,2,8,0,0,0,25.0,2023
+1358930,RM Ghosh,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,2,4,0,0,1,50.0,2023
+1358930,S Asha,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,2,3,0,0,1,66.67,2023
+1358930,S Mandhana,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,35,23,5,1,1,152.17,2023
+1358930,SFM Devine,Royal Challengers Bangalore,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-05,WPL,14,11,3,0,1,127.27,2023
+1358930,Shafali Verma,Delhi Capitals,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-05,WPL,84,45,10,4,1,186.67,2023
+1358931,A Gardner,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,25,19,2,1,1,131.58,2023
+1358931,A Sutherland,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,8,10,1,0,1,80.0,2023
+1358931,AJ Healy,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,7,8,1,0,1,87.5,2023
+1358931,D Hemalatha,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,21,13,2,1,0,161.54,2023
+1358931,DB Sharma,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,11,16,0,0,1,68.75,2023
+1358931,DP Vaidya,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,4,7,0,0,1,57.14,2023
+1358931,GM Harris,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,59,26,7,3,0,226.92,2023
+1358931,H Deol,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,46,32,7,0,1,143.75,2023
+1358931,KP Navgire,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,53,43,5,2,1,123.26,2023
+1358931,S Ecclestone,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,22,12,1,1,0,183.33,2023
+1358931,S Meghana,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,24,15,5,0,1,160.0,2023
+1358931,S Rana,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,9,7,1,0,0,128.57,2023
+1358931,S Sehrawat,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,5,6,1,0,1,83.33,2023
+1358931,S Verma,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,9,13,1,0,1,69.23,2023
+1358931,SIR Dunkley,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,13,11,2,0,1,118.18,2023
+1358931,Simran Shaikh,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,0,1,0,0,1,0.0,2023
+1358931,TM McGrath,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-05,WPL,0,1,0,0,1,0.0,2023
+1358932,DD Kasat,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,0,2,0,0,1,0.0,2023
+1358932,EA Perry,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,13,7,1,1,1,185.71,2023
+1358932,HC Knight,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,0,1,0,0,1,0.0,2023
+1358932,HK Matthews,Mumbai Indians,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-06,WPL,77,38,13,1,0,202.63,2023
+1358932,KS Ahuja,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,22,13,3,1,1,169.23,2023
+1358932,ML Schutt,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,20,14,3,0,1,142.86,2023
+1358932,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-06,WPL,55,29,9,1,0,189.66,2023
+1358932,Preeti Bose,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,1,1,0,0,0,100.0,2023
+1358932,RM Ghosh,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,28,26,3,1,1,107.69,2023
+1358932,Renuka Singh,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,2,5,0,0,1,40.0,2023
+1358932,S Mandhana,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,23,17,5,0,1,135.29,2023
+1358932,SFM Devine,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,16,11,2,1,1,145.45,2023
+1358932,SR Patil,Royal Challengers Bangalore,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-06,WPL,23,15,4,0,1,153.33,2023
+1358932,YH Bhatia,Mumbai Indians,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-06,WPL,23,19,4,0,1,121.05,2023
+1358933,A Capsey,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,21,10,1,2,1,210.0,2023
+1358933,AJ Healy,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,24,17,5,0,1,141.18,2023
+1358933,DB Sharma,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,12,20,1,0,1,60.0,2023
+1358933,DP Vaidya,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,23,21,2,0,1,109.52,2023
+1358933,JI Rodrigues,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,34,22,4,0,0,154.55,2023
+1358933,JL Jonassen,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,42,20,3,3,0,210.0,2023
+1358933,KP Navgire,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,2,2,0,0,1,100.0,2023
+1358933,M Kapp,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,16,12,2,0,1,133.33,2023
+1358933,MM Lanning,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,70,42,10,3,1,166.67,2023
+1358933,S Sehrawat,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,1,6,0,0,1,16.67,2023
+1358933,Shafali Verma,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,17,14,1,1,1,121.43,2023
+1358933,Simran Shaikh,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,6,4,1,0,0,150.0,2023
+1358933,TM McGrath,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-07,WPL,90,50,11,4,0,180.0,2023
+1358934,A Gardner,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,19,15,2,0,1,126.67,2023
+1358934,A Sutherland,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,14,8,1,1,1,175.0,2023
+1358934,D Hemalatha,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,16,7,2,1,1,228.57,2023
+1358934,EA Perry,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,32,25,5,0,1,128.0,2023
+1358934,H Deol,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,67,45,9,1,1,148.89,2023
+1358934,HC Knight,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,30,11,5,1,0,272.73,2023
+1358934,KJ Garth,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,3,2,0,0,0,150.0,2023
+1358934,KS Ahuja,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,10,7,2,0,1,142.86,2023
+1358934,PN Khemnar,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,2,4,0,0,1,50.0,2023
+1358934,RM Ghosh,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,10,10,2,0,1,100.0,2023
+1358934,S Mandhana,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,18,14,3,0,1,128.57,2023
+1358934,S Meghana,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,8,11,2,0,1,72.73,2023
+1358934,S Rana,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,2,3,0,0,1,66.67,2023
+1358934,S Verma,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,5,2,1,0,0,250.0,2023
+1358934,SFM Devine,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,66,45,8,2,1,146.67,2023
+1358934,SIR Dunkley,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-08,WPL,65,28,11,3,1,232.14,2023
+1358934,SR Patil,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-08,WPL,11,4,1,1,0,275.0,2023
+1358935,A Capsey,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,6,7,1,0,1,85.71,2023
+1358935,H Kaur,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,11,8,2,0,0,137.5,2023
+1358935,HK Matthews,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,32,31,6,0,1,103.23,2023
+1358935,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,25,18,3,0,1,138.89,2023
+1358935,JL Jonassen,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,2,3,0,0,1,66.67,2023
+1358935,M Kapp,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,2,4,0,0,1,50.0,2023
+1358935,M Mani,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,0,3,0,0,1,0.0,2023
+1358935,MM Lanning,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,43,41,5,0,1,104.88,2023
+1358935,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,23,19,4,0,0,121.05,2023
+1358935,RP Yadav,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,10,9,0,1,1,111.11,2023
+1358935,S Pandey,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,4,8,0,0,0,50.0,2023
+1358935,Shafali Verma,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,2,6,0,0,1,33.33,2023
+1358935,T Bhatia,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,4,9,0,0,1,44.44,2023
+1358935,TG Norris,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,0,1,0,0,1,0.0,2023
+1358935,YH Bhatia,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-09,WPL,41,32,8,0,1,128.12,2023
+1358936,AJ Healy,UP Warriorz,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-10,WPL,96,47,18,1,0,204.26,2023
+1358936,DP Vaidya,UP Warriorz,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-10,WPL,36,31,5,0,0,116.13,2023
+1358936,EA Burns,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,12,9,2,0,1,133.33,2023
+1358936,EA Perry,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,52,39,6,1,1,133.33,2023
+1358936,HC Knight,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,2,2,0,0,0,100.0,2023
+1358936,KS Ahuja,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,8,10,0,0,1,80.0,2023
+1358936,Komal Zanzad,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,5,7,0,0,1,71.43,2023
+1358936,RM Ghosh,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,1,1,0,0,0,100.0,2023
+1358936,Renuka Singh,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,3,8,0,0,1,37.5,2023
+1358936,S Mandhana,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,4,6,0,0,1,66.67,2023
+1358936,SFM Devine,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,36,24,5,1,1,150.0,2023
+1358936,SR Patil,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,15,10,3,0,1,150.0,2023
+1358936,SS Pawar,Royal Challengers Bangalore,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-10,WPL,0,1,0,0,1,0.0,2023
+1358937,A Gardner,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,0,1,0,0,1,0.0,2023
+1358937,D Hemalatha,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,5,5,1,0,1,100.0,2023
+1358937,G Wareham,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,22,25,2,0,1,88.0,2023
+1358937,H Deol,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,20,14,4,0,1,142.86,2023
+1358937,KJ Garth,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,32,37,3,0,0,86.49,2023
+1358937,L Wolvaardt,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,1,2,0,0,1,50.0,2023
+1358937,M Joshi,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,5,2,1,0,0,250.0,2023
+1358937,MM Lanning,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,21,15,3,0,0,140.0,2023
+1358937,S Meghana,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,0,2,0,0,1,0.0,2023
+1358937,S Rana,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,2,3,0,0,1,66.67,2023
+1358937,S Verma,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,2,10,0,0,1,20.0,2023
+1358937,Shafali Verma,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,76,28,10,5,0,271.43,2023
+1358937,TP Kanwar,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-11,WPL,13,19,1,0,1,68.42,2023
+1358938,AJ Healy,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,58,46,7,1,1,126.09,2023
+1358938,DB Sharma,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,7,6,1,0,1,116.67,2023
+1358938,DP Vaidya,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,6,5,1,0,1,120.0,2023
+1358938,H Kaur,Mumbai Indians,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-12,WPL,53,33,9,1,0,160.61,2023
+1358938,HK Matthews,Mumbai Indians,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-12,WPL,12,17,2,0,1,70.59,2023
+1358938,KP Navgire,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,17,14,2,1,1,121.43,2023
+1358938,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-12,WPL,45,31,6,1,0,145.16,2023
+1358938,S Ecclestone,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,1,4,0,0,1,25.0,2023
+1358938,S Sehrawat,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,2,2,0,0,0,100.0,2023
+1358938,Simran Shaikh,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,9,8,0,0,0,112.5,2023
+1358938,TM McGrath,UP Warriorz,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-12,WPL,50,37,9,0,1,135.14,2023
+1358938,YH Bhatia,Mumbai Indians,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-12,WPL,42,27,8,1,1,155.56,2023
+1358939,A Capsey,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,38,24,8,0,1,158.33,2023
+1358939,EA Perry,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,67,52,4,5,0,128.85,2023
+1358939,HC Knight,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,11,12,1,0,1,91.67,2023
+1358939,JI Rodrigues,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,32,28,3,0,1,114.29,2023
+1358939,JL Jonassen,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,29,15,4,1,0,193.33,2023
+1358939,M Kapp,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,32,32,3,1,0,100.0,2023
+1358939,MM Lanning,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,15,18,1,0,1,83.33,2023
+1358939,RM Ghosh,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,37,16,3,3,1,231.25,2023
+1358939,S Mandhana,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,8,15,1,0,1,53.33,2023
+1358939,SFM Devine,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,21,19,3,0,1,110.53,2023
+1358939,SR Patil,Royal Challengers Bangalore,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,4,6,0,0,0,66.67,2023
+1358939,Shafali Verma,Delhi Capitals,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-13,WPL,0,1,0,0,1,0.0,2023
+1358940,A Gardner,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,8,10,1,0,1,80.0,2023
+1358940,A Sutherland,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,4,0,0,1,0.0,2023
+1358940,AB Kaur,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,1,0,0,1,0.0,2023
+1358940,AC Kerr,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,19,13,2,0,1,146.15,2023
+1358940,D Hemalatha,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,6,6,1,0,1,100.0,2023
+1358940,DV Gujjar,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,1,1,0,0,0,100.0,2023
+1358940,H Deol,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,22,23,3,0,1,95.65,2023
+1358940,H Kaur,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,51,30,7,2,1,170.0,2023
+1358940,HK Matthews,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,3,0,0,1,0.0,2023
+1358940,HY Kazi,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,2,2,0,0,0,100.0,2023
+1358940,IECM Wong,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,1,0,0,1,0.0,2023
+1358940,JN Kalita,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,2,1,0,0,0,200.0,2023
+1358940,KJ Garth,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,8,8,1,0,1,100.0,2023
+1358940,M Joshi,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,7,9,1,0,0,77.78,2023
+1358940,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,36,31,5,1,1,116.13,2023
+1358940,S Meghana,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,16,17,3,0,1,94.12,2023
+1358940,S Rana,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,20,19,3,0,1,105.26,2023
+1358940,S Verma,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,18,19,1,0,0,94.74,2023
+1358940,SIR Dunkley,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,1,0,0,1,0.0,2023
+1358940,TP Kanwar,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-14,WPL,0,4,0,0,1,0.0,2023
+1358940,YH Bhatia,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-14,WPL,44,37,5,1,1,118.92,2023
+1358941,AJ Healy,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,1,3,0,0,1,33.33,2023
+1358941,DB Sharma,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,22,19,4,0,1,115.79,2023
+1358941,DP Vaidya,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,0,1,0,0,1,0.0,2023
+1358941,EA Perry,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,10,13,1,0,1,76.92,2023
+1358941,GM Harris,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,46,32,5,2,1,143.75,2023
+1358941,HC Knight,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,24,21,5,0,1,114.29,2023
+1358941,K Anjali Sarvani,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,8,9,1,0,1,88.89,2023
+1358941,KP Navgire,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,22,26,2,1,1,84.62,2023
+1358941,KS Ahuja,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,46,30,8,1,1,153.33,2023
+1358941,RM Ghosh,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,31,32,3,1,0,96.88,2023
+1358941,RS Gayakwad,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,2,1,0,0,1,200.0,2023
+1358941,S Ecclestone,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,12,9,2,0,0,133.33,2023
+1358941,S Mandhana,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,0,3,0,0,1,0.0,2023
+1358941,S Sehrawat,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,6,6,1,0,1,100.0,2023
+1358941,SFM Devine,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,14,6,2,1,1,233.33,2023
+1358941,SR Patil,Royal Challengers Bangalore,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,5,3,1,0,0,166.67,2023
+1358941,Simran Shaikh,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,2,9,0,0,1,22.22,2023
+1358941,TM McGrath,UP Warriorz,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-15,WPL,2,2,0,0,1,100.0,2023
+1358942,A Capsey,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,22,11,2,2,0,200.0,2023
+1358942,A Gardner,Gujarat Giants,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-16,WPL,51,33,9,0,0,154.55,2023
+1358942,A Reddy,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,25,17,4,0,1,147.06,2023
+1358942,D Hemalatha,Gujarat Giants,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-16,WPL,1,3,0,0,1,33.33,2023
+1358942,H Deol,Gujarat Giants,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-16,WPL,31,33,4,0,1,93.94,2023
+1358942,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,1,4,0,0,1,25.0,2023
+1358942,JL Jonassen,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,4,10,0,0,1,40.0,2023
+1358942,L Wolvaardt,Gujarat Giants,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-16,WPL,57,45,6,1,1,126.67,2023
+1358942,M Kapp,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,36,29,4,1,0,124.14,2023
+1358942,MM Lanning,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,18,15,3,0,1,120.0,2023
+1358942,Poonam Yadav,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,0,3,0,0,1,0.0,2023
+1358942,RP Yadav,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,1,3,0,0,1,33.33,2023
+1358942,S Pandey,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,8,9,0,0,0,88.89,2023
+1358942,SIR Dunkley,Gujarat Giants,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-16,WPL,4,6,0,0,1,66.67,2023
+1358942,Shafali Verma,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,8,7,0,1,1,114.29,2023
+1358942,T Bhatia,Delhi Capitals,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-16,WPL,1,4,0,0,1,25.0,2023
+1358943,AB Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,5,7,0,0,1,71.43,2023
+1358943,AC Kerr,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,3,5,0,0,1,60.0,2023
+1358943,AJ Healy,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,8,10,1,0,1,80.0,2023
+1358943,DB Sharma,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,13,14,1,0,0,92.86,2023
+1358943,DP Vaidya,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,1,7,0,0,1,14.29,2023
+1358943,DV Gujjar,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,3,3,0,0,1,100.0,2023
+1358943,GM Harris,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,39,28,7,0,1,139.29,2023
+1358943,H Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,25,22,3,0,1,113.64,2023
+1358943,HK Matthews,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,35,30,1,3,1,116.67,2023
+1358943,HY Kazi,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,4,6,0,0,1,66.67,2023
+1358943,IECM Wong,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,32,19,4,1,1,168.42,2023
+1358943,JN Kalita,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,3,3,0,0,0,100.0,2023
+1358943,KP Navgire,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,12,16,1,1,1,75.0,2023
+1358943,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,5,8,1,0,1,62.5,2023
+1358943,S Ecclestone,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,16,17,1,1,0,94.12,2023
+1358943,S Ishaque,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,0,2,0,0,1,0.0,2023
+1358943,TM McGrath,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,38,25,6,1,1,152.0,2023
+1358943,YH Bhatia,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-18,WPL,7,15,0,0,1,46.67,2023
+1358944,A Gardner,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,41,26,6,1,1,157.69,2023
+1358944,D Hemalatha,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,16,6,2,1,0,266.67,2023
+1358944,EA Perry,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-18,WPL,19,12,3,0,0,158.33,2023
+1358944,H Deol,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,12,5,1,1,0,240.0,2023
+1358944,HC Knight,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-18,WPL,22,15,4,0,0,146.67,2023
+1358944,L Wolvaardt,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,68,42,9,2,1,161.9,2023
+1358944,S Mandhana,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-18,WPL,37,31,5,1,1,119.35,2023
+1358944,S Meghana,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,31,32,4,0,1,96.88,2023
+1358944,SFM Devine,Royal Challengers Bangalore,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-18,WPL,99,36,9,8,1,275.0,2023
+1358944,SIR Dunkley,Gujarat Giants,Royal Challengers Bangalore,"Brabourne Stadium, Mumbai",2023-03-18,WPL,16,10,3,0,1,160.0,2023
+1358945,A Gardner,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,60,39,6,3,1,153.85,2023
+1358945,AJ Healy,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,12,8,3,0,1,150.0,2023
+1358945,Ashwani Kumari,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,5,5,0,0,1,100.0,2023
+1358945,D Hemalatha,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,57,33,6,3,1,172.73,2023
+1358945,DB Sharma,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,6,5,1,0,1,120.0,2023
+1358945,DP Vaidya,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,7,8,1,0,1,87.5,2023
+1358945,GM Harris,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,72,41,7,4,1,175.61,2023
+1358945,H Deol,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,4,7,1,0,1,57.14,2023
+1358945,KJ Garth,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,1,1,0,0,0,100.0,2023
+1358945,KP Navgire,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,4,4,1,0,1,100.0,2023
+1358945,L Wolvaardt,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,17,13,1,2,1,130.77,2023
+1358945,S Ecclestone,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,19,13,2,0,1,146.15,2023
+1358945,S Verma,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,8,9,1,0,0,88.89,2023
+1358945,SIR Dunkley,Gujarat Giants,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-20,WPL,23,13,3,0,1,176.92,2023
+1358945,Simran Shaikh,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,1,2,0,0,0,50.0,2023
+1358945,TM McGrath,UP Warriorz,Gujarat Giants,"Brabourne Stadium, Mumbai",2023-03-20,WPL,57,38,11,0,1,150.0,2023
+1358946,A Capsey,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,38,17,1,5,0,223.53,2023
+1358946,AB Kaur,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,19,16,2,0,0,118.75,2023
+1358946,AC Kerr,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,8,16,1,0,1,50.0,2023
+1358946,H Kaur,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,23,26,3,0,1,88.46,2023
+1358946,HK Matthews,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,5,10,1,0,1,50.0,2023
+1358946,HY Kazi,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,2,2,0,0,1,100.0,2023
+1358946,IECM Wong,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,23,24,0,1,1,95.83,2023
+1358946,MM Lanning,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,32,22,4,1,0,145.45,2023
+1358946,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,0,1,0,0,1,0.0,2023
+1358946,P Vastrakar,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,26,19,3,1,1,136.84,2023
+1358946,Shafali Verma,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,33,15,6,1,1,220.0,2023
+1358946,YH Bhatia,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Mumbai",2023-03-20,WPL,1,6,0,0,1,16.67,2023
+1358947,AC Kerr,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,31,27,4,0,0,114.81,2023
+1358947,DD Kasat,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,2,5,0,0,1,40.0,2023
+1358947,EA Perry,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,29,38,3,0,1,76.32,2023
+1358947,H Kaur,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,2,5,0,0,1,40.0,2023
+1358947,HC Knight,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,12,13,1,0,1,92.31,2023
+1358947,HK Matthews,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,24,17,2,1,1,141.18,2023
+1358947,IECM Wong,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,0,1,0,0,1,0.0,2023
+1358947,KS Ahuja,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,12,13,1,0,1,92.31,2023
+1358947,ML Schutt,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,2,5,0,0,1,40.0,2023
+1358947,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,13,7,1,1,1,185.71,2023
+1358947,P Vastrakar,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,19,18,2,0,1,105.56,2023
+1358947,RM Ghosh,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,29,13,3,2,1,223.08,2023
+1358947,S Asha,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,4,3,0,0,0,133.33,2023
+1358947,S Mandhana,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,24,25,3,1,1,96.0,2023
+1358947,SFM Devine,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,0,2,0,0,1,0.0,2023
+1358947,SR Patil,Royal Challengers Bangalore,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,4,3,1,0,1,133.33,2023
+1358947,YH Bhatia,Mumbai Indians,Royal Challengers Bangalore,"Dr DY Patil Sports Academy, Mumbai",2023-03-21,WPL,30,26,6,0,1,115.38,2023
+1358948,A Capsey,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,34,31,4,1,1,109.68,2023
+1358948,AJ Healy,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,36,34,4,1,1,105.88,2023
+1358948,DB Sharma,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,3,8,0,0,1,37.5,2023
+1358948,JI Rodrigues,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,3,3,0,0,1,100.0,2023
+1358948,JL Jonassen,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,0,5,0,0,1,0.0,2023
+1358948,K Anjali Sarvani,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,3,6,0,0,0,50.0,2023
+1358948,KP Navgire,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,2,3,0,0,1,66.67,2023
+1358948,M Kapp,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,34,31,4,1,0,109.68,2023
+1358948,MM Lanning,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,39,23,5,2,1,169.57,2023
+1358948,S Ecclestone,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,0,2,0,0,0,0.0,2023
+1358948,S Sehrawat,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,19,12,4,0,1,158.33,2023
+1358948,Shafali Verma,Delhi Capitals,UP Warriorz,"Brabourne Stadium, Mumbai",2023-03-21,WPL,21,16,4,0,1,131.25,2023
+1358948,Simran Shaikh,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,11,23,1,0,1,47.83,2023
+1358948,TM McGrath,UP Warriorz,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-21,WPL,58,32,8,2,0,181.25,2023
+1358949,AC Kerr,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,29,19,5,0,1,152.63,2023
+1358949,AJ Healy,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,11,6,2,0,1,183.33,2023
+1358949,DB Sharma,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,16,20,3,0,1,80.0,2023
+1358949,GM Harris,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,14,12,3,0,1,116.67,2023
+1358949,H Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,14,15,1,0,1,93.33,2023
+1358949,HK Matthews,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,26,26,2,1,1,100.0,2023
+1358949,K Anjali Sarvani,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,5,11,0,0,1,45.45,2023
+1358949,KP Navgire,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,43,27,4,3,1,159.26,2023
+1358949,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,72,38,9,2,0,189.47,2023
+1358949,P Vastrakar,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,11,4,1,1,0,275.0,2023
+1358949,PG Chopra,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,0,5,0,0,0,0.0,2023
+1358949,RS Gayakwad,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,5,9,1,0,1,55.56,2023
+1358949,S Ecclestone,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,0,1,0,0,1,0.0,2023
+1358949,S Sehrawat,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,1,8,0,0,1,12.5,2023
+1358949,Simran Shaikh,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,0,1,0,0,1,0.0,2023
+1358949,TM McGrath,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,7,6,1,0,0,116.67,2023
+1358949,YH Bhatia,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Mumbai",2023-03-24,WPL,21,18,4,0,1,116.67,2023
+1358950,A Capsey,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,0,2,0,0,1,0.0,2023
+1358950,A Reddy,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,0,5,0,0,1,0.0,2023
+1358950,AC Kerr,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-26,WPL,14,8,2,0,0,175.0,2023
+1358950,H Kaur,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-26,WPL,37,39,5,0,1,94.87,2023
+1358950,HK Matthews,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-26,WPL,13,12,3,0,1,108.33,2023
+1358950,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,9,8,2,0,1,112.5,2023
+1358950,JL Jonassen,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,2,11,0,0,1,18.18,2023
+1358950,M Kapp,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,18,21,2,0,1,85.71,2023
+1358950,M Mani,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,1,9,0,0,1,11.11,2023
+1358950,MM Lanning,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,35,29,5,0,0,120.69,2023
+1358950,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-26,WPL,60,55,7,0,0,109.09,2023
+1358950,RP Yadav,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,27,12,2,2,0,225.0,2023
+1358950,S Pandey,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,27,17,3,1,0,158.82,2023
+1358950,Shafali Verma,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,11,4,1,1,1,275.0,2023
+1358950,T Bhatia,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2023-03-26,WPL,0,2,0,0,1,0.0,2023
+1358950,YH Bhatia,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2023-03-26,WPL,4,3,1,0,1,133.33,2023
 1359475,AT Rayudu,Chennai Super Kings,Gujarat Titans,"Narendra Modi Stadium, Ahmedabad",2023-03-31,IPL,12,12,0,1,1,100.0,2023
 1359475,B Sai Sudharsan,Gujarat Titans,Chennai Super Kings,"Narendra Modi Stadium, Ahmedabad",2023-03-31,IPL,22,17,3,0,1,129.41,2023
 1359475,BA Stokes,Chennai Super Kings,Gujarat Titans,"Narendra Modi Stadium, Ahmedabad",2023-03-31,IPL,7,6,1,0,1,116.67,2023
@@ -133234,6 +133567,343 @@ match_id,striker,batting_team,bowling_team,venue,start_date,format,runs,balls_fa
 1416505,Usama Mir,Multan Sultans,Islamabad United,"National Stadium, Karachi",2024-03-18,PSL,6,2,0,1,1,300.0,2024
 1416505,Usman Khan,Multan Sultans,Islamabad United,"National Stadium, Karachi",2024-03-18,PSL,57,40,7,1,1,142.5,2024
 1416505,Yasir Khan,Multan Sultans,Islamabad United,"National Stadium, Karachi",2024-03-18,PSL,6,6,1,0,1,100.0,2024
+1417716,A Capsey,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,75,53,9,3,1,141.51,2024
+1417716,A Sutherland,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,1,2,0,0,0,50.0,2024
+1417716,AB Kaur,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,3,2,0,0,0,150.0,2024
+1417716,AC Kerr,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,24,18,3,0,1,133.33,2024
+1417716,H Kaur,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,55,34,7,1,1,161.76,2024
+1417716,HK Matthews,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,0,2,0,0,1,0.0,2024
+1417716,JI Rodrigues,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,42,24,5,2,1,175.0,2024
+1417716,M Kapp,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,16,9,3,0,1,177.78,2024
+1417716,MM Lanning,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,31,25,3,1,1,124.0,2024
+1417716,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,19,17,2,1,1,111.76,2024
+1417716,P Vastrakar,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,1,3,0,0,1,33.33,2024
+1417716,S Sajana,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,6,1,0,1,0,600.0,2024
+1417716,Shafali Verma,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,1,8,0,0,1,12.5,2024
+1417716,YH Bhatia,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-23,WPL,57,45,8,2,1,126.67,2024
+1417717,AJ Healy,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,5,4,1,0,1,125.0,2024
+1417717,D Vrinda,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,18,28,3,0,1,64.29,2024
+1417717,DB Sharma,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,13,9,2,0,0,144.44,2024
+1417717,EA Perry,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,8,7,1,0,1,114.29,2024
+1417717,G Wareham,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,0,3,0,0,1,0.0,2024
+1417717,GM Harris,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,38,23,4,2,1,165.22,2024
+1417717,KP Navgire,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,1,3,0,0,1,33.33,2024
+1417717,PN Khemnar,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,14,7,3,0,1,200.0,2024
+1417717,RM Ghosh,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,62,37,12,0,1,167.57,2024
+1417717,S Ecclestone,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,1,3,0,0,0,33.33,2024
+1417717,S Mandhana,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,13,11,1,1,1,118.18,2024
+1417717,S Meghana,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,53,44,7,1,1,120.45,2024
+1417717,S Molineux,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,9,9,1,0,0,100.0,2024
+1417717,S Sehrawat,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,31,25,2,1,1,124.0,2024
+1417717,SFM Devine,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,1,5,0,0,1,20.0,2024
+1417717,SR Patil,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,8,4,0,1,0,200.0,2024
+1417717,TM McGrath,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-24,WPL,22,18,2,1,1,122.22,2024
+1417718,A Gardner,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,15,22,2,0,1,68.18,2024
+1417718,AB Kaur,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,0,5,0,0,0,0.0,2024
+1417718,AC Kerr,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,31,25,3,0,1,124.0,2024
+1417718,BL Mooney,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,24,22,2,0,1,109.09,2024
+1417718,D Hemalatha,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,3,8,0,0,1,37.5,2024
+1417718,H Deol,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,8,9,0,1,1,88.89,2024
+1417718,H Kaur,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,46,41,5,1,1,112.2,2024
+1417718,HK Matthews,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,7,11,1,0,1,63.64,2024
+1417718,KE Bryce,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,25,24,1,1,0,104.17,2024
+1417718,LMM Tahuhu,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,0,2,0,0,1,0.0,2024
+1417718,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,22,18,4,0,0,122.22,2024
+1417718,P Litchfield,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,7,8,1,0,1,87.5,2024
+1417718,P Vastrakar,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,1,2,0,0,1,50.0,2024
+1417718,S Rana,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,0,2,0,0,1,0.0,2024
+1417718,TP Kanwar,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,28,21,4,0,1,133.33,2024
+1417718,V Krishnamurthy,Gujarat Giants,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,0,2,0,0,1,0.0,2024
+1417718,YH Bhatia,Mumbai Indians,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-25,WPL,7,7,1,0,1,100.0,2024
+1417719,AJ Healy,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,13,15,2,0,1,86.67,2024
+1417719,D Vrinda,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,0,5,0,0,1,0.0,2024
+1417719,DB Sharma,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,5,7,0,0,1,71.43,2024
+1417719,G Sultana,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,2,5,0,0,0,40.0,2024
+1417719,GM Harris,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,17,18,2,0,1,94.44,2024
+1417719,JI Rodrigues,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,4,1,1,0,0,400.0,2024
+1417719,KP Navgire,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,10,7,0,1,1,142.86,2024
+1417719,MM Lanning,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,51,43,6,0,1,118.6,2024
+1417719,PN Khemnar,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,10,9,2,0,1,111.11,2024
+1417719,S Ecclestone,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,6,6,0,0,1,100.0,2024
+1417719,S Sehrawat,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,45,42,5,1,1,107.14,2024
+1417719,Shafali Verma,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,64,43,6,4,0,148.84,2024
+1417719,TM McGrath,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-26,WPL,1,8,0,0,1,12.5,2024
+1417720,A Gardner,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,7,12,0,0,1,58.33,2024
+1417720,BL Mooney,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,8,7,2,0,1,114.29,2024
+1417720,D Hemalatha,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,31,25,2,1,0,124.0,2024
+1417720,EA Perry,Royal Challengers Bangalore,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,23,14,4,0,0,164.29,2024
+1417720,H Deol,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,22,31,3,0,1,70.97,2024
+1417720,KE Bryce,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,3,6,0,0,1,50.0,2024
+1417720,P Litchfield,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,5,12,1,0,1,41.67,2024
+1417720,S Mandhana,Royal Challengers Bangalore,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,43,27,8,1,1,159.26,2024
+1417720,S Meghana,Royal Challengers Bangalore,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,36,28,5,1,0,128.57,2024
+1417720,S Rana,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,12,10,2,0,1,120.0,2024
+1417720,SFM Devine,Royal Challengers Bangalore,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,6,6,1,0,1,100.0,2024
+1417720,TP Kanwar,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,4,2,0,0,0,200.0,2024
+1417720,V Krishnamurthy,Gujarat Giants,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-27,WPL,9,15,0,1,1,60.0,2024
+1417721,AB Kaur,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,0,1,0,0,0,0.0,2024
+1417721,AC Kerr,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,23,16,1,1,1,143.75,2024
+1417721,AJ Healy,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,33,29,5,0,1,113.79,2024
+1417721,DB Sharma,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,27,20,4,0,0,135.0,2024
+1417721,GM Harris,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,38,17,6,1,0,223.53,2024
+1417721,HK Matthews,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,55,47,9,1,1,117.02,2024
+1417721,IECM Wong,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,15,6,1,1,0,250.0,2024
+1417721,KP Navgire,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,57,31,6,4,1,183.87,2024
+1417721,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,19,14,2,0,0,135.71,2024
+1417721,P Vastrakar,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,18,12,0,0,1,150.0,2024
+1417721,S Sajana,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,4,2,1,0,1,200.0,2024
+1417721,TM McGrath,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,1,4,0,0,1,25.0,2024
+1417721,YH Bhatia,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-02-28,WPL,26,22,3,1,1,118.18,2024
+1417722,A Capsey,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,46,33,4,2,1,139.39,2024
+1417722,A Reddy,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,10,4,2,0,0,250.0,2024
+1417722,G Wareham,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,6,7,0,0,1,85.71,2024
+1417722,JI Rodrigues,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,0,4,0,0,1,0.0,2024
+1417722,JL Jonassen,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,36,16,4,2,0,225.0,2024
+1417722,M Kapp,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,32,16,2,3,1,200.0,2024
+1417722,MM Lanning,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,11,17,2,0,1,64.71,2024
+1417722,N de Klerk,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,1,2,0,0,1,50.0,2024
+1417722,RM Ghosh,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,19,13,0,2,1,146.15,2024
+1417722,Renuka Singh,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,1,1,0,0,0,100.0,2024
+1417722,S Asha,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,0,1,0,0,1,0.0,2024
+1417722,S Mandhana,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,74,43,10,3,1,172.09,2024
+1417722,S Meghana,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,36,31,2,1,1,116.13,2024
+1417722,S Molineux,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,1,2,0,0,1,50.0,2024
+1417722,SD Bahadur,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,2,2,0,0,1,100.0,2024
+1417722,SFM Devine,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,23,17,1,2,1,135.29,2024
+1417722,SR Patil,Royal Challengers Bangalore,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,1,2,0,0,0,50.0,2024
+1417722,Shafali Verma,Delhi Capitals,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-02-29,WPL,50,31,3,4,1,161.29,2024
+1417723,A Gardner,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,30,17,4,1,1,176.47,2024
+1417723,AC Jayangani,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,17,11,4,0,1,154.55,2024
+1417723,AJ Healy,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,33,21,7,0,1,157.14,2024
+1417723,BL Mooney,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,16,16,2,0,1,100.0,2024
+1417723,D Hemalatha,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,2,4,0,0,1,50.0,2024
+1417723,DB Sharma,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,17,14,3,0,0,121.43,2024
+1417723,GM Harris,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,60,33,9,2,0,181.82,2024
+1417723,H Deol,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,18,24,1,0,1,75.0,2024
+1417723,KE Bryce,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,5,7,0,0,0,71.43,2024
+1417723,KP Navgire,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,12,8,2,0,1,150.0,2024
+1417723,L Wolvaardt,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,28,26,4,0,1,107.69,2024
+1417723,P Litchfield,Gujarat Giants,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,35,26,4,1,0,134.62,2024
+1417723,S Sehrawat,UP Warriorz,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-01,WPL,2,7,0,0,1,28.57,2024
+1417724,AC Kerr,Mumbai Indians,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,40,24,7,0,0,166.67,2024
+1417724,EA Perry,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,44,38,5,0,0,115.79,2024
+1417724,G Wareham,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,27,20,3,0,1,135.0,2024
+1417724,HK Matthews,Mumbai Indians,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,26,21,3,1,1,123.81,2024
+1417724,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,27,25,4,0,1,108.0,2024
+1417724,P Vastrakar,Mumbai Indians,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,8,6,1,0,0,133.33,2024
+1417724,RM Ghosh,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,7,10,1,0,1,70.0,2024
+1417724,S Mandhana,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,9,11,1,0,1,81.82,2024
+1417724,S Meghana,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,11,12,1,0,1,91.67,2024
+1417724,S Molineux,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,12,14,1,0,1,85.71,2024
+1417724,SFM Devine,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,9,10,1,0,1,90.0,2024
+1417724,SR Patil,Royal Challengers Bangalore,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,7,5,1,0,0,140.0,2024
+1417724,YH Bhatia,Mumbai Indians,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-02,WPL,31,15,4,2,1,206.67,2024
+1417725,A Capsey,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,27,17,5,0,1,158.82,2024
+1417725,A Gardner,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,40,31,5,1,1,129.03,2024
+1417725,A Reddy,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,5,9,0,0,1,55.56,2024
+1417725,A Sutherland,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,20,12,2,1,1,166.67,2024
+1417725,BL Mooney,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,12,14,2,0,1,85.71,2024
+1417725,JI Rodrigues,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,7,10,0,0,1,70.0,2024
+1417725,JL Jonassen,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,11,7,0,1,1,157.14,2024
+1417725,KE Bryce,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,3,6,0,0,1,50.0,2024
+1417725,L Wolvaardt,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,0,3,0,0,1,0.0,2024
+1417725,MM Lanning,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,55,41,6,1,1,134.15,2024
+1417725,Meghna Singh,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,10,10,0,0,0,100.0,2024
+1417725,P Litchfield,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,15,10,2,1,1,150.0,2024
+1417725,RP Yadav,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,5,7,0,0,1,71.43,2024
+1417725,S Pandey,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,14,8,2,0,0,175.0,2024
+1417725,SG Satghare,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,7,7,0,0,0,100.0,2024
+1417725,Shafali Verma,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,13,9,1,1,1,144.44,2024
+1417725,TN Pathan,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,9,11,1,0,1,81.82,2024
+1417725,TP Kanwar,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,13,16,1,0,1,81.25,2024
+1417725,V Krishnamurthy,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2024-03-03,WPL,12,13,2,0,1,92.31,2024
+1417726,AC Jayangani,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,8,8,2,0,1,100.0,2024
+1417726,AJ Healy,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,55,38,7,3,1,144.74,2024
+1417726,DB Sharma,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,33,22,4,1,1,150.0,2024
+1417726,EA Perry,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,58,37,4,4,1,156.76,2024
+1417726,GM Harris,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,5,5,1,0,1,100.0,2024
+1417726,K Anjali Sarvani,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,3,4,0,0,0,75.0,2024
+1417726,KP Navgire,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,18,11,2,1,1,163.64,2024
+1417726,PN Khemnar,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,31,24,4,1,1,129.17,2024
+1417726,RM Ghosh,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,21,10,2,1,0,210.0,2024
+1417726,S Ecclestone,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,4,3,1,0,1,133.33,2024
+1417726,S Mandhana,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,80,50,10,3,1,160.0,2024
+1417726,S Meghana,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,28,21,5,0,1,133.33,2024
+1417726,S Sehrawat,UP Warriorz,Royal Challengers Bangalore,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,1,5,0,0,1,20.0,2024
+1417726,SFM Devine,Royal Challengers Bangalore,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2024-03-04,WPL,2,2,0,0,0,100.0,2024
+1417727,A Capsey,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,19,20,3,0,1,95.0,2024
+1417727,AB Kaur,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,42,27,7,0,1,155.56,2024
+1417727,AC Kerr,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,17,20,1,1,1,85.0,2024
+1417727,H Kaur,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,6,6,1,0,1,100.0,2024
+1417727,HK Matthews,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,29,17,6,0,1,170.59,2024
+1417727,HY Kazi,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,6,8,0,0,1,75.0,2024
+1417727,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,69,33,8,3,0,209.09,2024
+1417727,JL Jonassen,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,4,5,0,0,0,80.0,2024
+1417727,M Kapp,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,11,12,1,0,1,91.67,2024
+1417727,MM Lanning,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,53,38,6,2,1,139.47,2024
+1417727,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,5,3,1,0,1,166.67,2024
+1417727,P Vastrakar,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,17,22,0,1,1,77.27,2024
+1417727,S Sajana,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,24,14,3,1,0,171.43,2024
+1417727,Shafali Verma,Delhi Capitals,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,28,12,3,2,1,233.33,2024
+1417727,YH Bhatia,Mumbai Indians,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-05,WPL,6,3,1,0,1,200.0,2024
+1417728,A Gardner,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,0,1,0,0,1,0.0,2024
+1417728,BL Mooney,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,85,51,12,1,1,166.67,2024
+1417728,D Hemalatha,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,1,3,0,0,1,33.33,2024
+1417728,E Bisht,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,12,5,0,1,1,240.0,2024
+1417728,EA Perry,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,24,23,3,0,1,104.35,2024
+1417728,G Wareham,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,48,22,6,2,1,218.18,2024
+1417728,KE Bryce,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,1,1,0,0,0,100.0,2024
+1417728,L Wolvaardt,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,76,45,13,0,0,168.89,2024
+1417728,P Litchfield,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,18,17,1,0,0,105.88,2024
+1417728,RM Ghosh,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,30,21,5,1,1,142.86,2024
+1417728,S Mandhana,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,24,16,2,2,1,150.0,2024
+1417728,S Meghana,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,4,13,0,0,1,30.77,2024
+1417728,S Molineux,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,3,3,0,0,0,100.0,2024
+1417728,SD Bahadur,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,1,2,0,0,1,50.0,2024
+1417728,SFM Devine,Royal Challengers Bangalore,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,23,16,1,2,1,143.75,2024
+1417728,V Krishnamurthy,Gujarat Giants,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-06,WPL,1,2,0,0,0,50.0,2024
+1417729,AB Kaur,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,7,6,0,0,1,116.67,2024
+1417729,AC Jayangani,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,3,5,0,0,1,60.0,2024
+1417729,AC Kerr,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,39,23,6,0,0,169.57,2024
+1417729,AJ Healy,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,3,9,0,0,1,33.33,2024
+1417729,DB Sharma,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,53,36,6,2,0,147.22,2024
+1417729,GM Harris,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,15,23,0,2,1,65.22,2024
+1417729,H Kaur,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,33,30,3,1,1,110.0,2024
+1417729,HK Matthews,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,4,3,1,0,1,133.33,2024
+1417729,KP Navgire,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,7,8,0,1,1,87.5,2024
+1417729,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,45,31,8,0,1,145.16,2024
+1417729,PN Khemnar,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,7,10,1,0,1,70.0,2024
+1417729,RS Gayakwad,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,1,2,0,0,0,50.0,2024
+1417729,S Ecclestone,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,0,1,0,0,1,0.0,2024
+1417729,S Sajana,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,22,14,4,0,1,157.14,2024
+1417729,S Sehrawat,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,17,15,2,1,1,113.33,2024
+1417729,SZ Thakor,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,0,1,0,0,1,0.0,2024
+1417729,U Chetry,UP Warriorz,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,8,10,1,0,1,80.0,2024
+1417729,YH Bhatia,Mumbai Indians,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-07,WPL,9,13,2,0,1,69.23,2024
+1417730,A Capsey,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,15,23,1,1,1,65.22,2024
+1417730,A Reddy,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,0,1,0,0,1,0.0,2024
+1417730,A Sutherland,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,6,9,1,0,1,66.67,2024
+1417730,AJ Healy,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,29,30,5,0,1,96.67,2024
+1417730,DB Sharma,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,59,48,6,1,1,122.92,2024
+1417730,G Sultana,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,1,1,0,0,0,100.0,2024
+1417730,GM Harris,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,14,12,1,0,1,116.67,2024
+1417730,JI Rodrigues,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,17,15,0,1,1,113.33,2024
+1417730,JL Jonassen,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,11,5,1,1,0,220.0,2024
+1417730,KP Navgire,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,5,5,1,0,1,100.0,2024
+1417730,MM Lanning,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,60,46,12,0,1,130.43,2024
+1417730,PN Khemnar,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,1,4,0,0,1,25.0,2024
+1417730,RP Yadav,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,9,4,0,1,1,225.0,2024
+1417730,S Ecclestone,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,8,7,0,1,1,114.29,2024
+1417730,S Pandey,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,4,2,1,0,1,200.0,2024
+1417730,S Sehrawat,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,4,3,1,0,1,133.33,2024
+1417730,SZ Thakor,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,5,7,0,0,0,71.43,2024
+1417730,Shafali Verma,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,15,12,2,0,1,125.0,2024
+1417730,T Bhatia,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,0,1,0,0,1,0.0,2024
+1417730,TM McGrath,UP Warriorz,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,3,4,0,0,1,75.0,2024
+1417730,TR Sadhu,Delhi Capitals,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-08,WPL,0,1,0,0,1,0.0,2024
+1417731,A Gardner,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,1,3,0,0,1,33.33,2024
+1417731,AC Kerr,Mumbai Indians,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,12,10,0,1,0,120.0,2024
+1417731,BL Mooney,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,66,35,8,3,1,188.57,2024
+1417731,BS Fulmali,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,21,13,1,1,0,161.54,2024
+1417731,D Hemalatha,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,74,40,9,2,1,185.0,2024
+1417731,H Kaur,Mumbai Indians,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,95,48,10,5,0,197.92,2024
+1417731,HK Matthews,Mumbai Indians,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,18,21,4,0,1,85.71,2024
+1417731,KE Bryce,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,7,8,1,0,1,87.5,2024
+1417731,L Wolvaardt,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,13,14,3,0,1,92.86,2024
+1417731,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,2,4,0,0,1,50.0,2024
+1417731,P Litchfield,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,3,4,0,0,1,75.0,2024
+1417731,S Rana,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,1,2,0,0,1,50.0,2024
+1417731,TP Kanwar,Gujarat Giants,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,0,1,0,0,0,0.0,2024
+1417731,YH Bhatia,Mumbai Indians,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-09,WPL,49,36,8,1,1,136.11,2024
+1417732,A Capsey,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,48,32,8,0,1,150.0,2024
+1417732,EA Perry,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,49,32,7,1,0,153.12,2024
+1417732,G Wareham,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,12,6,2,0,1,200.0,2024
+1417732,JI Rodrigues,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,58,36,8,1,1,161.11,2024
+1417732,JL Jonassen,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,1,2,0,0,1,50.0,2024
+1417732,M Kapp,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,12,6,0,1,0,200.0,2024
+1417732,MM Lanning,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,29,26,5,0,1,111.54,2024
+1417732,RM Ghosh,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,51,29,4,3,1,175.86,2024
+1417732,RP Yadav,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,1,1,0,0,0,100.0,2024
+1417732,S Mandhana,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,5,7,1,0,1,71.43,2024
+1417732,S Molineux,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,33,30,5,0,1,110.0,2024
+1417732,SFM Devine,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,26,16,1,2,1,162.5,2024
+1417732,Shafali Verma,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-10,WPL,23,18,3,1,1,127.78,2024
+1417733,A Gardner,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,15,10,1,1,1,150.0,2024
+1417733,AC Jayangani,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,0,3,0,0,1,0.0,2024
+1417733,AJ Healy,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,4,3,1,0,1,133.33,2024
+1417733,BL Mooney,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,74,52,10,1,1,142.31,2024
+1417733,BS Fulmali,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,1,4,0,0,1,25.0,2024
+1417733,D Hemalatha,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,0,2,0,0,1,0.0,2024
+1417733,DB Sharma,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,88,60,9,4,0,146.67,2024
+1417733,GM Harris,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,1,7,0,0,1,14.29,2024
+1417733,KE Bryce,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,11,11,2,0,1,100.0,2024
+1417733,KP Navgire,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,0,2,0,0,1,0.0,2024
+1417733,L Wolvaardt,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,43,30,8,1,1,143.33,2024
+1417733,P Litchfield,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,4,8,0,0,1,50.0,2024
+1417733,PN Khemnar,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,36,36,3,1,0,100.0,2024
+1417733,S Sehrawat,UP Warriorz,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,8,9,2,0,1,88.89,2024
+1417733,TP Kanwar,Gujarat Giants,UP Warriorz,"Arun Jaitley Stadium, Delhi",2024-03-11,WPL,1,3,0,0,1,33.33,2024
+1417734,AB Kaur,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,4,2,1,0,1,200.0,2024
+1417734,AC Kerr,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,2,5,0,0,1,40.0,2024
+1417734,EA Perry,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,40,38,5,1,0,105.26,2024
+1417734,H Kaur,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,0,1,0,0,1,0.0,2024
+1417734,HK Matthews,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,26,23,2,2,1,113.04,2024
+1417734,HY Kazi,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,4,7,0,0,1,57.14,2024
+1417734,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,10,15,1,0,1,66.67,2024
+1417734,P Vastrakar,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,6,10,1,0,1,60.0,2024
+1417734,PP Bala,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,19,18,2,0,0,105.56,2024
+1417734,RM Ghosh,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,36,28,4,2,0,128.57,2024
+1417734,S Ishaque,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,1,4,0,0,1,25.0,2024
+1417734,S Ismail,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,8,8,1,0,1,100.0,2024
+1417734,S Mandhana,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,11,13,2,0,1,84.62,2024
+1417734,S Molineux,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,9,9,2,0,1,100.0,2024
+1417734,S Sajana,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,30,21,5,1,1,142.86,2024
+1417734,SFM Devine,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-12,WPL,4,2,1,0,1,200.0,2024
+1417735,A Capsey,Delhi Capitals,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,0,4,0,0,1,0.0,2024
+1417735,A Gardner,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,12,12,2,0,1,100.0,2024
+1417735,BL Mooney,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,0,5,0,0,1,0.0,2024
+1417735,BS Fulmali,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,42,36,7,0,1,116.67,2024
+1417735,D Hemalatha,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,4,7,0,0,1,57.14,2024
+1417735,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,38,28,4,1,0,135.71,2024
+1417735,KE Bryce,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,28,22,4,0,1,127.27,2024
+1417735,L Wolvaardt,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,7,11,1,0,1,63.64,2024
+1417735,MM Lanning,Delhi Capitals,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,18,10,4,0,1,180.0,2024
+1417735,Meghna Singh,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,4,2,1,0,1,200.0,2024
+1417735,P Litchfield,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,21,22,2,1,1,95.45,2024
+1417735,SM Shakil,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,1,2,0,0,0,50.0,2024
+1417735,Shafali Verma,Delhi Capitals,Gujarat Giants,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,71,37,7,5,1,191.89,2024
+1417735,TP Kanwar,Gujarat Giants,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-13,WPL,0,1,0,0,1,0.0,2024
+1417736,AB Kaur,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,1,1,0,0,0,100.0,2024
+1417736,AC Kerr,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,27,25,2,0,0,108.0,2024
+1417736,DD Kasat,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,0,7,0,0,1,0.0,2024
+1417736,EA Perry,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,66,50,8,1,1,132.0,2024
+1417736,G Wareham,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,18,10,1,1,0,180.0,2024
+1417736,H Kaur,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,33,30,4,0,1,110.0,2024
+1417736,HK Matthews,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,15,14,3,0,1,107.14,2024
+1417736,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,23,17,4,0,1,135.29,2024
+1417736,P Vastrakar,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,4,4,0,0,1,100.0,2024
+1417736,RM Ghosh,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,14,19,1,1,1,73.68,2024
+1417736,S Mandhana,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,10,7,2,0,1,142.86,2024
+1417736,S Molineux,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,11,17,1,0,1,64.71,2024
+1417736,S Sajana,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,1,3,0,0,1,33.33,2024
+1417736,SFM Devine,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,10,7,2,0,1,142.86,2024
+1417736,SR Patil,Royal Challengers Bangalore,Mumbai Indians,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,3,3,0,0,0,100.0,2024
+1417736,YH Bhatia,Mumbai Indians,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-15,WPL,19,27,3,0,1,70.37,2024
+1417737,A Capsey,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,0,1,0,0,1,0.0,2024
+1417737,A Reddy,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,10,13,0,0,1,76.92,2024
+1417737,EA Perry,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,35,37,4,0,0,94.59,2024
+1417737,JI Rodrigues,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,0,2,0,0,1,0.0,2024
+1417737,JL Jonassen,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,3,11,0,0,1,27.27,2024
+1417737,M Kapp,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,8,16,0,0,1,50.0,2024
+1417737,M Mani,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,5,3,1,0,1,166.67,2024
+1417737,MM Lanning,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,23,23,3,0,1,100.0,2024
+1417737,RM Ghosh,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,17,14,2,0,0,121.43,2024
+1417737,RP Yadav,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,12,9,2,0,0,133.33,2024
+1417737,S Mandhana,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,31,39,3,0,1,79.49,2024
+1417737,S Pandey,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,5,5,0,0,0,100.0,2024
+1417737,SFM Devine,Royal Challengers Bangalore,Delhi Capitals,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,32,27,5,1,1,118.52,2024
+1417737,Shafali Verma,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,44,27,2,3,1,162.96,2024
+1417737,T Bhatia,Delhi Capitals,Royal Challengers Bangalore,"Arun Jaitley Stadium, Delhi",2024-03-17,WPL,0,1,0,0,1,0.0,2024
 1418176,Aung Ko Ko,Myanmar,Cambodia,"Terdthai Cricket Ground, Bangkok",2024-01-27,T20I,2,2,0,0,0,100.0,2024
 1418176,E Beukes,Cambodia,Myanmar,"Terdthai Cricket Ground, Bangkok",2024-01-27,T20I,15,12,1,1,0,125.0,2024
 1418176,H Lin Aung,Myanmar,Cambodia,"Terdthai Cricket Ground, Bangkok",2024-01-27,T20I,11,18,0,1,1,61.11,2024
@@ -153626,6 +154296,362 @@ match_id,striker,batting_team,bowling_team,venue,start_date,format,runs,balls_fa
 1469168,SPD Smith,Australia,Sri Lanka,"R Premadasa Stadium, Colombo",2025-02-14,ODI,29,34,3,1,1,85.29,2025
 1469168,T Sangha,Australia,Sri Lanka,"R Premadasa Stadium, Colombo",2025-02-14,ODI,5,16,0,0,0,31.25,2025
 1469168,TM Head,Australia,Sri Lanka,"R Premadasa Stadium, Colombo",2025-02-14,ODI,18,18,3,0,1,100.0,2025
+1469298,A Gardner,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,79,37,3,8,0,213.51,2025
+1469298,BL Mooney,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,56,42,8,0,1,133.33,2025
+1469298,D Hemalatha,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,4,9,0,0,1,44.44,2025
+1469298,DJS Dottin,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,25,13,3,1,1,192.31,2025
+1469298,DN Wyatt,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,4,4,1,0,1,100.0,2025
+1469298,EA Perry,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,57,34,6,2,1,167.65,2025
+1469298,H Deol,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,9,4,2,0,0,225.0,2025
+1469298,KS Ahuja,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,30,13,4,0,0,230.77,2025
+1469298,L Wolvaardt,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,6,10,1,0,1,60.0,2025
+1469298,RM Ghosh,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,64,27,7,4,0,237.04,2025
+1469298,Raghvi Bist,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,25,27,3,0,1,92.59,2025
+1469298,S Mandhana,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-14,WPL,9,7,2,0,1,128.57,2025
+1469298,Simran Shaikh,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-14,WPL,11,5,1,1,1,220.0,2025
+1469299,A Capsey,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,16,18,1,0,1,88.89,2025
+1469299,A Reddy,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,2,1,0,0,0,200.0,2025
+1469299,A Sutherland,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,13,10,2,0,1,130.0,2025
+1469299,AB Kaur,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,7,7,1,0,1,100.0,2025
+1469299,AC Kerr,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,9,9,1,0,0,100.0,2025
+1469299,H Kaur,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,42,22,4,3,1,190.91,2025
+1469299,HK Matthews,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,0,2,0,0,1,0.0,2025
+1469299,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,2,5,0,0,1,40.0,2025
+1469299,JN Kalita,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,1,1,0,0,0,100.0,2025
+1469299,MM Lanning,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,15,19,3,0,1,78.95,2025
+1469299,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,80,59,13,0,1,135.59,2025
+1469299,NS Prasad,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,35,33,4,0,1,106.06,2025
+1469299,RP Yadav,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,9,4,0,1,0,225.0,2025
+1469299,S Gupta,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,2,5,0,0,1,40.0,2025
+1469299,S Ishaque,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,0,1,0,0,1,0.0,2025
+1469299,S Pandey,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,2,3,0,0,1,66.67,2025
+1469299,S Sajana,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,1,2,0,0,1,50.0,2025
+1469299,SJ Bryce,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,21,10,2,1,1,210.0,2025
+1469299,Shafali Verma,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-15,WPL,43,18,7,2,1,238.89,2025
+1469299,YH Bhatia,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-15,WPL,11,9,2,0,1,122.22,2025
+1469300,A Gardner,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,52,32,5,3,1,162.5,2025
+1469300,A King,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,19,14,2,1,0,135.71,2025
+1469300,BL Mooney,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,0,1,0,0,1,0.0,2025
+1469300,D Hemalatha,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,0,3,0,0,1,0.0,2025
+1469300,D Vrinda,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,6,8,1,0,1,75.0,2025
+1469300,DB Sharma,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,39,27,6,0,1,144.44,2025
+1469300,DJS Dottin,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,33,18,3,2,0,183.33,2025
+1469300,GM Harris,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,4,2,1,0,1,200.0,2025
+1469300,H Deol,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,34,30,4,0,0,113.33,2025
+1469300,KP Navgire,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,15,8,3,0,1,187.5,2025
+1469300,L Wolvaardt,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-16,WPL,22,24,2,1,1,91.67,2025
+1469300,S Ecclestone,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,2,7,0,0,1,28.57,2025
+1469300,S Sehrawat,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,16,18,1,0,1,88.89,2025
+1469300,SZ Thakor,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,15,7,3,0,1,214.29,2025
+1469300,TM McGrath,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,0,2,0,0,1,0.0,2025
+1469300,U Chetry,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-16,WPL,24,27,4,0,1,88.89,2025
+1469301,A Reddy,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,4,5,0,0,1,80.0,2025
+1469301,A Sutherland,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,19,13,0,1,1,146.15,2025
+1469301,DN Wyatt,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-17,WPL,42,33,7,0,1,127.27,2025
+1469301,EA Perry,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-17,WPL,7,13,0,0,0,53.85,2025
+1469301,JI Rodrigues,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,34,22,4,2,1,154.55,2025
+1469301,JL Jonassen,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,1,4,0,0,1,25.0,2025
+1469301,M Kapp,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,12,13,0,0,1,92.31,2025
+1469301,M Mani,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,5,4,1,0,0,125.0,2025
+1469301,MM Lanning,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,17,19,3,0,1,89.47,2025
+1469301,RM Ghosh,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-17,WPL,11,5,1,1,0,220.0,2025
+1469301,RP Yadav,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,0,2,0,0,1,0.0,2025
+1469301,S Mandhana,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-17,WPL,81,47,10,3,1,172.34,2025
+1469301,S Pandey,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,14,15,1,0,1,93.33,2025
+1469301,SJ Bryce,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,23,19,2,0,1,121.05,2025
+1469301,Shafali Verma,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2025-02-17,WPL,0,1,0,0,1,0.0,2025
+1469302,A Gardner,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,10,10,1,1,1,100.0,2025
+1469302,AC Kerr,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,19,20,1,1,1,95.0,2025
+1469302,BL Mooney,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,1,3,0,0,1,33.33,2025
+1469302,D Hemalatha,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,9,11,1,0,1,81.82,2025
+1469302,DJS Dottin,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,7,6,1,0,1,116.67,2025
+1469302,G Kamalini,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,4,1,1,0,0,400.0,2025
+1469302,H Deol,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,32,31,4,0,1,103.23,2025
+1469302,H Kaur,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,4,2,1,0,1,200.0,2025
+1469302,HK Matthews,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,17,19,3,0,1,89.47,2025
+1469302,KS Gautam,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,20,15,2,1,1,133.33,2025
+1469302,L Wolvaardt,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,4,7,1,0,1,57.14,2025
+1469302,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,57,39,11,0,1,146.15,2025
+1469302,Priya Mishra,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,2,7,0,0,0,28.57,2025
+1469302,S Sajana,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,10,6,2,0,0,166.67,2025
+1469302,SG Satghare,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,13,11,2,0,1,118.18,2025
+1469302,Simran Shaikh,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,3,8,0,0,1,37.5,2025
+1469302,TP Kanwar,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2025-02-18,WPL,13,12,2,0,1,108.33,2025
+1469302,YH Bhatia,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2025-02-18,WPL,8,10,1,0,1,80.0,2025
+1469303,A Sutherland,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-19,WPL,41,35,4,0,0,117.14,2025
+1469303,CA Henry,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,33,15,3,3,1,220.0,2025
+1469303,D Vrinda,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,16,15,2,0,1,106.67,2025
+1469303,DB Sharma,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,7,7,1,0,1,100.0,2025
+1469303,GM Harris,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,12,14,1,0,1,85.71,2025
+1469303,JI Rodrigues,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-19,WPL,0,2,0,0,1,0.0,2025
+1469303,KP Navgire,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,51,27,6,3,1,188.89,2025
+1469303,M Kapp,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-19,WPL,29,17,4,0,0,170.59,2025
+1469303,MM Lanning,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-19,WPL,69,49,12,0,1,140.82,2025
+1469303,S Ecclestone,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,2,3,0,0,0,66.67,2025
+1469303,S Sehrawat,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,37,33,4,1,1,112.12,2025
+1469303,Shafali Verma,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2025-02-19,WPL,26,16,3,1,1,162.5,2025
+1469303,TM McGrath,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2025-02-19,WPL,1,6,0,0,1,16.67,2025
+1469304,AB Kaur,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,34,27,2,2,0,125.93,2025
+1469304,AC Kerr,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,2,6,0,0,1,33.33,2025
+1469304,DN Wyatt,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,9,9,1,0,1,100.0,2025
+1469304,E Bisht,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,2,1,0,0,0,200.0,2025
+1469304,EA Perry,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,81,43,11,2,1,188.37,2025
+1469304,G Kamalini,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,11,8,1,0,0,137.5,2025
+1469304,G Wareham,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,6,7,1,0,1,85.71,2025
+1469304,H Kaur,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,50,38,8,1,1,131.58,2025
+1469304,HK Matthews,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,15,10,3,0,1,150.0,2025
+1469304,KJ Garth,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,8,10,0,0,0,80.0,2025
+1469304,KS Ahuja,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,3,9,0,0,1,33.33,2025
+1469304,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,42,21,9,0,1,200.0,2025
+1469304,RM Ghosh,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,28,25,3,1,1,112.0,2025
+1469304,Raghvi Bist,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,1,3,0,0,1,33.33,2025
+1469304,S Mandhana,Royal Challengers Bengaluru,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,26,13,4,1,1,200.0,2025
+1469304,S Sajana,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,0,1,0,0,1,0.0,2025
+1469304,YH Bhatia,Mumbai Indians,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-21,WPL,8,8,2,0,1,100.0,2025
+1469305,A Reddy,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,0,1,0,0,1,0.0,2025
+1469305,A Sutherland,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,5,5,0,0,1,100.0,2025
+1469305,CA Henry,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,62,23,2,8,1,269.57,2025
+1469305,D Vrinda,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,4,7,1,0,1,57.14,2025
+1469305,DB Sharma,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,13,19,2,0,1,68.42,2025
+1469305,GM Harris,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,2,8,0,0,1,25.0,2025
+1469305,JI Rodrigues,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,56,35,8,1,1,160.0,2025
+1469305,JL Jonassen,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,5,4,1,0,1,125.0,2025
+1469305,KP Navgire,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,17,20,3,0,1,85.0,2025
+1469305,M Kapp,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,9,9,1,0,1,100.0,2025
+1469305,M Mani,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,0,1,0,0,1,0.0,2025
+1469305,MM Lanning,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,5,5,1,0,1,100.0,2025
+1469305,NS Prasad,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,18,10,2,1,1,180.0,2025
+1469305,S Ecclestone,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,12,8,2,0,1,150.0,2025
+1469305,S Pandey,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,15,13,2,0,0,115.38,2025
+1469305,S Sehrawat,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,11,6,1,1,1,183.33,2025
+1469305,SJ Bryce,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,5,5,1,0,1,100.0,2025
+1469305,SZ Thakor,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,4,2,1,0,0,200.0,2025
+1469305,Shafali Verma,Delhi Capitals,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,24,30,4,0,1,80.0,2025
+1469305,TM McGrath,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,24,23,3,0,1,104.35,2025
+1469305,U Chetry,UP Warriorz,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-22,WPL,3,5,0,0,1,60.0,2025
+1469306,CA Henry,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,12,9,0,1,1,133.33,2025
+1469306,D Vrinda,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,14,10,2,0,1,140.0,2025
+1469306,DB Sharma,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,25,13,4,1,1,192.31,2025
+1469306,DN Wyatt,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,57,41,4,3,1,139.02,2025
+1469306,EA Perry,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,90,56,9,3,1,160.71,2025
+1469306,G Wareham,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,7,5,1,0,1,140.0,2025
+1469306,GM Harris,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,9,11,1,0,1,81.82,2025
+1469306,K Goud,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,2,2,0,0,1,100.0,2025
+1469306,KJ Garth,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,2,2,0,0,0,100.0,2025
+1469306,KP Navgire,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,24,12,4,1,1,200.0,2025
+1469306,KS Ahuja,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,5,3,1,0,1,166.67,2025
+1469306,RM Ghosh,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,10,9,2,0,1,111.11,2025
+1469306,S Ecclestone,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,34,21,1,4,0,161.9,2025
+1469306,S Mandhana,Royal Challengers Bengaluru,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,8,12,1,0,1,66.67,2025
+1469306,S Sehrawat,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,31,25,4,0,1,124.0,2025
+1469306,SZ Thakor,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,14,8,1,1,1,175.0,2025
+1469306,TM McGrath,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,0,4,0,0,1,0.0,2025
+1469306,U Chetry,UP Warriorz,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-24,WPL,14,11,2,0,1,127.27,2025
+1469307,A Gardner,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,3,9,0,0,1,33.33,2025
+1469307,A Sutherland,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,1,2,0,0,1,50.0,2025
+1469307,BL Mooney,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,10,11,2,0,1,90.91,2025
+1469307,BS Fulmali,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,40,29,4,2,0,137.93,2025
+1469307,DJS Dottin,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,26,24,5,0,1,108.33,2025
+1469307,H Deol,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,5,10,1,0,1,50.0,2025
+1469307,JI Rodrigues,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,5,9,0,0,1,55.56,2025
+1469307,JL Jonassen,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,61,32,9,2,0,190.62,2025
+1469307,KS Gautam,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,0,1,0,0,1,0.0,2025
+1469307,M Kapp,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,9,8,1,0,0,112.5,2025
+1469307,MM Lanning,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,3,13,0,0,1,23.08,2025
+1469307,Meghna Singh,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,0,1,0,0,1,0.0,2025
+1469307,P Litchfield,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,0,3,0,0,1,0.0,2025
+1469307,Priya Mishra,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,1,1,0,0,0,100.0,2025
+1469307,Shafali Verma,Delhi Capitals,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,44,27,5,3,1,162.96,2025
+1469307,Simran Shaikh,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,5,7,1,0,1,71.43,2025
+1469307,TP Kanwar,Gujarat Giants,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-25,WPL,16,24,1,0,1,66.67,2025
+1469308,CA Henry,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,7,8,0,0,1,87.5,2025
+1469308,D Vrinda,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,33,30,5,0,1,110.0,2025
+1469308,DB Sharma,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,4,6,0,0,1,66.67,2025
+1469308,GM Harris,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,45,26,6,2,1,173.08,2025
+1469308,H Kaur,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,4,1,1,0,0,400.0,2025
+1469308,HK Matthews,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,59,50,7,2,1,118.0,2025
+1469308,K Goud,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,5,2,1,0,0,250.0,2025
+1469308,KP Navgire,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,1,3,0,0,1,33.33,2025
+1469308,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,75,44,13,0,0,170.45,2025
+1469308,S Ecclestone,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,6,8,1,0,1,75.0,2025
+1469308,S Sehrawat,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,19,13,1,1,1,146.15,2025
+1469308,SZ Thakor,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,0,2,0,0,1,0.0,2025
+1469308,TM McGrath,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,1,2,0,0,1,50.0,2025
+1469308,U Chetry,UP Warriorz,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,13,20,1,0,0,65.0,2025
+1469308,YH Bhatia,Mumbai Indians,UP Warriorz,"M Chinnaswamy Stadium, Bengaluru",2025-02-26,WPL,0,8,0,0,1,0.0,2025
+1469309,A Gardner,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,58,31,6,3,1,187.1,2025
+1469309,BL Mooney,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,17,20,2,0,1,85.0,2025
+1469309,D Hemalatha,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,11,15,2,0,1,73.33,2025
+1469309,DJS Dottin,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,0,2,0,0,0,0.0,2025
+1469309,DN Wyatt,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,4,4,1,0,1,100.0,2025
+1469309,EA Perry,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,0,4,0,0,1,0.0,2025
+1469309,G Wareham,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,20,21,1,0,0,95.24,2025
+1469309,H Deol,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,5,10,0,0,1,50.0,2025
+1469309,KJ Garth,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,14,15,1,0,1,93.33,2025
+1469309,KS Ahuja,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,33,28,1,2,1,117.86,2025
+1469309,P Litchfield,Gujarat Giants,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,30,21,3,1,0,142.86,2025
+1469309,RM Ghosh,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,9,10,0,1,1,90.0,2025
+1469309,Raghvi Bist,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,22,19,1,1,1,115.79,2025
+1469309,S Mandhana,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,10,20,1,0,1,50.0,2025
+1469309,S Rana,Royal Challengers Bengaluru,Gujarat Giants,"M Chinnaswamy Stadium, Bengaluru",2025-02-27,WPL,1,1,0,0,0,100.0,2025
+1469310,AB Kaur,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,17,10,2,0,0,170.0,2025
+1469310,AC Kerr,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,17,18,2,0,1,94.44,2025
+1469310,G Kamalini,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,1,5,0,0,1,20.0,2025
+1469310,H Kaur,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,22,16,2,1,1,137.5,2025
+1469310,HK Matthews,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,22,25,4,0,1,88.0,2025
+1469310,JI Rodrigues,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,15,10,2,0,0,150.0,2025
+1469310,JN Kalita,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,0,3,0,0,1,0.0,2025
+1469310,MM Lanning,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,60,49,9,0,0,122.45,2025
+1469310,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,18,22,2,0,1,81.82,2025
+1469310,S Gupta,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,3,4,0,0,1,75.0,2025
+1469310,S Sajana,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,5,8,0,0,1,62.5,2025
+1469310,Shafali Verma,Delhi Capitals,Mumbai Indians,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,43,28,4,3,1,153.57,2025
+1469310,YH Bhatia,Mumbai Indians,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-02-28,WPL,11,10,1,1,1,110.0,2025
+1469311,DN Wyatt,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,21,18,2,1,1,116.67,2025
+1469311,EA Perry,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,60,47,3,3,0,127.66,2025
+1469311,G Wareham,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,12,10,1,0,0,120.0,2025
+1469311,JL Jonassen,Delhi Capitals,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,61,38,9,1,0,160.53,2025
+1469311,KS Ahuja,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,2,3,0,0,1,66.67,2025
+1469311,MM Lanning,Delhi Capitals,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,2,12,0,0,1,16.67,2025
+1469311,RM Ghosh,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,5,3,1,0,1,166.67,2025
+1469311,Raghvi Bist,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,33,32,0,2,1,103.12,2025
+1469311,S Mandhana,Royal Challengers Bengaluru,Delhi Capitals,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,8,7,1,0,1,114.29,2025
+1469311,Shafali Verma,Delhi Capitals,Royal Challengers Bengaluru,"M Chinnaswamy Stadium, Bengaluru",2025-03-01,WPL,80,43,8,4,0,186.05,2025
+1469312,A Gardner,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,11,10,1,0,1,110.0,2025
+1469312,BL Mooney,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,96,59,17,0,0,162.71,2025
+1469312,BS Fulmali,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,2,3,0,0,0,66.67,2025
+1469312,CA Henry,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,28,14,3,2,1,200.0,2025
+1469312,D Hemalatha,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,2,3,0,0,1,66.67,2025
+1469312,D Vrinda,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,1,3,0,0,1,33.33,2025
+1469312,DB Sharma,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,6,9,0,0,1,66.67,2025
+1469312,DJS Dottin,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,17,8,2,1,1,212.5,2025
+1469312,G Sultana,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,0,1,0,0,1,0.0,2025
+1469312,G Voll,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,0,3,0,0,1,0.0,2025
+1469312,GM Harris,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,25,30,3,0,1,83.33,2025
+1469312,H Deol,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,45,32,6,0,1,140.62,2025
+1469312,K Goud,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,0,2,0,0,0,0.0,2025
+1469312,KP Navgire,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,0,1,0,0,1,0.0,2025
+1469312,P Litchfield,Gujarat Giants,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,8,6,1,0,1,133.33,2025
+1469312,S Ecclestone,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,14,10,0,1,1,140.0,2025
+1469312,S Sehrawat,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,5,8,0,0,1,62.5,2025
+1469312,U Chetry,UP Warriorz,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-03,WPL,17,22,1,0,1,77.27,2025
+1469313,AB Kaur,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,12,15,1,0,0,80.0,2025
+1469313,AC Kerr,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,10,13,2,0,1,76.92,2025
+1469313,CA Henry,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,6,2,0,1,1,300.0,2025
+1469313,D Vrinda,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,10,12,1,0,1,83.33,2025
+1469313,DB Sharma,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,27,25,2,0,1,108.0,2025
+1469313,G Voll,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,55,33,12,0,1,166.67,2025
+1469313,GM Harris,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,28,25,3,1,1,112.0,2025
+1469313,H Kaur,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,4,9,0,0,1,44.44,2025
+1469313,HK Matthews,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,68,46,8,2,1,147.83,2025
+1469313,K Goud,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,1,1,0,0,0,100.0,2025
+1469313,KP Navgire,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,0,2,0,0,1,0.0,2025
+1469313,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,37,23,7,0,1,160.87,2025
+1469313,S Ecclestone,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,16,11,3,0,1,145.45,2025
+1469313,S Sehrawat,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,0,2,0,0,1,0.0,2025
+1469313,U Chetry,UP Warriorz,Mumbai Indians,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,1,7,0,0,1,14.29,2025
+1469313,YH Bhatia,Mumbai Indians,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-06,WPL,10,6,2,0,0,166.67,2025
+1469314,A Gardner,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,22,13,1,2,1,169.23,2025
+1469314,A Sutherland,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,14,8,2,0,1,175.0,2025
+1469314,BL Mooney,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,44,35,6,0,1,125.71,2025
+1469314,D Hemalatha,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,1,7,0,0,1,14.29,2025
+1469314,DJS Dottin,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,24,10,2,2,1,240.0,2025
+1469314,H Deol,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,70,49,9,1,0,142.86,2025
+1469314,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,4,8,0,0,1,50.0,2025
+1469314,JL Jonassen,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,9,10,1,0,1,90.0,2025
+1469314,KS Gautam,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,9,3,0,1,0,300.0,2025
+1469314,M Kapp,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,7,9,1,0,0,77.78,2025
+1469314,MM Lanning,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,92,57,15,1,1,161.4,2025
+1469314,P Litchfield,Gujarat Giants,Delhi Capitals,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,0,1,0,0,1,0.0,2025
+1469314,SJ Bryce,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,6,1,0,1,0,600.0,2025
+1469314,Shafali Verma,Delhi Capitals,Gujarat Giants,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-07,WPL,40,27,3,3,1,148.15,2025
+1469315,CA Henry,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,19,15,4,0,1,126.67,2025
+1469315,CE Dean,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,9,5,0,1,1,180.0,2025
+1469315,DB Sharma,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,1,1,0,0,0,100.0,2025
+1469315,EA Perry,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,28,15,6,0,1,186.67,2025
+1469315,G Voll,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,99,56,17,1,1,176.79,2025
+1469315,G Wareham,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,17,15,2,0,1,113.33,2025
+1469315,GM Harris,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,39,22,7,1,0,177.27,2025
+1469315,KJ Garth,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,3,4,0,0,1,75.0,2025
+1469315,KP Navgire,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,46,16,2,5,1,287.5,2025
+1469315,KS Ahuja,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,8,11,0,0,1,72.73,2025
+1469315,RM Ghosh,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,69,33,6,5,1,209.09,2025
+1469315,Raghvi Bist,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,14,12,2,0,1,116.67,2025
+1469315,Renuka Singh,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,1,1,0,0,0,100.0,2025
+1469315,S Ecclestone,UP Warriorz,Royal Challengers Bengaluru,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,13,10,2,0,1,130.0,2025
+1469315,S Mandhana,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,4,4,1,0,1,100.0,2025
+1469315,S Meghana,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,27,12,2,2,1,225.0,2025
+1469315,S Rana,Royal Challengers Bengaluru,UP Warriorz,"Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",2025-03-08,WPL,26,6,2,3,1,433.33,2025
+1469316,A Gardner,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,0,2,0,0,1,0.0,2025
+1469316,AB Kaur,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,27,15,3,1,1,180.0,2025
+1469316,AC Kerr,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,5,9,1,0,1,55.56,2025
+1469316,BL Mooney,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,7,9,1,0,1,77.78,2025
+1469316,BS Fulmali,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,61,25,8,4,1,244.0,2025
+1469316,DJS Dottin,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,10,11,1,0,1,90.91,2025
+1469316,H Deol,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,24,17,5,0,1,141.18,2025
+1469316,H Kaur,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,54,33,9,0,1,163.64,2025
+1469316,HK Matthews,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,27,22,3,2,1,122.73,2025
+1469316,KS Gautam,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,10,14,2,0,1,71.43,2025
+1469316,Meghna Singh,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,1,1,0,0,0,100.0,2025
+1469316,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,38,31,6,0,1,122.58,2025
+1469316,P Litchfield,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,22,16,4,0,1,137.5,2025
+1469316,Priya Mishra,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,1,3,0,0,1,33.33,2025
+1469316,S Sajana,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,11,6,2,0,0,183.33,2025
+1469316,Simran Shaikh,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,18,16,1,1,1,112.5,2025
+1469316,TP Kanwar,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-10,WPL,10,6,2,0,0,166.67,2025
+1469316,YH Bhatia,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-10,WPL,13,4,1,1,1,325.0,2025
+1469317,AB Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,17,15,1,0,1,113.33,2025
+1469317,AC Kerr,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,9,10,1,0,1,90.0,2025
+1469317,EA Perry,Royal Challengers Bengaluru,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-11,WPL,49,38,5,1,0,128.95,2025
+1469317,G Kamalini,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,6,4,1,0,1,150.0,2025
+1469317,G Wareham,Royal Challengers Bengaluru,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-11,WPL,31,10,5,1,0,310.0,2025
+1469317,H Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,20,18,2,0,1,111.11,2025
+1469317,HK Matthews,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,19,16,4,0,1,118.75,2025
+1469317,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,69,35,9,2,1,197.14,2025
+1469317,PS Sisodia,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,0,1,0,0,0,0.0,2025
+1469317,RM Ghosh,Royal Challengers Bengaluru,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-11,WPL,36,22,5,1,1,163.64,2025
+1469317,S Gupta,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,10,4,2,0,1,250.0,2025
+1469317,S Ismail,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,4,1,1,0,0,400.0,2025
+1469317,S Mandhana,Royal Challengers Bengaluru,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-11,WPL,53,37,6,3,1,143.24,2025
+1469317,S Meghana,Royal Challengers Bengaluru,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-11,WPL,26,13,4,1,1,200.0,2025
+1469317,S Sajana,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,23,12,1,2,1,191.67,2025
+1469317,YH Bhatia,Mumbai Indians,Royal Challengers Bengaluru,"Brabourne Stadium, Mumbai",2025-03-11,WPL,4,4,1,0,1,100.0,2025
+1469318,A Gardner,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,8,4,0,1,1,200.0,2025
+1469318,BL Mooney,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,6,5,1,0,1,120.0,2025
+1469318,BS Fulmali,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,30,20,3,1,1,150.0,2025
+1469318,DR Gibson,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,34,24,5,1,1,141.67,2025
+1469318,H Deol,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,8,9,1,0,0,88.89,2025
+1469318,H Kaur,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-13,WPL,36,12,2,4,1,300.0,2025
+1469318,HK Matthews,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-13,WPL,77,50,10,3,1,154.0,2025
+1469318,KS Gautam,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,4,6,1,0,1,66.67,2025
+1469318,Meghna Singh,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,5,5,1,0,1,100.0,2025
+1469318,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-13,WPL,77,41,10,2,1,187.8,2025
+1469318,P Litchfield,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,31,20,4,1,1,155.0,2025
+1469318,Priya Mishra,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,0,3,0,0,0,0.0,2025
+1469318,S Sajana,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-13,WPL,1,3,0,0,0,33.33,2025
+1469318,Simran Shaikh,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,17,8,2,1,1,212.5,2025
+1469318,TP Kanwar,Gujarat Giants,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-13,WPL,16,12,2,0,1,133.33,2025
+1469318,YH Bhatia,Mumbai Indians,Gujarat Giants,"Brabourne Stadium, Mumbai",2025-03-13,WPL,15,14,3,0,1,107.14,2025
+1469319,A Sutherland,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,2,5,0,0,1,40.0,2025
+1469319,AB Kaur,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,14,7,2,0,0,200.0,2025
+1469319,AC Kerr,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,2,3,0,0,1,66.67,2025
+1469319,G Kamalini,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,10,7,0,1,1,142.86,2025
+1469319,H Kaur,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,66,44,9,2,1,150.0,2025
+1469319,HK Matthews,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,3,10,0,0,1,30.0,2025
+1469319,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,30,21,4,0,1,142.86,2025
+1469319,JL Jonassen,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,13,15,2,0,1,86.67,2025
+1469319,M Kapp,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,40,26,5,2,1,153.85,2025
+1469319,M Mani,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,4,2,1,0,1,200.0,2025
+1469319,MM Lanning,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,13,9,2,0,1,144.44,2025
+1469319,N Shree Charani,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,3,4,0,0,0,75.0,2025
+1469319,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,30,28,4,0,1,107.14,2025
+1469319,NS Prasad,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,25,23,1,1,0,108.7,2025
+1469319,S Gupta,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,8,5,1,0,0,160.0,2025
+1469319,S Pandey,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,0,1,0,0,1,0.0,2025
+1469319,S Sajana,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,0,2,0,0,1,0.0,2025
+1469319,SJ Bryce,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,5,5,0,0,0,100.0,2025
+1469319,Shafali Verma,Delhi Capitals,Mumbai Indians,"Brabourne Stadium, Mumbai",2025-03-15,WPL,4,9,0,0,1,44.44,2025
+1469319,YH Bhatia,Mumbai Indians,Delhi Capitals,"Brabourne Stadium, Mumbai",2025-03-15,WPL,8,14,1,0,1,57.14,2025
 1470186,A Prashar,Hungary,Malta,Marsa Sports Club,2025-02-03,T20I,7,11,0,0,0,63.64,2025
 1470186,Abbas Ghani,Hungary,Malta,Marsa Sports Club,2025-02-03,T20I,53,27,4,4,1,196.3,2025
 1470186,Amal Jacob,Hungary,Malta,Marsa Sports Club,2025-02-03,T20I,0,2,0,0,1,0.0,2025
@@ -173084,6 +174110,344 @@ match_id,striker,batting_team,bowling_team,venue,start_date,format,runs,balls_fa
 1513304,Sulaimon Runsewe,Nigeria,Rwanda,"Nigeria Cricket Federation Oval 1, Abuja",2025-12-14,T20I,34,26,2,2,1,130.77,2025
 1513304,VD Adewoye,Nigeria,Rwanda,"Nigeria Cricket Federation Oval 1, Abuja",2025-12-14,T20I,21,20,1,0,1,105.0,2025
 1513304,Z Bimenyimana,Rwanda,Nigeria,"Nigeria Cricket Federation Oval 1, Abuja",2025-12-14,T20I,0,1,0,0,1,0.0,2025
+1513682,A Reddy,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,20,25,2,0,1,80.0,2026
+1513682,AB Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,0,2,0,0,0,0.0,2026
+1513682,AC Kerr,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,4,15,0,0,1,26.67,2026
+1513682,D Hemalatha,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,7,12,1,0,1,58.33,2026
+1513682,G Kamalini,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,32,28,5,0,1,114.29,2026
+1513682,GM Harris,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,25,12,4,1,1,208.33,2026
+1513682,H Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,20,17,1,1,1,117.65,2026
+1513682,N de Klerk,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,63,44,7,2,0,143.18,2026
+1513682,NJ Carey,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,40,29,4,0,1,137.93,2026
+1513682,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,4,3,1,0,1,133.33,2026
+1513682,P Rawat,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,8,4,2,0,0,200.0,2026
+1513682,PN Khemnar,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,0,1,0,0,0,0.0,2026
+1513682,RM Ghosh,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,6,6,1,0,1,100.0,2026
+1513682,RP Yadav,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,1,2,0,0,1,50.0,2026
+1513682,S Mandhana,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,18,13,4,0,1,138.46,2026
+1513682,S Sajana,Mumbai Indians,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,45,25,7,1,1,180.0,2026
+1513682,SR Patil,Royal Challengers Bengaluru,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-09,WPL,1,2,0,0,1,50.0,2026
+1513683,A Gardner,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,65,41,6,3,1,158.54,2026
+1513683,AB Sharma,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,44,30,7,0,1,146.67,2026
+1513683,BL Mooney,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,13,12,1,0,1,108.33,2026
+1513683,BS Fulmali,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,14,7,0,2,0,200.0,2026
+1513683,DB Sharma,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,1,2,0,0,1,50.0,2026
+1513683,DJS Dottin,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,12,9,1,1,1,133.33,2026
+1513683,G Wareham,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,27,10,1,3,0,270.0,2026
+1513683,H Deol,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,0,2,0,0,1,0.0,2026
+1513683,KP Navgire,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,1,4,0,0,1,25.0,2026
+1513683,MM Lanning,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,30,27,5,0,1,111.11,2026
+1513683,P Litchfield,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,78,40,8,5,1,195.0,2026
+1513683,S Asha,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,27,10,3,2,0,270.0,2026
+1513683,S Ecclestone,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,11,8,2,0,1,137.5,2026
+1513683,S Pandey,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,1,1,0,0,0,100.0,2026
+1513683,S Sehrawat,UP Warriorz,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,25,17,1,3,1,147.06,2026
+1513683,SFM Devine,Gujarat Giants,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,38,20,5,2,1,190.0,2026
+1513684,AC Kerr,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,0,1,0,0,1,0.0,2026
+1513684,CA Henry,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,56,33,5,3,1,169.7,2026
+1513684,G Kamalini,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,16,19,3,0,1,84.21,2026
+1513684,H Kaur,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,74,42,8,3,0,176.19,2026
+1513684,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,1,3,0,0,1,33.33,2026
+1513684,L Lee,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,10,10,2,0,1,100.0,2026
+1513684,L Wolvaardt,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,9,5,2,0,1,180.0,2026
+1513684,M Kapp,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,10,6,1,1,1,166.67,2026
+1513684,M Mani,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,7,6,1,0,1,116.67,2026
+1513684,N Shree Charani,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,10,6,2,0,0,166.67,2026
+1513684,NJ Carey,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,21,12,4,0,1,175.0,2026
+1513684,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,70,46,13,0,1,152.17,2026
+1513684,NS Prasad,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,12,18,1,0,1,66.67,2026
+1513684,NSS Sharma,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,0,3,0,0,1,0.0,2026
+1513684,S Rana,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,11,11,0,1,1,100.0,2026
+1513684,S Sajana,Mumbai Indians,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,5,2,1,0,0,250.0,2026
+1513684,Shafali Verma,Delhi Capitals,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-10,WPL,8,13,1,0,1,61.54,2026
+1513685,A Gardner,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,49,26,4,3,1,188.46,2026
+1513685,AB Sharma,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,13,10,1,1,1,130.0,2026
+1513685,BL Mooney,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,19,16,2,0,1,118.75,2026
+1513685,BS Fulmali,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,3,6,0,0,1,50.0,2026
+1513685,CA Henry,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,7,6,0,1,1,116.67,2026
+1513685,G Wareham,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,3,3,0,0,1,100.0,2026
+1513685,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,15,9,2,0,1,166.67,2026
+1513685,KS Ahuja,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,4,5,0,0,1,80.0,2026
+1513685,KS Gautam,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,14,10,0,1,1,140.0,2026
+1513685,L Lee,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,86,54,12,3,1,159.26,2026
+1513685,L Wolvaardt,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,77,38,9,3,1,202.63,2026
+1513685,M Kapp,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,1,2,0,0,0,50.0,2026
+1513685,RS Gayakwad,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,0,1,0,0,1,0.0,2026
+1513685,Renuka Singh,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,0,1,0,0,1,0.0,2026
+1513685,S Rana,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,0,1,0,0,0,0.0,2026
+1513685,SFM Devine,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,95,42,7,8,1,226.19,2026
+1513685,Shafali Verma,Delhi Capitals,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,14,12,2,0,1,116.67,2026
+1513685,TP Kanwar,Gujarat Giants,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-11,WPL,1,1,0,0,0,100.0,2026
+1513686,DB Sharma,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,45,35,5,1,0,128.57,2026
+1513686,DJS Dottin,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,40,37,3,1,0,108.11,2026
+1513686,GM Harris,Royal Challengers Bengaluru,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,85,40,10,5,1,212.5,2026
+1513686,H Deol,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,11,14,2,0,1,78.57,2026
+1513686,KP Navgire,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,5,3,1,0,1,166.67,2026
+1513686,MM Lanning,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,14,21,1,0,1,66.67,2026
+1513686,P Litchfield,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,20,11,3,1,1,181.82,2026
+1513686,RM Ghosh,Royal Challengers Bengaluru,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,4,2,1,0,0,200.0,2026
+1513686,S Mandhana,Royal Challengers Bengaluru,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,47,32,9,0,0,146.88,2026
+1513686,S Sehrawat,UP Warriorz,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-12,WPL,0,1,0,0,1,0.0,2026
+1513687,A Gardner,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,20,11,4,0,1,181.82,2026
+1513687,A Soni,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,11,14,0,0,0,78.57,2026
+1513687,AB Kaur,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,40,26,7,0,1,153.85,2026
+1513687,BL Mooney,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,33,26,3,1,1,126.92,2026
+1513687,BS Fulmali,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,36,15,3,3,0,240.0,2026
+1513687,G Kamalini,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,13,12,2,0,1,108.33,2026
+1513687,G Wareham,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,43,33,4,1,1,130.3,2026
+1513687,H Kaur,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,71,43,7,2,0,165.12,2026
+1513687,HK Matthews,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,22,12,3,1,1,183.33,2026
+1513687,KS Ahuja,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,35,18,4,2,1,194.44,2026
+1513687,NJ Carey,Mumbai Indians,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,38,23,6,0,0,165.22,2026
+1513687,SFM Devine,Gujarat Giants,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-13,WPL,8,4,2,0,1,200.0,2026
+1513688,CL Tryon,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,1,3,0,0,1,33.33,2026
+1513688,DB Sharma,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,2,2,0,0,1,100.0,2026
+1513688,H Deol,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,47,36,7,0,0,130.56,2026
+1513688,JI Rodrigues,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,21,14,3,0,1,150.0,2026
+1513688,KP Navgire,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,0,3,0,0,1,0.0,2026
+1513688,L Lee,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,67,44,8,3,1,152.27,2026
+1513688,L Wolvaardt,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,25,24,2,1,0,104.17,2026
+1513688,M Kapp,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,5,6,1,0,0,83.33,2026
+1513688,MM Lanning,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,54,38,9,1,1,142.11,2026
+1513688,P Litchfield,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,27,20,5,0,1,135.0,2026
+1513688,S Asha,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,1,1,0,0,0,100.0,2026
+1513688,S Ecclestone,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,3,5,0,0,1,60.0,2026
+1513688,S Pandey,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,2,1,0,0,0,200.0,2026
+1513688,S Sehrawat,UP Warriorz,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,11,12,1,0,1,91.67,2026
+1513688,Shafali Verma,Delhi Capitals,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-14,WPL,36,32,6,0,1,112.5,2026
+1513689,AB Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,38,33,7,0,1,115.15,2026
+1513689,CL Tryon,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,27,11,4,1,0,245.45,2026
+1513689,G Kamalini,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,5,12,0,0,1,41.67,2026
+1513689,H Deol,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,64,39,12,0,0,164.1,2026
+1513689,H Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,16,11,1,1,1,145.45,2026
+1513689,KP Navgire,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,10,12,2,0,1,83.33,2026
+1513689,MM Lanning,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,25,26,3,1,1,96.15,2026
+1513689,NJ Carey,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,32,20,5,0,1,160.0,2026
+1513689,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,65,43,9,1,1,151.16,2026
+1513689,P Litchfield,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,25,22,2,1,1,113.64,2026
+1513689,S Sajana,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-15,WPL,1,2,0,0,0,50.0,2026
+1513690,A Gardner,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,3,6,0,0,1,50.0,2026
+1513690,A Reddy,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,2,2,0,0,0,100.0,2026
+1513690,BL Mooney,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,27,14,4,1,1,192.86,2026
+1513690,BS Fulmali,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,39,20,3,3,1,195.0,2026
+1513690,D Hemalatha,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,4,8,0,0,1,50.0,2026
+1513690,G Wareham,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,13,13,1,0,1,100.0,2026
+1513690,GJ Naik,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,9,6,2,0,1,150.0,2026
+1513690,GM Harris,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,17,8,4,0,1,212.5,2026
+1513690,KS Ahuja,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,16,14,2,0,1,114.29,2026
+1513690,KS Gautam,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,18,14,1,1,1,128.57,2026
+1513690,N de Klerk,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,26,12,2,2,1,216.67,2026
+1513690,RM Ghosh,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,44,28,4,2,1,157.14,2026
+1513690,RP Yadav,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,66,47,6,3,1,140.43,2026
+1513690,RS Gayakwad,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,0,2,0,0,0,0.0,2026
+1513690,Renuka Singh,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,2,3,0,0,1,66.67,2026
+1513690,S Mandhana,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,5,8,0,0,1,62.5,2026
+1513690,SFM Devine,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,8,12,1,0,1,66.67,2026
+1513690,SR Patil,Royal Challengers Bengaluru,Gujarat Giants,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,0,1,0,0,0,0.0,2026
+1513690,Shivani Singh,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,0,2,0,0,1,0.0,2026
+1513690,TP Kanwar,Gujarat Giants,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-16,WPL,21,13,3,1,1,161.54,2026
+1513691,AB Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,41,24,4,3,1,170.83,2026
+1513691,AC Kerr,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,49,28,6,1,0,175.0,2026
+1513691,CL Tryon,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,21,13,1,1,1,161.54,2026
+1513691,DB Sharma,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,0,2,0,0,1,0.0,2026
+1513691,G Kamalini,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,9,6,0,1,0,150.0,2026
+1513691,H Deol,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,25,16,2,1,1,156.25,2026
+1513691,H Kaur,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,18,21,2,1,1,85.71,2026
+1513691,HK Matthews,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,13,13,3,0,1,100.0,2026
+1513691,KP Navgire,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,0,1,0,0,1,0.0,2026
+1513691,MM Lanning,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,70,45,11,2,1,155.56,2026
+1513691,NJ Carey,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,6,10,0,0,1,60.0,2026
+1513691,NR Sciver-Brunt,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,15,12,3,0,1,125.0,2026
+1513691,P Litchfield,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,61,37,7,3,1,164.86,2026
+1513691,S Asha,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,1,1,0,0,0,100.0,2026
+1513691,S Ecclestone,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,1,4,0,0,1,25.0,2026
+1513691,S Sajana,Mumbai Indians,UP Warriorz,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,10,6,1,1,1,166.67,2026
+1513691,S Sehrawat,UP Warriorz,Mumbai Indians,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,0,1,0,0,1,0.0,2026
+1513692,G Voll,Royal Challengers Bengaluru,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,54,42,5,2,0,128.57,2026
+1513692,GM Harris,Royal Challengers Bengaluru,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,1,4,0,0,1,25.0,2026
+1513692,JI Rodrigues,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,4,3,1,0,1,133.33,2026
+1513692,L Lee,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,4,2,1,0,1,200.0,2026
+1513692,L Wolvaardt,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,0,2,0,0,1,0.0,2026
+1513692,LK Hamilton,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,36,19,3,3,1,189.47,2026
+1513692,M Kapp,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,0,1,0,0,1,0.0,2026
+1513692,M Mani,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,5,4,1,0,1,125.0,2026
+1513692,N Shree Charani,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,11,11,1,0,1,100.0,2026
+1513692,NS Prasad,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,12,14,2,0,1,85.71,2026
+1513692,NSS Sharma,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,1,1,0,0,0,100.0,2026
+1513692,RM Ghosh,Royal Challengers Bengaluru,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,7,4,1,0,0,175.0,2026
+1513692,S Mandhana,Royal Challengers Bengaluru,Delhi Capitals,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,96,61,13,3,1,157.38,2026
+1513692,S Rana,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,22,22,3,0,1,100.0,2026
+1513692,Shafali Verma,Delhi Capitals,Royal Challengers Bengaluru,"Dr DY Patil Sports Academy, Navi Mumbai",2026-01-17,WPL,62,41,5,4,1,151.22,2026
+1513693,A Gardner,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,54,43,5,1,1,125.58,2026
+1513693,AB Sharma,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,18,20,3,0,1,90.0,2026
+1513693,BL Mooney,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,3,4,0,0,1,75.0,2026
+1513693,BS Fulmali,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,14,15,1,0,1,93.33,2026
+1513693,G Voll,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,1,3,0,0,1,33.33,2026
+1513693,G Wareham,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,2,6,0,0,1,33.33,2026
+1513693,GJ Naik,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,73,55,7,1,1,132.73,2026
+1513693,GM Harris,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,1,3,0,0,1,33.33,2026
+1513693,KS Ahuja,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,0,3,0,0,1,0.0,2026
+1513693,KS Gautam,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,4,8,0,0,1,50.0,2026
+1513693,N de Klerk,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,4,6,0,0,0,66.67,2026
+1513693,RM Ghosh,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,27,20,0,3,1,135.0,2026
+1513693,RP Yadav,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,17,8,2,1,1,212.5,2026
+1513693,Renuka Singh,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,6,6,1,0,0,100.0,2026
+1513693,S Mandhana,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,26,23,4,0,1,113.04,2026
+1513693,SFM Devine,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,0,4,0,0,1,0.0,2026
+1513693,SR Patil,Royal Challengers Bengaluru,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-19,WPL,8,2,2,0,0,400.0,2026
+1513693,TP Kanwar,Gujarat Giants,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-19,WPL,11,11,1,0,0,100.0,2026
+1513694,AB Kaur,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,3,3,0,0,1,100.0,2026
+1513694,H Kaur,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,41,33,7,0,1,124.24,2026
+1513694,HK Matthews,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,12,15,2,0,1,80.0,2026
+1513694,JI Rodrigues,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-20,WPL,51,37,5,1,1,137.84,2026
+1513694,L Lee,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-20,WPL,46,28,7,1,0,164.29,2026
+1513694,L Wolvaardt,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-20,WPL,17,19,0,0,0,89.47,2026
+1513694,M Kapp,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-20,WPL,10,6,0,1,0,166.67,2026
+1513694,NJ Carey,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,12,11,1,0,1,109.09,2026
+1513694,NR Sciver-Brunt,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,65,45,6,2,0,144.44,2026
+1513694,S Gupta,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,10,5,0,1,0,200.0,2026
+1513694,S Sajana,Mumbai Indians,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-20,WPL,9,9,1,0,1,100.0,2026
+1513694,Shafali Verma,Delhi Capitals,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-20,WPL,29,24,6,0,1,120.83,2026
+1513695,A Gardner,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,5,12,0,0,1,41.67,2026
+1513695,AB Sharma,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,14,8,3,0,1,175.0,2026
+1513695,BL Mooney,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,38,34,5,0,1,111.76,2026
+1513695,BS Fulmali,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,5,5,0,0,0,100.0,2026
+1513695,CL Tryon,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,30,22,3,1,1,136.36,2026
+1513695,DB Sharma,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,4,7,0,0,1,57.14,2026
+1513695,DN Wyatt,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,14,8,3,0,1,175.0,2026
+1513695,H Deol,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,3,12,0,0,1,25.0,2026
+1513695,K Goud,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,1,2,0,0,1,50.0,2026
+1513695,KP Navgire,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,0,1,0,0,0,0.0,2026
+1513695,KS Ahuja,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,6,5,1,0,1,120.0,2026
+1513695,KS Gautam,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,11,6,0,1,1,183.33,2026
+1513695,MM Lanning,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,14,10,2,0,1,140.0,2026
+1513695,P Litchfield,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,32,27,5,0,1,118.52,2026
+1513695,Renuka Singh,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,1,1,0,0,0,100.0,2026
+1513695,S Asha,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,7,11,1,0,1,63.64,2026
+1513695,S Ecclestone,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,1,4,0,0,1,25.0,2026
+1513695,S Pandey,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,1,3,0,0,0,33.33,2026
+1513695,S Sehrawat,UP Warriorz,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-22,WPL,3,6,0,0,1,50.0,2026
+1513695,SFM Devine,Gujarat Giants,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-22,WPL,50,42,2,3,1,119.05,2026
+1513696,A Reddy,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,2,5,0,0,1,40.0,2026
+1513696,G Voll,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,11,14,0,0,1,78.57,2026
+1513696,GJ Naik,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,3,7,0,0,1,42.86,2026
+1513696,GM Harris,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,9,13,2,0,1,69.23,2026
+1513696,JI Rodrigues,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-24,WPL,24,26,4,0,1,92.31,2026
+1513696,L Lee,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-24,WPL,6,8,1,0,1,75.0,2026
+1513696,L Wolvaardt,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-24,WPL,42,38,4,1,0,110.53,2026
+1513696,LK Bell,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,1,1,0,0,0,100.0,2026
+1513696,M Kapp,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-24,WPL,19,15,3,0,0,126.67,2026
+1513696,N de Klerk,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,5,9,0,0,1,55.56,2026
+1513696,RM Ghosh,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,5,9,0,0,1,55.56,2026
+1513696,RP Yadav,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,18,17,0,1,1,105.88,2026
+1513696,S Mandhana,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,38,34,6,1,1,111.76,2026
+1513696,SG Satghare,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,3,5,0,0,1,60.0,2026
+1513696,SR Patil,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-24,WPL,7,7,1,0,1,100.0,2026
+1513696,Shafali Verma,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-24,WPL,16,8,4,0,1,200.0,2026
+1513697,A Reddy,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,14,18,1,0,1,77.78,2026
+1513697,AB Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,4,4,0,0,1,100.0,2026
+1513697,AC Kerr,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,1,1,0,0,0,100.0,2026
+1513697,G Voll,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,9,6,2,0,1,150.0,2026
+1513697,GJ Naik,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,1,2,0,0,1,50.0,2026
+1513697,GM Harris,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,15,9,3,0,1,166.67,2026
+1513697,H Kaur,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,20,12,2,1,1,166.67,2026
+1513697,HK Matthews,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,56,39,9,0,1,143.59,2026
+1513697,N de Klerk,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,28,20,3,1,1,140.0,2026
+1513697,NR Sciver-Brunt,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,100,57,16,1,0,175.44,2026
+1513697,RM Ghosh,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,90,50,10,6,1,180.0,2026
+1513697,RP Yadav,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,0,2,0,0,1,0.0,2026
+1513697,S Mandhana,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,6,7,1,0,1,85.71,2026
+1513697,S Sajana,Mumbai Indians,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-26,WPL,7,7,1,0,1,100.0,2026
+1513697,SG Satghare,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,0,1,0,0,1,0.0,2026
+1513697,SR Patil,Royal Challengers Bengaluru,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-26,WPL,12,5,3,0,0,240.0,2026
+1513698,A Gardner,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,2,4,0,0,1,50.0,2026
+1513698,AB Sharma,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,39,25,8,0,1,156.0,2026
+1513698,BL Mooney,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,58,46,7,0,1,126.09,2026
+1513698,BS Fulmali,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,3,5,0,0,1,60.0,2026
+1513698,CA Henry,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,9,11,1,0,1,81.82,2026
+1513698,G Wareham,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,11,7,0,1,1,157.14,2026
+1513698,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,16,16,1,0,1,100.0,2026
+1513698,KS Ahuja,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,4,5,0,0,1,80.0,2026
+1513698,KS Gautam,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,2,3,0,0,1,66.67,2026
+1513698,L Lee,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,11,20,2,0,1,55.0,2026
+1513698,L Wolvaardt,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,24,23,2,0,1,104.35,2026
+1513698,M Kapp,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,0,1,0,0,1,0.0,2026
+1513698,M Mani,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,1,1,0,0,0,100.0,2026
+1513698,NS Prasad,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,47,24,9,0,1,195.83,2026
+1513698,Renuka Singh,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,3,4,0,0,0,75.0,2026
+1513698,S Rana,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,29,15,3,2,1,193.33,2026
+1513698,SFM Devine,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,13,10,3,0,1,130.0,2026
+1513698,Shafali Verma,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-27,WPL,14,10,3,0,1,140.0,2026
+1513698,TP Kanwar,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-01-27,WPL,21,11,3,1,1,190.91,2026
+1513699,AE Jones,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,1,2,0,0,1,50.0,2026
+1513699,CL Tryon,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,6,7,1,0,1,85.71,2026
+1513699,DB Sharma,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,55,43,6,1,1,127.91,2026
+1513699,G Voll,Royal Challengers Bengaluru,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-29,WPL,16,15,2,0,1,106.67,2026
+1513699,GM Harris,Royal Challengers Bengaluru,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-29,WPL,75,37,13,2,1,202.7,2026
+1513699,H Deol,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,14,14,2,0,1,100.0,2026
+1513699,MM Lanning,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,41,30,6,1,1,136.67,2026
+1513699,S Asha,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,0,1,0,0,0,0.0,2026
+1513699,S Ecclestone,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,0,1,0,0,1,0.0,2026
+1513699,S Mandhana,Royal Challengers Bengaluru,UP Warriorz,"Kotambi Stadium, Vadodara",2026-01-29,WPL,54,27,8,2,0,200.0,2026
+1513699,S Pandey,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,0,1,0,0,0,0.0,2026
+1513699,S Sehrawat,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,7,10,0,0,1,70.0,2026
+1513699,Simran Shaikh,UP Warriorz,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-01-29,WPL,10,11,1,0,1,90.91,2026
+1513700,A Gardner,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,46,28,7,1,1,164.29,2026
+1513700,AB Kaur,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,13,12,2,0,1,108.33,2026
+1513700,AB Sharma,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,33,31,4,1,1,106.45,2026
+1513700,AC Kerr,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,20,16,2,0,1,125.0,2026
+1513700,BL Mooney,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,5,8,0,0,1,62.5,2026
+1513700,BS Fulmali,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,5,6,0,0,0,83.33,2026
+1513700,G Wareham,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,44,26,4,2,0,169.23,2026
+1513700,H Kaur,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,82,48,8,4,0,170.83,2026
+1513700,HK Matthews,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,6,8,1,0,1,75.0,2026
+1513700,NR Sciver-Brunt,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,2,6,0,0,1,33.33,2026
+1513700,PN Khemnar,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,2,3,0,0,1,66.67,2026
+1513700,Rahila Firdous,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,1,1,0,0,0,100.0,2026
+1513700,S Gupta,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,0,1,0,0,1,0.0,2026
+1513700,S Sajana,Mumbai Indians,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-01-30,WPL,26,25,4,1,1,104.0,2026
+1513700,SFM Devine,Gujarat Giants,Mumbai Indians,"Kotambi Stadium, Vadodara",2026-01-30,WPL,25,21,3,0,1,119.05,2026
+1513701,CA Henry,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,1,4,0,0,1,25.0,2026
+1513701,CR Knott,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,12,12,2,0,1,100.0,2026
+1513701,DB Sharma,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,24,19,4,1,1,126.32,2026
+1513701,DJS Dottin,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,5,9,1,0,1,55.56,2026
+1513701,H Deol,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,3,11,0,0,1,27.27,2026
+1513701,JI Rodrigues,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,34,18,5,0,0,188.89,2026
+1513701,L Lee,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,10,10,2,0,1,100.0,2026
+1513701,L Wolvaardt,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,47,36,7,0,1,130.56,2026
+1513701,M Kapp,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,0,5,0,0,1,0.0,2026
+1513701,MM Lanning,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,0,1,0,0,1,0.0,2026
+1513701,NS Prasad,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,4,6,0,0,0,66.67,2026
+1513701,S Asha,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,13,13,0,1,1,100.0,2026
+1513701,S Ecclestone,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,10,20,0,0,0,50.0,2026
+1513701,S Pandey,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,23,13,3,0,0,176.92,2026
+1513701,SR Giri,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,9,8,1,0,1,112.5,2026
+1513701,Shafali Verma,Delhi Capitals,UP Warriorz,"Kotambi Stadium, Vadodara",2026-02-01,WPL,29,33,2,0,1,87.88,2026
+1513701,Simran Shaikh,UP Warriorz,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-01,WPL,22,14,3,0,1,157.14,2026
+1513702,A Gardner,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,0,1,0,0,1,0.0,2026
+1513702,AB Sharma,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,16,13,2,0,1,123.08,2026
+1513702,BL Mooney,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,62,51,6,0,1,121.57,2026
+1513702,BS Fulmali,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,0,2,0,0,1,0.0,2026
+1513702,G Wareham,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,35,25,3,1,1,140.0,2026
+1513702,JI Rodrigues,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-02-03,WPL,41,23,4,1,1,178.26,2026
+1513702,KS Ahuja,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,6,9,0,0,1,66.67,2026
+1513702,KS Gautam,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,18,10,3,0,0,180.0,2026
+1513702,L Lee,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-02-03,WPL,43,24,8,1,1,179.17,2026
+1513702,L Wolvaardt,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-02-03,WPL,32,24,2,1,0,133.33,2026
+1513702,M Kapp,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-02-03,WPL,4,3,1,0,0,133.33,2026
+1513702,SFM Devine,Gujarat Giants,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-03,WPL,6,9,1,0,1,66.67,2026
+1513702,Shafali Verma,Delhi Capitals,Gujarat Giants,"Kotambi Stadium, Vadodara",2026-02-03,WPL,31,21,7,0,1,147.62,2026
+1513703,CA Henry,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-02-05,WPL,35,15,4,2,0,233.33,2026
+1513703,G Voll,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,79,54,14,0,1,146.3,2026
+1513703,GM Harris,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,9,7,2,0,1,128.57,2026
+1513703,JI Rodrigues,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-02-05,WPL,57,37,8,0,1,154.05,2026
+1513703,L Lee,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-02-05,WPL,37,30,3,3,1,123.33,2026
+1513703,L Wolvaardt,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-02-05,WPL,44,25,3,2,1,176.0,2026
+1513703,N de Klerk,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,7,5,1,0,0,140.0,2026
+1513703,RM Ghosh,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,6,6,1,0,1,100.0,2026
+1513703,RP Yadav,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,12,5,2,0,0,240.0,2026
+1513703,S Mandhana,Royal Challengers Bengaluru,Delhi Capitals,"Kotambi Stadium, Vadodara",2026-02-05,WPL,87,41,12,3,1,212.2,2026
+1513703,Shafali Verma,Delhi Capitals,Royal Challengers Bengaluru,"Kotambi Stadium, Vadodara",2026-02-05,WPL,20,13,3,0,1,153.85,2026
 1513735,AC Jayangani,Sri Lanka,India,"Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam",2025-12-21,T20I,15,12,3,0,1,125.0,2025
 1513735,EMKNH Senavirathna,Sri Lanka,India,"Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam",2025-12-21,T20I,9,6,1,0,0,150.0,2025
 1513735,GWHM Perera,Sri Lanka,India,"Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam",2025-12-21,T20I,20,23,2,0,1,86.96,2025
