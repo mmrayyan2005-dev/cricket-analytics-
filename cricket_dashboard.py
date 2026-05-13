@@ -334,6 +334,50 @@ def bar_v(df, x, y, title, color, h=360):
     fig.update_yaxes(showgrid=True,gridcolor=GRID)
     return fig
 
+def bowl_wickets_year(df, title, color, h=380):
+    """Wickets-per-year bars + matches-played dotted line on secondary axis."""
+    if df.empty: return go.Figure()
+    df = df.copy().sort_values("year")
+    has_m = "matches" in df.columns
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df["year"], y=df["wickets"], name="Wickets",
+        text=df["wickets"], textposition="outside",
+        textfont=dict(size=12, color=TEXT),
+        marker=dict(color=color, line=dict(width=0)),
+        customdata=df["matches"].values if has_m else None,
+        hovertemplate=(
+            "<b>%{x}</b><br>Wickets: <b>%{y}</b><br>Matches: <b>%{customdata}</b><extra></extra>"
+            if has_m else
+            "<b>%{x}</b><br>Wickets: <b>%{y}</b><extra></extra>"
+        ),
+        yaxis="y1"
+    ))
+    if has_m:
+        fig.add_trace(go.Scatter(
+            x=df["year"], y=df["matches"], name="Matches played",
+            mode="lines+markers+text",
+            text=df["matches"], textposition="top center",
+            textfont=dict(size=11, color="#fbbf24"),
+            line=dict(color="#fbbf24", width=2, dash="dot"),
+            marker=dict(size=8, color="#fbbf24", line=dict(width=2, color=BG)),
+            hovertemplate="<b>%{x}</b><br>Matches: <b>%{y}</b><extra></extra>",
+            yaxis="y2"
+        ))
+    fig.update_layout(
+        **BASE, height=h, margin=M_BARV, title=title,
+        legend=dict(orientation="h", x=0, y=1.10, font=dict(size=11)),
+        yaxis=dict(title="Wickets", showgrid=True, gridcolor=GRID, rangemode="tozero"),
+        **(dict(yaxis2=dict(
+            title="Matches", overlaying="y", side="right", showgrid=False,
+            rangemode="tozero", tickfont=dict(color="#fbbf24"),
+            title_font=dict(color="#fbbf24")
+        )) if has_m else {})
+    )
+    fig.update_xaxes(tickmode="linear", tickangle=-40, showgrid=False,
+                     tickfont=dict(size=12), automargin=True)
+    return fig
+
 def line(df, x, y, title, color, h=280):
     if df.empty: return go.Figure()
     fig = px.line(df,x=x,y=y,markers=True,title=title)
@@ -542,12 +586,9 @@ def get_wiki(cricsheet_name, search_name):
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
-        # Strip all HTML tags; run entity decode then strip again (handles &lt;div&gt; etc.)
+        # Strip any HTML tags that may appear in the extract
         bio=re.sub(r"<[^>]+>","",bio)
-        bio=(bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">")
-               .replace("&quot;",'"').replace("&#39;","'").replace("&nbsp;"," "))
-        bio=re.sub(r"<[^>]+>","",bio)   # second pass after entity decode
-        bio=bio.replace("<","").replace(">","")  # nuke any stray angle brackets
+        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -621,16 +662,6 @@ def get_wiki(cricsheet_name, search_name):
                 "nation":nation[:40] if nation else ""}
     except: return None
 
-def _safe_text(v):
-    """Strip ALL HTML tags and decode common entities — for safe injection into HTML attributes/text."""
-    if not v: return ""
-    v = re.sub(r"<[^>]+>", "", str(v))
-    v = (v.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">")
-          .replace("&quot;",'"').replace("&#39;","'").replace("&nbsp;"," "))
-    # After entity decode, strip any resulting angle brackets so no stray tags survive
-    v = v.replace("<","").replace(">","")
-    return v.strip()
-
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     if not card:
@@ -638,22 +669,18 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
         return
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
-    debut=_safe_text(card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut",""))
+    debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
     max_sents=2 if compact else 5
-    raw_bio=_safe_text(card.get("bio",""))
-    short_bio=". ".join(raw_bio.split(". ")[:max_sents])+"." if raw_bio else ""
+    short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+    short_bio=re.sub(r"<[^>]+>","",short_bio)
 
     # ── fully inline-styled pill (no CSS classes — Streamlit strips them) ──
     PILL="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 3px 2px 0"
     pills=""
-    born=_safe_text(card.get("born",""))
-    nation=_safe_text(card.get("nation",""))
-    role=_safe_text(card.get("role",""))
-    title=_safe_text(card.get("title","")) or _safe_text(cricsheet_name)
-    if born:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {born}</span>'
-    if nation: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {nation}</span>'
-    if role:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {role[:30]}</span>'
-    if debut:  pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
+    if card["born"]:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {card["born"]}</span>'
+    if card["nation"]: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {card["nation"]}</span>'
+    if card["role"]:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {card["role"][:30]}</span>'
+    if debut:          pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
 
     img_html=""
     if card.get("img"):
@@ -663,28 +690,25 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
                   f'flex-shrink:0;margin-right:14px" />')
 
     name_size="16px" if compact else "18px"
-    clamp=2 if compact else 5
     bio_html=(f'<div style="color:#8899bb;font-size:11px;line-height:1.6;margin-top:5px;'
               f'overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;'
-              f'-webkit-line-clamp:{clamp}">{short_bio}</div>') if short_bio else ""
+              f'-webkit-line-clamp:{2 if compact else 5}">{short_bio}</div>') if short_bio else ""
 
-    # Use a wrapping <div> with an HTML comment to force Streamlit's markdown
-    # renderer to treat the entire block as raw HTML rather than markdown text.
-    html_block = (
+    st.markdown(
         f'<div style="display:flex;align-items:flex-start;gap:0;'
         f'background:#131929;border:1px solid #1e2840;border-radius:14px;'
         f'padding:{"14px 16px" if compact else "18px 20px"};margin-bottom:14px;'
         f'box-shadow:0 4px 24px rgba(0,0,0,.4)">'
         f'{img_html}'
-        f'<div style="flex:1;min-width:0;">'
+        f'<div style="flex:1;min-width:0">'
         f'<div style="font-family:\'Syne\',sans-serif;color:#fff;font-weight:800;'
         f'font-size:{name_size};margin-bottom:6px;white-space:nowrap;overflow:hidden;'
-        f'text-overflow:ellipsis;letter-spacing:-0.2px">{title}</div>'
+        f'text-overflow:ellipsis;letter-spacing:-0.2px">{card["title"]}</div>'
         f'<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">{pills}</div>'
         f'{bio_html}'
-        f'</div></div>'
+        f'</div></div>',
+        unsafe_allow_html=True
     )
-    st.markdown(html_block, unsafe_allow_html=True)
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
@@ -936,7 +960,7 @@ elif section=="🔍 Player Search":
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
                     if len(by2)>1:
                         st.markdown("**🎳 Bowling Trends**")
-                        ch(bar_v(by2,"year","wickets","Wickets per Year",clr))
+                        ch(bowl_wickets_year(by2,"Wickets per Year (bars) · Matches played (line)",clr))
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
@@ -1211,7 +1235,7 @@ elif section=="📈 Over Years":
                 with c2: ch(line(by,"year","strike_rate","Strike Rate","#fdcb6e"),280)
                 st.dataframe(by[["year","matches","runs","average","strike_rate","fours","sixes"]].reset_index(drop=True))
             else:
-                ch(bar_v(by,"year","wickets","Wickets per Year",clr))
+                ch(bowl_wickets_year(by,"Wickets per Year (bars) · Matches played (line)",clr))
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
@@ -1425,7 +1449,7 @@ elif section=="🔥 Form & Ratings":
                         if badges2.strip():
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges2}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#d63031")
-                    ch(bar_v(pyr,"year","wickets",f"{pname} — Wickets per Year ({fmt})","#d63031"))
+                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt}) · Matches played (line)","#d63031"))
                     c1,c2=st.columns(2)
                     fig_econ=px.line(pyr,x="year",y="economy",markers=True,title=f"{pname} — Economy by Year")
                     fig_econ.update_traces(line=dict(color="#d63031",width=3),
