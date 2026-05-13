@@ -334,8 +334,7 @@ def bar_v(df, x, y, title, color, h=360):
     fig.update_yaxes(showgrid=True,gridcolor=GRID)
     return fig
 
-def bowl_wickets_year(df, title, color, h=380):
-    """Wickets bars + matches-played dotted line on secondary axis."""
+def bowl_wickets_year(df, title, color, h=400):
     if df.empty: return go.Figure()
     df = df.copy().sort_values("year")
     has_m = "matches" in df.columns
@@ -343,7 +342,7 @@ def bowl_wickets_year(df, title, color, h=380):
     fig.add_trace(go.Bar(
         x=df["year"], y=df["wickets"], name="Wickets",
         text=df["wickets"], textposition="outside",
-        textfont=dict(size=12, color=TEXT),
+        textfont=dict(size=12, color="#ffffff"),
         marker=dict(color=color, line=dict(width=0)),
         customdata=df["matches"].values if has_m else None,
         hovertemplate=(
@@ -360,22 +359,27 @@ def bowl_wickets_year(df, title, color, h=380):
             text=df["matches"], textposition="top center",
             textfont=dict(size=11, color="#fbbf24"),
             line=dict(color="#fbbf24", width=2, dash="dot"),
-            marker=dict(size=8, color="#fbbf24", line=dict(width=2, color=BG)),
+            marker=dict(size=9, color="#fbbf24", line=dict(width=2, color="#0d1117")),
             hovertemplate="<b>%{x}</b><br>Matches: <b>%{y}</b><extra></extra>",
             yaxis="y2"
         ))
+    layout_extra = dict(yaxis2=dict(
+        title="Matches", overlaying="y", side="right", showgrid=False,
+        rangemode="tozero", tickfont=dict(color="#fbbf24"),
+        title_font=dict(color="#fbbf24")
+    )) if has_m else {}
     fig.update_layout(
-        **BASE, height=h, margin=M_BARV, title=title,
-        legend=dict(orientation="h", x=0, y=1.10, font=dict(size=11)),
-        yaxis=dict(title="Wickets", showgrid=True, gridcolor=GRID, rangemode="tozero"),
-        **(dict(yaxis2=dict(
-            title="Matches", overlaying="y", side="right", showgrid=False,
-            rangemode="tozero", tickfont=dict(color="#fbbf24"),
-            title_font=dict(color="#fbbf24")
-        )) if has_m else {})
+        title=title,
+        height=h,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#ffffff"),
+        legend=dict(orientation="h", x=0, y=1.12, font=dict(size=11)),
+        margin=dict(t=60,b=60,l=40,r=60),
+        yaxis=dict(title="Wickets", showgrid=True, gridcolor="rgba(255,255,255,0.08)", rangemode="tozero"),
+        **layout_extra
     )
-    fig.update_xaxes(tickmode="linear", tickangle=-40, showgrid=False,
-                     tickfont=dict(size=12), automargin=True)
+    fig.update_xaxes(tickmode="linear", tickangle=-40, showgrid=False, tickfont=dict(size=12), automargin=True)
     return fig
 
 def line(df, x, y, title, color, h=280):
@@ -960,7 +964,7 @@ elif section=="🔍 Player Search":
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
                     if len(by2)>1:
                         st.markdown("**🎳 Bowling Trends**")
-                        ch(bowl_wickets_year(by2,"Wickets per Year  ·  Matches played (🟡 line)",clr))
+                        ch(bowl_wickets_year(by2,"Wickets per Year  |  Matches played (yellow line)",clr))
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
@@ -1235,7 +1239,7 @@ elif section=="📈 Over Years":
                 with c2: ch(line(by,"year","strike_rate","Strike Rate","#fdcb6e"),280)
                 st.dataframe(by[["year","matches","runs","average","strike_rate","fours","sixes"]].reset_index(drop=True))
             else:
-                ch(bowl_wickets_year(by,"Wickets per Year  ·  Matches played (🟡 line)",clr))
+                ch(bowl_wickets_year(by,"Wickets per Year  |  Matches played (yellow line)",clr))
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
@@ -1449,7 +1453,7 @@ elif section=="🔥 Form & Ratings":
                         if badges2.strip():
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges2}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#d63031")
-                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt})  ·  Matches played (🟡 line)","#d63031"))
+                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt})  |  Matches played (yellow line)","#d63031"))
                     c1,c2=st.columns(2)
                     fig_econ=px.line(pyr,x="year",y="economy",markers=True,title=f"{pname} — Economy by Year")
                     fig_econ.update_traces(line=dict(color="#d63031",width=3),
