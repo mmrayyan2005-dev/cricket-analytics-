@@ -542,9 +542,12 @@ def get_wiki(cricsheet_name, search_name):
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
-        # Strip any HTML tags that may appear in the extract
+        # Strip all HTML tags; run entity decode then strip again (handles &lt;div&gt; etc.)
         bio=re.sub(r"<[^>]+>","",bio)
-        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
+        bio=(bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">")
+               .replace("&quot;",'"').replace("&#39;","'").replace("&nbsp;"," "))
+        bio=re.sub(r"<[^>]+>","",bio)   # second pass after entity decode
+        bio=bio.replace("<","").replace(">","")  # nuke any stray angle brackets
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -618,6 +621,16 @@ def get_wiki(cricsheet_name, search_name):
                 "nation":nation[:40] if nation else ""}
     except: return None
 
+def _safe_text(v):
+    """Strip ALL HTML tags and decode common entities — for safe injection into HTML attributes/text."""
+    if not v: return ""
+    v = re.sub(r"<[^>]+>", "", str(v))
+    v = (v.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">")
+          .replace("&quot;",'"').replace("&#39;","'").replace("&nbsp;"," "))
+    # After entity decode, strip any resulting angle brackets so no stray tags survive
+    v = v.replace("<","").replace(">","")
+    return v.strip()
+
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     if not card:
@@ -625,18 +638,22 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
         return
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
-    debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
+    debut=_safe_text(card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut",""))
     max_sents=2 if compact else 5
-    short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    short_bio=re.sub(r"<[^>]+>","",short_bio)
+    raw_bio=_safe_text(card.get("bio",""))
+    short_bio=". ".join(raw_bio.split(". ")[:max_sents])+"." if raw_bio else ""
 
     # ── fully inline-styled pill (no CSS classes — Streamlit strips them) ──
     PILL="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 3px 2px 0"
     pills=""
-    if card["born"]:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {card["born"]}</span>'
-    if card["nation"]: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {card["nation"]}</span>'
-    if card["role"]:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {card["role"][:30]}</span>'
-    if debut:          pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
+    born=_safe_text(card.get("born",""))
+    nation=_safe_text(card.get("nation",""))
+    role=_safe_text(card.get("role",""))
+    title=_safe_text(card.get("title","")) or _safe_text(cricsheet_name)
+    if born:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {born}</span>'
+    if nation: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {nation}</span>'
+    if role:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {role[:30]}</span>'
+    if debut:  pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
 
     img_html=""
     if card.get("img"):
@@ -646,25 +663,28 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
                   f'flex-shrink:0;margin-right:14px" />')
 
     name_size="16px" if compact else "18px"
+    clamp=2 if compact else 5
     bio_html=(f'<div style="color:#8899bb;font-size:11px;line-height:1.6;margin-top:5px;'
               f'overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;'
-              f'-webkit-line-clamp:{2 if compact else 5}">{short_bio}</div>') if short_bio else ""
+              f'-webkit-line-clamp:{clamp}">{short_bio}</div>') if short_bio else ""
 
-    st.markdown(
+    # Use a wrapping <div> with an HTML comment to force Streamlit's markdown
+    # renderer to treat the entire block as raw HTML rather than markdown text.
+    html_block = (
         f'<div style="display:flex;align-items:flex-start;gap:0;'
         f'background:#131929;border:1px solid #1e2840;border-radius:14px;'
         f'padding:{"14px 16px" if compact else "18px 20px"};margin-bottom:14px;'
         f'box-shadow:0 4px 24px rgba(0,0,0,.4)">'
         f'{img_html}'
-        f'<div style="flex:1;min-width:0">'
+        f'<div style="flex:1;min-width:0;">'
         f'<div style="font-family:\'Syne\',sans-serif;color:#fff;font-weight:800;'
         f'font-size:{name_size};margin-bottom:6px;white-space:nowrap;overflow:hidden;'
-        f'text-overflow:ellipsis;letter-spacing:-0.2px">{card["title"]}</div>'
+        f'text-overflow:ellipsis;letter-spacing:-0.2px">{title}</div>'
         f'<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">{pills}</div>'
         f'{bio_html}'
-        f'</div></div>',
-        unsafe_allow_html=True
+        f'</div></div>'
     )
+    st.markdown(html_block, unsafe_allow_html=True)
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
