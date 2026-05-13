@@ -334,54 +334,6 @@ def bar_v(df, x, y, title, color, h=360):
     fig.update_yaxes(showgrid=True,gridcolor=GRID)
     return fig
 
-def bowl_wickets_year(df, title, color, h=400):
-    if df.empty: return go.Figure()
-    df = df.copy().sort_values("year")
-    has_m = "matches" in df.columns
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=df["year"], y=df["wickets"], name="Wickets",
-        text=df["wickets"], textposition="outside",
-        textfont=dict(size=12, color="#ffffff"),
-        marker=dict(color=color, line=dict(width=0)),
-        customdata=df["matches"].values if has_m else None,
-        hovertemplate=(
-            "<b>%{x}</b><br>Wickets: <b>%{y}</b><br>Matches: <b>%{customdata}</b><extra></extra>"
-            if has_m else
-            "<b>%{x}</b><br>Wickets: <b>%{y}</b><extra></extra>"
-        ),
-        yaxis="y1"
-    ))
-    if has_m:
-        fig.add_trace(go.Scatter(
-            x=df["year"], y=df["matches"], name="Matches played",
-            mode="lines+markers+text",
-            text=df["matches"], textposition="top center",
-            textfont=dict(size=11, color="#fbbf24"),
-            line=dict(color="#fbbf24", width=2, dash="dot"),
-            marker=dict(size=9, color="#fbbf24", line=dict(width=2, color="#0d1117")),
-            hovertemplate="<b>%{x}</b><br>Matches: <b>%{y}</b><extra></extra>",
-            yaxis="y2"
-        ))
-    layout_extra = dict(yaxis2=dict(
-        title="Matches", overlaying="y", side="right", showgrid=False,
-        rangemode="tozero", tickfont=dict(color="#fbbf24"),
-        title_font=dict(color="#fbbf24")
-    )) if has_m else {}
-    fig.update_layout(
-        title=title,
-        height=h,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#ffffff"),
-        legend=dict(orientation="h", x=0, y=1.12, font=dict(size=11)),
-        margin=dict(t=60,b=60,l=40,r=60),
-        yaxis=dict(title="Wickets", showgrid=True, gridcolor="rgba(255,255,255,0.08)", rangemode="tozero"),
-        **layout_extra
-    )
-    fig.update_xaxes(tickmode="linear", tickangle=-40, showgrid=False, tickfont=dict(size=12), automargin=True)
-    return fig
-
 def line(df, x, y, title, color, h=280):
     if df.empty: return go.Figure()
     fig = px.line(df,x=x,y=y,markers=True,title=title)
@@ -589,14 +541,10 @@ def get_wiki(cricsheet_name, search_name):
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
-        # Prefer extract_html if available, but always strip tags; fall back to extract
-        raw_bio=data.get("extract_html","") or data.get("extract","")
-        # Aggressively strip ALL HTML tags and entities
-        raw_bio=re.sub(r"<[^>]+>","",raw_bio)
-        raw_bio=re.sub(r"&[a-zA-Z]+;|&#\d+;","",raw_bio)
-        raw_bio=raw_bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
-        raw_bio=re.sub(r"\s+"," ",raw_bio).strip()
-        bio=raw_bio
+        bio=data.get("extract","")
+        # Strip any HTML tags that may appear in the extract
+        bio=re.sub(r"<[^>]+>","",bio)
+        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -678,50 +626,29 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    max_sents=2 if compact else 5
+    max_sents=2 if compact else 4
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    # Strip any residual HTML tags, entities, or template markup
     short_bio=re.sub(r"<[^>]+>","",short_bio)
-    short_bio=re.sub(r"\{\{[^}]+\}\}","",short_bio)
-    short_bio=re.sub(r"\[\[([^\]|]+\|)?([^\]]+)\]\]",r"\2",short_bio)
-    short_bio=re.sub(r"&[a-zA-Z]+;|&#\d+;","",short_bio)
-    short_bio=re.sub(r"\s+"," ",short_bio).strip()
 
-    # ── fully inline-styled pill (no CSS classes — Streamlit strips them) ──
-    PILL="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 3px 2px 0"
-    pills=""
-    if card["born"]:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {card["born"]}</span>'
-    if card["nation"]: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {card["nation"]}</span>'
-    if card["role"]:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {card["role"][:30]}</span>'
-    if debut:          pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
-
-    img_html=""
+    # Use native Streamlit columns for layout
     if card.get("img"):
-        sz=72 if compact else 96
-        img_html=(f'<img src="{card["img"]}" width="{sz}" height="{sz}" '
-                  f'style="border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.12);'
-                  f'flex-shrink:0;margin-right:14px" />')
+        col_img, col_info = st.columns([1, 4])
+        with col_img:
+            st.image(card["img"], width=72 if compact else 96)
+    else:
+        col_info = st.container()
 
-    name_size="16px" if compact else "18px"
-    bio_html=(f'<div style="color:#8899bb;font-size:11px;line-height:1.6;margin-top:5px;'
-              f'overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;'
-              f'-webkit-line-clamp:{2 if compact else 5}">{short_bio}</div>') if short_bio else ""
-
-    st.markdown(
-        f'<div style="display:flex;align-items:flex-start;gap:0;'
-        f'background:#131929;border:1px solid #1e2840;border-radius:14px;'
-        f'padding:{"14px 16px" if compact else "18px 20px"};margin-bottom:14px;'
-        f'box-shadow:0 4px 24px rgba(0,0,0,.4)">'
-        f'{img_html}'
-        f'<div style="flex:1;min-width:0">'
-        f'<div style="font-family:\'Syne\',sans-serif;color:#fff;font-weight:800;'
-        f'font-size:{name_size};margin-bottom:6px;white-space:nowrap;overflow:hidden;'
-        f'text-overflow:ellipsis;letter-spacing:-0.2px">{card["title"]}</div>'
-        f'<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">{pills}</div>'
-        f'{bio_html}'
-        f'</div></div>',
-        unsafe_allow_html=True
-    )
+    with col_info:
+        st.markdown(f"### {card['title']}" if not compact else f"**{card['title']}**")
+        pills_text = ""
+        if card["born"]:    pills_text += f"🎂 {card['born']}  "
+        if card["nation"]:  pills_text += f"🌍 {card['nation']}  "
+        if card["role"]:    pills_text += f"🏏 {card['role'][:30]}  "
+        if debut:           pills_text += f"🎯 {fmt} debut: {debut}"
+        if pills_text:
+            st.caption(pills_text)
+        if short_bio:
+            st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
@@ -909,7 +836,6 @@ elif section=="🔍 Player Search":
         bat=find_rows(bat_fmt[bat_fmt["format"]==fmt],"striker",sname)
         bowl=find_rows(bowl_fmt[bowl_fmt["format"]==fmt],"bowler",sname)
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
-        card_data=get_wiki(display_name,name)
         show_player_card(display_name,name,fmt)
 
         lu=get_last_updated()
@@ -963,12 +889,6 @@ elif section=="🔍 Player Search":
                 if len(bat)>0:
                     p=bat.sort_values("runs",ascending=False).iloc[0]; en=p["striker"]
                     by=bat_yr[(bat_yr["format"]==fmt)&(bat_yr["striker"]==en)].sort_values("year") if not bat_yr.empty else pd.DataFrame()
-                    # Filter out years where the player would have been unrealistically young
-                    if not by.empty and card_data and card_data.get("born"):
-                        try:
-                            birth_year=int(re.search(r"\d{4}",card_data["born"]).group())
-                            by=by[by["year"]>=birth_year+14]
-                        except: pass
                     if len(by)>1:
                         st.markdown("**🏏 Batting Trends**")
                         ch(bar_v(by,"year","runs","Runs per Year",clr))
@@ -978,15 +898,9 @@ elif section=="🔍 Player Search":
                 if len(bowl)>0:
                     p2=bowl.sort_values("wickets",ascending=False).iloc[0]; en2=p2["bowler"]
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
-                    # Filter out years where the player would have been unrealistically young
-                    if not by2.empty and card_data and card_data.get("born"):
-                        try:
-                            birth_year=int(re.search(r"\d{4}",card_data["born"]).group())
-                            by2=by2[by2["year"]>=birth_year+14]
-                        except: pass
                     if len(by2)>1:
                         st.markdown("**🎳 Bowling Trends**")
-                        ch(bowl_wickets_year(by2,"Wickets per Year  |  Matches played (yellow line)",clr))
+                        ch(bar_v(by2,"year","wickets","Wickets per Year",clr))
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
@@ -1261,7 +1175,7 @@ elif section=="📈 Over Years":
                 with c2: ch(line(by,"year","strike_rate","Strike Rate","#fdcb6e"),280)
                 st.dataframe(by[["year","matches","runs","average","strike_rate","fours","sixes"]].reset_index(drop=True))
             else:
-                ch(bowl_wickets_year(by,"Wickets per Year  |  Matches played (yellow line)",clr))
+                ch(bar_v(by,"year","wickets","Wickets per Year",clr))
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
@@ -1475,7 +1389,7 @@ elif section=="🔥 Form & Ratings":
                         if badges2.strip():
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges2}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#d63031")
-                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt})  |  Matches played (yellow line)","#d63031"))
+                    ch(bar_v(pyr,"year","wickets",f"{pname} — Wickets per Year ({fmt})","#d63031"))
                     c1,c2=st.columns(2)
                     fig_econ=px.line(pyr,x="year",y="economy",markers=True,title=f"{pname} — Economy by Year")
                     fig_econ.update_traces(line=dict(color="#d63031",width=3),
