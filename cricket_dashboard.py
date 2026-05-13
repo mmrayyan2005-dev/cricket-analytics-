@@ -630,30 +630,41 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
     short_bio=re.sub(r"<[^>]+>","",short_bio)
 
-    # Build pills HTML
+    # ── fully inline-styled pill (no CSS classes — Streamlit strips them) ──
+    PILL="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 3px 2px 0"
     pills=""
-    if card["born"]:   pills+=f'<span class="ca-pill" style="color:#fbbf24">🎂 {card["born"]}</span>'
-    if card["nation"]: pills+=f'<span class="ca-pill" style="color:#3d8bff">🌍 {card["nation"]}</span>'
-    if card["role"]:   pills+=f'<span class="ca-pill" style="color:#a78bfa">🏏 {card["role"][:30]}</span>'
-    if debut:          pills+=f'<span class="ca-pill" style="color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
+    if card["born"]:   pills+=f'<span style="{PILL};color:#fbbf24">🎂 {card["born"]}</span>'
+    if card["nation"]: pills+=f'<span style="{PILL};color:#3d8bff">🌍 {card["nation"]}</span>'
+    if card["role"]:   pills+=f'<span style="{PILL};color:#a78bfa">🏏 {card["role"][:30]}</span>'
+    if debut:          pills+=f'<span style="{PILL};color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
 
     img_html=""
     if card.get("img"):
         sz=72 if compact else 96
-        img_html=f'<div class="ca-player-img"><img src="{card["img"]}" width="{sz}" height="{sz}" style="border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.12)" onerror="this.style.display=\'none\'"/></div>'
+        img_html=(f'<img src="{card["img"]}" width="{sz}" height="{sz}" '
+                  f'style="border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.12);'
+                  f'flex-shrink:0;margin-right:14px" />')
 
     name_size="16px" if compact else "18px"
-    bio_clamp=2 if compact else 5
-    bio_html=f'<div class="ca-player-bio" style="-webkit-line-clamp:{bio_clamp}">{short_bio}</div>' if short_bio else ""
+    bio_html=(f'<div style="color:#8899bb;font-size:11px;line-height:1.6;margin-top:5px;'
+              f'overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;'
+              f'-webkit-line-clamp:{2 if compact else 5}">{short_bio}</div>') if short_bio else ""
 
-    st.markdown(f"""<div class="ca-player-card ca-fade">
-      {img_html}
-      <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_size}">{card["title"]}</div>
-        <div class="ca-player-pills">{pills}</div>
-        {bio_html}
-      </div>
-    </div>""", unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="display:flex;align-items:flex-start;gap:0;'
+        f'background:#131929;border:1px solid #1e2840;border-radius:14px;'
+        f'padding:{"14px 16px" if compact else "18px 20px"};margin-bottom:14px;'
+        f'box-shadow:0 4px 24px rgba(0,0,0,.4)">'
+        f'{img_html}'
+        f'<div style="flex:1;min-width:0">'
+        f'<div style="font-family:\'Syne\',sans-serif;color:#fff;font-weight:800;'
+        f'font-size:{name_size};margin-bottom:6px;white-space:nowrap;overflow:hidden;'
+        f'text-overflow:ellipsis;letter-spacing:-0.2px">{card["title"]}</div>'
+        f'<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">{pills}</div>'
+        f'{bio_html}'
+        f'</div></div>',
+        unsafe_allow_html=True
+    )
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
