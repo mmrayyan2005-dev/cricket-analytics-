@@ -542,7 +542,12 @@ def get_wiki(cricsheet_name, search_name):
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
-        # Strip any HTML tags that may appear in the extract
+        # Reject extract if it contains HTML structure (disambiguation or bad page)
+        if "<div" in bio or "<table" in bio or "<span" in bio:
+            # Try to get just plain text by stripping all tags
+            bio = re.sub(r"<[^>]+>", " ", bio)
+            bio = re.sub(r"\s+", " ", bio).strip()
+        # Strip any remaining HTML tags
         bio=re.sub(r"<[^>]+>","",bio)
         bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
@@ -638,18 +643,22 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     else:
         col_info = st.container()
 
+    def _strip(t):
+        t = re.sub(r"<[^>]+>", "", t or "")
+        t = t.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
+        return t.strip()
+
     with col_info:
-        st.markdown(f"### {card['title']}" if not compact else f"**{card['title']}**")
+        st.markdown(f"### {_strip(card['title'])}" if not compact else f"**{_strip(card['title'])}**")
         pills_text = ""
-        if card["born"]:    pills_text += f"🎂 {card['born']}  "
-        if card["nation"]:  pills_text += f"🌍 {card['nation']}  "
-        if card["role"]:    pills_text += f"🏏 {card['role'][:30]}  "
-        if debut:           pills_text += f"🎯 {fmt} debut: {debut}"
+        if card["born"]:    pills_text += f"🎂 {_strip(card['born'])}  "
+        if card["nation"]:  pills_text += f"🌍 {_strip(card['nation'])}  "
+        if card["role"]:    pills_text += f"🏏 {_strip(card['role'])[:30]}  "
+        if debut:           pills_text += f"🎯 {fmt} debut: {_strip(debut)}"
         if pills_text:
             st.caption(pills_text)
         if short_bio:
-            st.caption(short_bio)
-
+            st.caption(_strip(short_bio))
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
