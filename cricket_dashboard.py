@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
+import re
 from datetime import datetime, timezone, timedelta
 
 st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="🏏",
@@ -541,6 +542,9 @@ def get_wiki(cricsheet_name, search_name):
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
+        # Strip any HTML tags that may appear in the extract
+        bio=re.sub(r"<[^>]+>","",bio)
+        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -636,6 +640,8 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
     max_sents=2 if compact else 4
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+    # Strip any residual HTML tags from bio to prevent raw HTML rendering
+    short_bio=re.sub(r"<[^>]+>","",short_bio)
     name_sz="14px" if compact else "18px"
     img_html=f'<div class="ca-player-img"><img src="{card["img"]}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if card["img"] else ""
     st.markdown(f"""<div class="ca-fade ca-player-card" style="
