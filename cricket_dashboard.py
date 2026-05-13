@@ -45,7 +45,7 @@ st.markdown("""<style>
   --shadow:0 4px 24px rgba(0,0,0,.4);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
-.block-container{padding:0 !important;max-width:100% !important}
+.block-container{padding:20px 24px 60px !important;max-width:100% !important}
 [data-testid="stSidebar"]{display:none !important}
 
 /* ── Metrics ── */
@@ -720,7 +720,7 @@ function navigateTo(idx) {{
 with st.sidebar:
     section=st.radio("",PAGES,key="page",label_visibility="collapsed")
 
-st.markdown('<div class="ca-content">', unsafe_allow_html=True)
+# ca-content padding applied via CSS on .block-container instead of a wrapper div
 section=st.session_state.get("page","🏠 Home")
 
 # ── FIX: Back button — shows correct previous page name ──────────────────────
@@ -1512,4 +1512,4 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(ps2[show_bowl].reset_index(drop=True))
             else: st.info(f"No bowling player score data for {fmt} yet.")
 
-st.markdown('</div>', unsafe_allow_html=True)
+# end of content
