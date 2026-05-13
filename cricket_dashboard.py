@@ -626,29 +626,34 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    max_sents=2 if compact else 4
+    max_sents=2 if compact else 5
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
     short_bio=re.sub(r"<[^>]+>","",short_bio)
 
-    # Use native Streamlit columns for layout
-    if card.get("img"):
-        col_img, col_info = st.columns([1, 4])
-        with col_img:
-            st.image(card["img"], width=72 if compact else 96)
-    else:
-        col_info = st.container()
+    # Build pills HTML
+    pills=""
+    if card["born"]:   pills+=f'<span class="ca-pill" style="color:#fbbf24">🎂 {card["born"]}</span>'
+    if card["nation"]: pills+=f'<span class="ca-pill" style="color:#3d8bff">🌍 {card["nation"]}</span>'
+    if card["role"]:   pills+=f'<span class="ca-pill" style="color:#a78bfa">🏏 {card["role"][:30]}</span>'
+    if debut:          pills+=f'<span class="ca-pill" style="color:#00e5a0">🎯 {fmt} debut: {debut}</span>'
 
-    with col_info:
-        st.markdown(f"### {card['title']}" if not compact else f"**{card['title']}**")
-        pills_text = ""
-        if card["born"]:    pills_text += f"🎂 {card['born']}  "
-        if card["nation"]:  pills_text += f"🌍 {card['nation']}  "
-        if card["role"]:    pills_text += f"🏏 {card['role'][:30]}  "
-        if debut:           pills_text += f"🎯 {fmt} debut: {debut}"
-        if pills_text:
-            st.caption(pills_text)
-        if short_bio:
-            st.caption(short_bio)
+    img_html=""
+    if card.get("img"):
+        sz=72 if compact else 96
+        img_html=f'<div class="ca-player-img"><img src="{card["img"]}" width="{sz}" height="{sz}" style="border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.12)" onerror="this.style.display=\'none\'"/></div>'
+
+    name_size="16px" if compact else "18px"
+    bio_clamp=2 if compact else 5
+    bio_html=f'<div class="ca-player-bio" style="-webkit-line-clamp:{bio_clamp}">{short_bio}</div>' if short_bio else ""
+
+    st.markdown(f"""<div class="ca-player-card ca-fade">
+      {img_html}
+      <div class="ca-player-info">
+        <div class="ca-player-name" style="font-size:{name_size}">{card["title"]}</div>
+        <div class="ca-player-pills">{pills}</div>
+        {bio_html}
+      </div>
+    </div>""", unsafe_allow_html=True)
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
