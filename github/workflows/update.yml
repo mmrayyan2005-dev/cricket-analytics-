@@ -1,27 +1,31 @@
-name: Update Cricket Data
+name: Update Cricket Data Daily
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # Runs daily at 3 AM UTC
-  workflow_dispatch:        # Also allow manual trigger
+    - cron: '0 2 * * *'   # Runs every day at 2:00 AM UTC
+  workflow_dispatch:        # Also allows manual trigger from GitHub
 
 jobs:
-  update:
+  update-data:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install pandas numpy scikit-learn requests
+        run: |
+          pip install pandas requests scikit-learn numpy jupyter nbconvert
 
-      - name: Run updater
+      - name: Run the notebook
         env:
-          DATA_PUSH_TOKEN: ${{ secrets.DATA_PUSH_TOKEN }}
-          DATA_GITHUB_USER: ${{ secrets.DATA_GITHUB_USER }}
-          DATA_GITHUB_REPO: ${{ secrets.DATA_GITHUB_REPO }}
-        run: python update_cricket_data.py
+          GITHUB_TOKEN_SECRET: ${{ secrets.CRICKET_GH_TOKEN }}
+        run: |
+          jupyter nbconvert --to notebook --execute All_Formats_Cricket_ML_v6.ipynb \
+            --ExecutePreprocessor.timeout=1800 \
+            --output All_Formats_Cricket_ML_v6_executed.ipynb
