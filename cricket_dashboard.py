@@ -589,10 +589,14 @@ def get_wiki(cricsheet_name, search_name):
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
-        bio=data.get("extract","")
-        # Strip any HTML tags that may appear in the extract
-        bio=re.sub(r"<[^>]+>","",bio)
-        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
+        # Prefer extract_html if available, but always strip tags; fall back to extract
+        raw_bio=data.get("extract_html","") or data.get("extract","")
+        # Aggressively strip ALL HTML tags and entities
+        raw_bio=re.sub(r"<[^>]+>","",raw_bio)
+        raw_bio=re.sub(r"&[a-zA-Z]+;|&#\d+;","",raw_bio)
+        raw_bio=raw_bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
+        raw_bio=re.sub(r"\s+"," ",raw_bio).strip()
+        bio=raw_bio
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -676,7 +680,12 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
     max_sents=2 if compact else 5
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+    # Strip any residual HTML tags, entities, or template markup
     short_bio=re.sub(r"<[^>]+>","",short_bio)
+    short_bio=re.sub(r"\{\{[^}]+\}\}","",short_bio)
+    short_bio=re.sub(r"\[\[([^\]|]+\|)?([^\]]+)\]\]",r"\2",short_bio)
+    short_bio=re.sub(r"&[a-zA-Z]+;|&#\d+;","",short_bio)
+    short_bio=re.sub(r"\s+"," ",short_bio).strip()
 
     # ── fully inline-styled pill (no CSS classes — Streamlit strips them) ──
     PILL="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 3px 2px 0"
@@ -900,6 +909,7 @@ elif section=="🔍 Player Search":
         bat=find_rows(bat_fmt[bat_fmt["format"]==fmt],"striker",sname)
         bowl=find_rows(bowl_fmt[bowl_fmt["format"]==fmt],"bowler",sname)
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
+        card_data=get_wiki(display_name,name)
         show_player_card(display_name,name,fmt)
 
         lu=get_last_updated()
@@ -953,6 +963,12 @@ elif section=="🔍 Player Search":
                 if len(bat)>0:
                     p=bat.sort_values("runs",ascending=False).iloc[0]; en=p["striker"]
                     by=bat_yr[(bat_yr["format"]==fmt)&(bat_yr["striker"]==en)].sort_values("year") if not bat_yr.empty else pd.DataFrame()
+                    # Filter out years where the player would have been unrealistically young
+                    if not by.empty and card_data and card_data.get("born"):
+                        try:
+                            birth_year=int(re.search(r"\d{4}",card_data["born"]).group())
+                            by=by[by["year"]>=birth_year+14]
+                        except: pass
                     if len(by)>1:
                         st.markdown("**🏏 Batting Trends**")
                         ch(bar_v(by,"year","runs","Runs per Year",clr))
@@ -962,6 +978,12 @@ elif section=="🔍 Player Search":
                 if len(bowl)>0:
                     p2=bowl.sort_values("wickets",ascending=False).iloc[0]; en2=p2["bowler"]
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
+                    # Filter out years where the player would have been unrealistically young
+                    if not by2.empty and card_data and card_data.get("born"):
+                        try:
+                            birth_year=int(re.search(r"\d{4}",card_data["born"]).group())
+                            by2=by2[by2["year"]>=birth_year+14]
+                        except: pass
                     if len(by2)>1:
                         st.markdown("**🎳 Bowling Trends**")
                         ch(bowl_wickets_year(by2,"Wickets per Year  |  Matches played (yellow line)",clr))
