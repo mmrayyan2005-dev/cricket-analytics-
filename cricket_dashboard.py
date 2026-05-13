@@ -621,41 +621,34 @@ def get_wiki(cricsheet_name, search_name):
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     if not card:
-        st.markdown(f"""<div style="background:var(--card);border-radius:var(--radius);padding:14px 16px;
-          margin:0 0 16px;border:1px solid var(--border)">
-          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {cricsheet_name}</div>
-        </div>""", unsafe_allow_html=True)
+        st.info(f"📖 Profile unavailable for {cricsheet_name}")
         return
-    img_sz=72 if compact else 96
-    acl=FC.get(fmt,"#00e5a0")
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    def pill(icon,text,color):
-        return f'<span class="ca-pill" style="color:{color}">{icon} {text}</span>'
-    pills=""
-    if card["born"]: pills+=pill("🎂",card["born"],"#fbbf24")
-    if card["nation"]: pills+=pill("🌍",card["nation"],"#3d8bff")
-    if card["role"]: pills+=pill("🏏",card["role"][:30],"#00e5a0")
-    if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
     max_sents=2 if compact else 4
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    # Strip any residual HTML tags from bio to prevent raw HTML rendering
     short_bio=re.sub(r"<[^>]+>","",short_bio)
-    name_sz="14px" if compact else "18px"
-    img_html=f'<div class="ca-player-img"><img src="{card["img"]}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if card["img"] else ""
-    st.markdown(f"""<div class="ca-fade ca-player-card" style="
-      background:linear-gradient(135deg,var(--card),var(--surface));
-      border-radius:var(--radius);padding:14px;margin:0 0 14px 0;
-      border:1px solid var(--border);border-left:3px solid {acl};
-      box-sizing:border-box;width:100%">
-      {img_html}
-      <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_sz}">{card["title"]}</div>
-        <div class="ca-player-pills">{pills}</div>
-        <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
+
+    # Use native Streamlit columns for layout
+    if card.get("img"):
+        col_img, col_info = st.columns([1, 4])
+        with col_img:
+            st.image(card["img"], width=72 if compact else 96)
+    else:
+        col_info = st.container()
+
+    with col_info:
+        st.markdown(f"### {card['title']}" if not compact else f"**{card['title']}**")
+        pills_text = ""
+        if card["born"]:    pills_text += f"🎂 {card['born']}  "
+        if card["nation"]:  pills_text += f"🌍 {card['nation']}  "
+        if card["role"]:    pills_text += f"🏏 {card['role'][:30]}  "
+        if debut:           pills_text += f"🎯 {fmt} debut: {debut}"
+        if pills_text:
+            st.caption(pills_text)
+        if short_bio:
+            st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
