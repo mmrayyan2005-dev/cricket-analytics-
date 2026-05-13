@@ -335,7 +335,7 @@ def bar_v(df, x, y, title, color, h=360):
     return fig
 
 def bowl_wickets_year(df, title, color, h=380):
-    """Wickets-per-year bars + matches-played dotted line on secondary axis."""
+    """Wickets bars + matches-played dotted line on secondary axis."""
     if df.empty: return go.Figure()
     df = df.copy().sort_values("year")
     has_m = "matches" in df.columns
@@ -960,7 +960,7 @@ elif section=="🔍 Player Search":
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
                     if len(by2)>1:
                         st.markdown("**🎳 Bowling Trends**")
-                        ch(bowl_wickets_year(by2,"Wickets per Year (bars) · Matches played (line)",clr))
+                        ch(bowl_wickets_year(by2,"Wickets per Year  ·  Matches played (🟡 line)",clr))
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
@@ -1235,7 +1235,7 @@ elif section=="📈 Over Years":
                 with c2: ch(line(by,"year","strike_rate","Strike Rate","#fdcb6e"),280)
                 st.dataframe(by[["year","matches","runs","average","strike_rate","fours","sixes"]].reset_index(drop=True))
             else:
-                ch(bowl_wickets_year(by,"Wickets per Year (bars) · Matches played (line)",clr))
+                ch(bowl_wickets_year(by,"Wickets per Year  ·  Matches played (🟡 line)",clr))
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
@@ -1449,7 +1449,7 @@ elif section=="🔥 Form & Ratings":
                         if badges2.strip():
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges2}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#d63031")
-                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt}) · Matches played (line)","#d63031"))
+                    ch(bowl_wickets_year(pyr,f"{pname} — Wickets per Year ({fmt})  ·  Matches played (🟡 line)","#d63031"))
                     c1,c2=st.columns(2)
                     fig_econ=px.line(pyr,x="year",y="economy",markers=True,title=f"{pname} — Economy by Year")
                     fig_econ.update_traces(line=dict(color="#d63031",width=3),
