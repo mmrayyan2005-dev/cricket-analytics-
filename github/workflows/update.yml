@@ -1,31 +1,39 @@
-name: Update Cricket Data Daily
+name: Update Cricket Data
 
+# Runs automatically every Sunday at 03:00 UTC, and can also be triggered
+# manually from the GitHub Actions tab ("Run workflow" button) whenever you
+# want fresh data immediately.
 on:
   schedule:
-    - cron: '0 2 * * *'   # Runs every day at 2:00 AM UTC
-  workflow_dispatch:        # Also allows manual trigger from GitHub
+    - cron: "0 3 * * 0"
+  workflow_dispatch: {}
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          pip install pandas requests scikit-learn numpy jupyter nbconvert
+        run: pip install pandas numpy scikit-learn requests
 
-      - name: Run the notebook
+      - name: Run pipeline
         env:
-          GITHUB_TOKEN_SECRET: ${{ secrets.CRICKET_GH_TOKEN }}
-        run: |
-          jupyter nbconvert --to notebook --execute All_Formats_Cricket_ML_v6.ipynb \
-            --ExecutePreprocessor.timeout=1800 \
-            --output All_Formats_Cricket_ML_v6_executed.ipynb
+          GITHUB_TOKEN: ${{ secrets.DATA_PUSH_TOKEN }}
+          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_REPO: cricket-analytics_-
+          BRANCH: main
+        run: python pipeline.py
+
+      - name: Upload run log (for debugging failed runs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-run-log
+          path: pipeline_run.log
