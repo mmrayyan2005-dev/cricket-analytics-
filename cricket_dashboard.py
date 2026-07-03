@@ -279,6 +279,35 @@ ALL_FMT=get_all_formats(bat_fmt)
 def avail(df,col):
     return sorted(df[col].unique().tolist(),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
 
+# ── Player name autocomplete ──────────────────────────────────────────────────
+# Previously every player search was a plain free-text box — you had to know
+# and correctly spell the exact Cricsheet name (e.g. "V Kohli" not "Kohli").
+# This builds one master list of every player name that exists in the data
+# (batters + bowlers, all formats) so we can offer live suggestions as you
+# type, similar to a Google search dropdown.
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_all_player_names():
+    names = set()
+    if not batting.empty and "striker" in batting.columns:
+        names.update(batting["striker"].dropna().unique().tolist())
+    if not bowling.empty and "bowler" in bowling.columns:
+        names.update(bowling["bowler"].dropna().unique().tolist())
+    return sorted(names)
+
+ALL_PLAYER_NAMES = get_all_player_names()
+
+def player_input(label, default, key=None):
+    """Dropdown with every known player name, searchable by typing — this is
+    what gives the 'type ba, see Babar Azam / Brad Hogg' suggestion behavior.
+    Falls back gracefully if the default isn't in the list (e.g. first run)."""
+    options = ALL_PLAYER_NAMES if ALL_PLAYER_NAMES else [default]
+    try:
+        idx = options.index(default)
+    except ValueError:
+        idx = 0
+    return st.selectbox(label, options, index=idx, key=key,
+                         help="Start typing to search — matches filter as you type, like a search engine.")
+
 # ── V12 smart find_rows (more thorough) ──────────────────────────────────────
 def find_rows(df, name_col, query):
     import re as _re
@@ -602,12 +631,14 @@ def get_wiki(cricsheet_name, search_name):
         return None
 
 # ── V12 show_player_card (pill helper + border-left accent + mobile classes) ──
+import html as _html
+
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     if not card:
         st.markdown(f"""<div style="background:var(--card);border-radius:var(--radius);padding:14px 16px;
           margin:0 0 16px;border:1px solid var(--border)">
-          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {cricsheet_name}</div>
+          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {_html.escape(cricsheet_name)}</div>
         </div>""", unsafe_allow_html=True)
         return
     img_sz=72 if compact else 96
@@ -616,7 +647,15 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
     def pill(icon,text,color):
-        return f'<span class="ca-pill" style="color:{color}">{icon} {text}</span>'
+        # NOTE: previously this inserted Wikipedia-sourced text (name, role,
+        # nationality, dates) straight into raw HTML with zero escaping. If
+        # any of that text contained a stray '<', '>', or '"' — which does
+        # happen with messy/leftover wiki-markup in some infoboxes — it would
+        # break the surrounding tag structure. Once one tag breaks, the
+        # browser can end up displaying the rest of the card's HTML as
+        # literal visible text instead of rendering it, which is exactly the
+        # "raw HTML shown on screen" bug. html.escape() neutralizes this.
+        return f'<span class="ca-pill" style="color:{color}">{icon} {_html.escape(str(text))}</span>'
     pills=""
     if card["born"]: pills+=pill("🎂",card["born"],"#fbbf24")
     if card["nation"]: pills+=pill("🌍",card["nation"],"#3d8bff")
@@ -624,8 +663,14 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
     max_sents=2 if compact else 4
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+    short_bio=_html.escape(short_bio)
+    safe_title=_html.escape(str(card["title"]))
     name_sz="14px" if compact else "18px"
-    img_html=f'<div class="ca-player-img"><img src="{card["img"]}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if card["img"] else ""
+    # Also escape the image URL's quote character specifically, since a
+    # malformed URL containing a stray '"' would break out of the src
+    # attribute the same way.
+    safe_img=_html.escape(card["img"], quote=True) if card["img"] else ""
+    img_html=f'<div class="ca-player-img"><img src="{safe_img}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if safe_img else ""
     st.markdown(f"""<div class="ca-fade ca-player-card" style="
       background:linear-gradient(135deg,var(--card),var(--surface));
       border-radius:var(--radius);padding:14px;margin:0 0 14px 0;
@@ -633,7 +678,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
       box-sizing:border-box;width:100%">
       {img_html}
       <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_sz}">{card["title"]}</div>
+        <div class="ca-player-name" style="font-size:{name_sz}">{safe_title}</div>
         <div class="ca-player-pills">{pills}</div>
         <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
       </div>
@@ -988,7 +1033,7 @@ elif section=="⚔️ Head to Head":
 # ══ VS VENUE ══════════════════════════════════════════════════════════════════
 elif section=="🏟️ vs Venue":
     page_banner("🏟️","Player vs Venue","How does a player perform at different grounds?","#0a1a1a","#0d2b2b","#00b894")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_ven,"striker",sname) if st_=="Batting" else find_rows(bowl_ven,"bowler",sname)
@@ -1044,7 +1089,7 @@ elif section=="🏟️ vs Venue":
 # ══ VS OPPONENT ═══════════════════════════════════════════════════════════════
 elif section=="🌍 vs Opponent":
     page_banner("🌍","Player vs Opponent","Find which teams a player dominates — and which trouble them","#0a1020","#0d1e3a","#0984e3")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_opp,"striker",sname) if st_=="Batting" else find_rows(bowl_opp,"bowler",sname)
@@ -1104,7 +1149,7 @@ elif section=="🤜 Batter vs Bowler":
     page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a0a","#2e1010","#d63031")
     mt=st.radio("Look up a...",["Batter","Bowler"],horizontal=True)
     if mt=="Batter":
-        name=st.text_input("Batter name","Babar Azam")
+        name=player_input("Batter name",resolve("Babar Azam"),key="bvb_batter")
         if name:
             sname=resolve(name)
             src=find_rows(bvb,"striker",sname)
@@ -1117,7 +1162,7 @@ elif section=="🤜 Batter vs Bowler":
                 ch(bar_h(df_m,m,"bowler",m,"Greens",f"Top 20 bowlers faced — {m} ({fmt})"))
                 st.dataframe(df_m[["bowler","balls_faced","runs","strike_rate","dismissals"]].reset_index(drop=True))
     else:
-        name=st.text_input("Bowler name","Shaheen")
+        name=player_input("Bowler name",resolve("Shaheen"),key="bvb_bowler")
         if name:
             sname=resolve(name)
             src=find_rows(wvb,"bowler",sname)
@@ -1133,7 +1178,7 @@ elif section=="🤜 Batter vs Bowler":
 # ══ PERFORMANCE OVER YEARS ════════════════════════════════════════════════════
 elif section=="📈 Over Years":
     page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#0a150a","#0d2a10","#00b894")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_yr,"striker",sname) if st_=="Batting" else find_rows(bowl_yr,"bowler",sname)
@@ -1231,7 +1276,7 @@ elif section=="🤖 Similar Players":
     page_banner("🤖","Similar Players","ML-powered: find cricketers who play just like your favourite","#0a0a1a","#1a1a3a","#a29bfe")
     st.markdown("Uses **KMeans clustering + cosine similarity** on career stats to find statistically similar players.")
     st_type=st.radio("Type",["Batter","Bowler"],horizontal=True)
-    name=st.text_input("Player name","Babar"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
+    name=player_input("Player name",resolve("Babar"),key="leaderboard_player"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
     if name:
         sname=resolve(name)
         if st_type=="Batter":
@@ -1287,7 +1332,7 @@ elif section=="🔥 Form & Ratings":
     # ── Tab 1: Player year-by-year form ──────────────────────────────────────
     with tab1:
         st.markdown("#### Year-by-year form with career reference lines")
-        fname=st.text_input("Player name","Kohli",key="form_player")
+        fname=player_input("Player name",resolve("Kohli"),key="form_player")
         ftype=st.radio("Type",["Batting","Bowling"],horizontal=True,key="form_type")
         if fname:
             fsname=resolve(fname)
