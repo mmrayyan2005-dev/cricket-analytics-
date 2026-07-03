@@ -443,7 +443,28 @@ def main():
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
 
+    # ── Diagnostic: what's the most recent date Cricsheet actually gave us,
+    # per format, BEFORE any cleaning? This directly answers "is 2025/2026
+    # data missing because Cricsheet doesn't have it yet, or because our
+    # own cleaning step is dropping it?" — instead of guessing.
+    if "start_date" in df.columns:
+        raw_dates = pd.to_datetime(df["start_date"], errors="coerce")
+        for fmt in df["format"].unique():
+            fmt_max = raw_dates[df["format"] == fmt].max()
+            log.info(f"[RAW, pre-clean] {fmt}: most recent match date = {fmt_max}")
+
     df = clean_and_validate(df)
+
+    # Same check AFTER cleaning — if this max date is earlier than the raw
+    # check above, our cleaning logic is dropping recent rows (a real bug
+    # to fix). If it matches the raw check, Cricsheet's own archive simply
+    # doesn't have newer data yet (nothing to fix on our end, just a
+    # known lag to document for users).
+    for fmt in df["format"].unique():
+        fmt_max = df.loc[df["format"] == fmt, "start_date"].max()
+        log.info(f"[CLEANED, post-clean] {fmt}: most recent match date = {fmt_max}")
+
+
     bat_innings, bowl_innings = build_innings_tables(df)
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
     (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
