@@ -123,10 +123,26 @@ def load_format(folder, label):
     df = pd.concat(dfs, ignore_index=True)
 
     if "match_id" in df.columns:
+        # BUG FIX: pandas groupby() silently drops rows where the grouping
+        # column (match_id) is NaN/blank. Newer or slightly inconsistent
+        # Cricsheet files can have a handful of rows with a missing
+        # match_id. The dedup logic below only knows how to compare rows
+        # THAT HAVE a match_id — so we must set aside any NaN-match_id rows
+        # first and keep them untouched, otherwise they silently vanish
+        # entirely during the merge step (this was likely deleting real,
+        # legitimate recent matches — e.g. brand-new debutants' data —
+        # not just true duplicates).
+        no_id_mask = df["match_id"].isna()
+        df_no_id = df[no_id_mask]
+        df_with_id = df[~no_id_mask]
+        if len(df_no_id) > 0:
+            log.warning(f"{label}: {len(df_no_id):,} row(s) had a missing/blank match_id — "
+                        f"keeping them as-is (can't be deduplicated, but must not be dropped).")
+
         # For each match_id, find which source file has the most rows
         # (the most complete/authoritative version), then keep ONLY that
         # file's rows for that match_id and drop the rest.
-        file_counts = df.groupby(["match_id", "_source_file"]).size().reset_index(name="n")
+        file_counts = df_with_id.groupby(["match_id", "_source_file"]).size().reset_index(name="n")
         best_file = file_counts.loc[file_counts.groupby("match_id")["n"].idxmax()]
         dup_matches = file_counts["match_id"].value_counts()
         dup_matches = dup_matches[dup_matches > 1].index.tolist()
@@ -136,8 +152,10 @@ def load_format(folder, label):
                         f"most complete version of each to avoid double-counting. "
                         f"Examples: {dup_matches[:5]}")
         keep = best_file.rename(columns={"_source_file": "_keep_file"})[["match_id", "_keep_file"]]
-        df = df.merge(keep, on="match_id", how="left")
-        df = df[df["_source_file"] == df["_keep_file"]].drop(columns=["_keep_file"])
+        df_with_id = df_with_id.merge(keep, on="match_id", how="left")
+        df_with_id = df_with_id[df_with_id["_source_file"] == df_with_id["_keep_file"]].drop(columns=["_keep_file"])
+
+        df = pd.concat([df_with_id, df_no_id], ignore_index=True)
 
     df = df.drop(columns=["_source_file"])
     df["format"] = label
