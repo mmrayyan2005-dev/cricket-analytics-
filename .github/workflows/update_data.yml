@@ -27,7 +27,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DATA_PUSH_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
-          GITHUB_REPO: cricket-data
+          GITHUB_REPO: cricket-analytics_-
           BRANCH: main
         run: python pipeline.py
 
