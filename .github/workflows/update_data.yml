@@ -1,5 +1,8 @@
 name: Update Cricket Data
 
+# Runs automatically every Sunday at 03:00 UTC, and can also be triggered
+# manually from the GitHub Actions tab ("Run workflow" button) whenever you
+# want fresh data immediately — no Colab required either way.
 on:
   schedule:
     - cron: "0 3 * * 0"
@@ -24,7 +27,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DATA_PUSH_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
-          GITHUB_REPO: cricket-analytics_-
+          GITHUB_REPO: cricket-data
           BRANCH: main
         run: python pipeline.py
 
