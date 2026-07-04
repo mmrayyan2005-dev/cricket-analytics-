@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
+import re
 from datetime import datetime, timezone, timedelta
 
 st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="🏏",
@@ -33,7 +34,6 @@ M_DEFAULT=dict(l=8,r=8,t=48,b=8)
 M_BARV=dict(l=8,r=8,t=48,b=60)
 CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"responsive":True},use_container_width=True)
 
-# ── V17 UI + comprehensive CSS ────────────────────────────────────────────────
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
 :root{
@@ -45,7 +45,7 @@ st.markdown("""<style>
   --shadow:0 4px 24px rgba(0,0,0,.4);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
-.block-container{padding:0 !important;max-width:100% !important}
+.block-container{padding:20px 24px 60px !important;max-width:100% !important}
 [data-testid="stSidebar"]{display:none !important}
 
 /* ── Metrics ── */
@@ -73,6 +73,9 @@ div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!im
 [data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:5px 13px!important;font-size:12px!important;font-weight:600!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important}
 [data-testid="stRadio"] label:hover{border-color:#2e4060!important;color:var(--text)!important}
 [data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(0,229,160,.08)!important;box-shadow:0 0 8px rgba(0,229,160,.1)!important}
+
+/* ── FIX: Hide stRadio label when label_visibility=collapsed ── */
+[data-testid="stRadio"] > label[data-testid="stWidgetLabel"]{display:none!important}
 
 /* ── Sliders ── */
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(0,229,160,.15)!important}
@@ -118,6 +121,11 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:20p
 
 /* ── Columns ── */
 div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!important;flex:1 1 auto}
+
+/* ── Section header style (replaces raw ### markdown) ── */
+.ca-section-heading{display:flex;align-items:center;gap:8px;margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.ca-section-heading-icon{font-size:18px}
+.ca-section-heading-text{font-family:var(--font-head);font-size:16px;font-weight:800;color:#fff}
 
 /* ── Animations ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -169,6 +177,10 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 .ca-insight{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6}
 .ca-insight strong{color:var(--accent)}
 
+/* ── Radar note box ── */
+.ca-radar-note{background:rgba(61,139,255,.05);border:1px solid rgba(61,139,255,.2);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6}
+.ca-radar-note strong{color:#3d8bff}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .ca-content{padding:12px 14px 40px}
@@ -206,69 +218,60 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 </style>""", unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
-# NOTE: previously this fetched 18 CSVs one-by-one over the network in sequence.
-# Each fetch has its own round-trip latency, so 18 sequential calls meant the
-# app waited for #1 to fully finish before even starting #2, and so on.
-# Fetching them concurrently (ThreadPoolExecutor) means all 18 requests are
-# in flight at once, so total load time ≈ the slowest single file, not the sum
-# of all 18. This is the main fix for "the app takes forever after the cache
-# expires every hour."
-from concurrent.futures import ThreadPoolExecutor
-
-CSV_FILES = [
-    "cricket_batting_stats.csv","cricket_bowling_stats.csv",
-    "cricket_batting_by_format.csv","cricket_bowling_by_format.csv",
-    "cricket_batting_yearly.csv","cricket_bowling_yearly.csv",
-    "cricket_batting_venue.csv","cricket_batting_opponent.csv",
-    "cricket_bowling_venue.csv","cricket_bowling_opponent.csv",
-    "cricket_batter_vs_bowler.csv","cricket_bowler_vs_batter.csv",
-    "cricket_bat_form_ratings.csv","cricket_bowl_form_ratings.csv",
-    "cricket_bat_similarity.csv","cricket_bowl_similarity.csv",
-    "cricket_bat_innings.csv","cricket_bowl_innings.csv",
-]
-
-def _read_one(name):
-    try:
-        return (name, pd.read_csv(f"{RAW_BASE}/{name}"), None)
-    except Exception as e:
-        # Previously a bare `except: return pd.DataFrame()` swallowed every
-        # error silently, so a renamed/missing file just quietly became an
-        # empty table with zero indication anything went wrong. Now we
-        # collect the failure so it can be shown in the app (see load_errors).
-        return (name, pd.DataFrame(), str(e))
-
 @st.cache_data(ttl=3600, show_spinner=False)
-def load():
-    results = {}
-    errors = []
-    with ThreadPoolExecutor(max_workers=len(CSV_FILES)) as ex:
-        for name, df, err in ex.map(_read_one, CSV_FILES):
-            results[name] = df
-            if err:
-                errors.append((name, err))
-    ordered = [results[name] for name in CSV_FILES]
-    return (*ordered, errors)
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_last_updated():
+def _get_remote_last_updated():
+    """Fetch last_updated.txt from GitHub (cached for 1 hour)."""
     try:
-        r=requests.get(f"{RAW_BASE}/last_updated.txt",timeout=5)
-        if r.status_code==200: return r.text.strip()
-    except: pass
+        r = requests.get(f"{RAW_BASE}/last_updated.txt", timeout=5,
+                         headers={"Cache-Control": "no-cache", "Pragma": "no-cache"})
+        if r.status_code == 200:
+            return r.text.strip()
+    except:
+        pass
     return None
 
-with st.spinner("Loading cricket data..."):
-    (batting,bowling,bat_fmt,bowl_fmt,bat_yr,bowl_yr,bat_ven,bat_opp,
-     bowl_ven,bowl_opp,bvb,wvb,bat_form,bowl_form,bat_sim,bowl_sim,bat_inn,bowl_inn,
-     load_errors) = load()
+def get_last_updated():
+    return _get_remote_last_updated()
 
-# Surface load failures instead of hiding them as silently-empty tables.
-# This is what was previously making "some data missing" impossible to debug —
-# a failed fetch just looked like a normal empty dataset with no explanation.
-if load_errors:
-    with st.expander(f"⚠️ {len(load_errors)} data file(s) failed to load — click for details", expanded=False):
-        for name, err in load_errors:
-            st.caption(f"**{name}**: {err}")
+@st.cache_data(ttl=0, show_spinner=False)
+def _get_data_version():
+    """Returns the last_updated string to use as cache key — fetched fresh each time."""
+    try:
+        r = requests.get(f"{RAW_BASE}/last_updated.txt", timeout=5,
+                         headers={"Cache-Control": "no-cache", "Pragma": "no-cache"})
+        if r.status_code == 200:
+            return r.text.strip()
+    except:
+        pass
+    return "static"
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load(_version="static"):
+    """Load all CSVs. Re-fetches when _version (last_updated) changes."""
+    def read(name):
+        try:
+            r = requests.get(f"{RAW_BASE}/{name}",
+                             headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
+                             timeout=30)
+            r.raise_for_status()
+            from io import StringIO
+            return pd.read_csv(StringIO(r.text))
+        except:
+            return pd.DataFrame()
+    return (read("cricket_batting_stats.csv"),read("cricket_bowling_stats.csv"),
+            read("cricket_batting_by_format.csv"),read("cricket_bowling_by_format.csv"),
+            read("cricket_batting_yearly.csv"),read("cricket_bowling_yearly.csv"),
+            read("cricket_batting_venue.csv"),read("cricket_batting_opponent.csv"),
+            read("cricket_bowling_venue.csv"),read("cricket_bowling_opponent.csv"),
+            read("cricket_batter_vs_bowler.csv"),read("cricket_bowler_vs_batter.csv"),
+            read("cricket_bat_form_ratings.csv"),read("cricket_bowl_form_ratings.csv"),
+            read("cricket_bat_similarity.csv"),read("cricket_bowl_similarity.csv"),
+            read("cricket_bat_innings.csv"),read("cricket_bowl_innings.csv"))
+
+with st.spinner("Loading cricket data..."):
+    _version = _get_data_version()
+    (batting,bowling,bat_fmt,bowl_fmt,bat_yr,bowl_yr,bat_ven,bat_opp,
+     bowl_ven,bowl_opp,bvb,wvb,bat_form,bowl_form,bat_sim,bowl_sim,bat_inn,bowl_inn)=load(_version)
 
 def get_all_formats(df,col="format"):
     if df.empty or col not in df.columns: return ["ODI","Test","T20I","IPL","PSL"]
@@ -279,36 +282,6 @@ ALL_FMT=get_all_formats(bat_fmt)
 def avail(df,col):
     return sorted(df[col].unique().tolist(),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
 
-# ── Player name autocomplete ──────────────────────────────────────────────────
-# Previously every player search was a plain free-text box — you had to know
-# and correctly spell the exact Cricsheet name (e.g. "V Kohli" not "Kohli").
-# This builds one master list of every player name that exists in the data
-# (batters + bowlers, all formats) so we can offer live suggestions as you
-# type, similar to a Google search dropdown.
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_all_player_names():
-    names = set()
-    if not batting.empty and "striker" in batting.columns:
-        names.update(batting["striker"].dropna().unique().tolist())
-    if not bowling.empty and "bowler" in bowling.columns:
-        names.update(bowling["bowler"].dropna().unique().tolist())
-    return sorted(names)
-
-ALL_PLAYER_NAMES = get_all_player_names()
-
-def player_input(label, default, key=None):
-    """Dropdown with every known player name, searchable by typing — this is
-    what gives the 'type ba, see Babar Azam / Brad Hogg' suggestion behavior.
-    Falls back gracefully if the default isn't in the list (e.g. first run)."""
-    options = ALL_PLAYER_NAMES if ALL_PLAYER_NAMES else [default]
-    try:
-        idx = options.index(default)
-    except ValueError:
-        idx = 0
-    return st.selectbox(label, options, index=idx, key=key,
-                         help="Start typing to search — matches filter as you type, like a search engine.")
-
-# ── V12 smart find_rows (more thorough) ──────────────────────────────────────
 def find_rows(df, name_col, query):
     import re as _re
     if df.empty: return pd.DataFrame()
@@ -385,7 +358,6 @@ def metrics(d):
         for c,(k,v) in zip(cols,items[i:i+chunk]): c.metric(k,v)
 
 def _hex_to_rgba(hex_color, alpha=0.18):
-    """Convert hex color like #00e5a0 to rgba(0,229,160,0.18)."""
     h = hex_color.lstrip("#")
     if len(h) == 3: h = "".join(c*2 for c in h)
     try:
@@ -394,31 +366,62 @@ def _hex_to_rgba(hex_color, alpha=0.18):
     except:
         return f"rgba(100,100,100,{alpha})"
 
+def section_heading(icon, text):
+    """Render a styled section heading using HTML (replaces raw ### markdown)."""
+    st.markdown(f"""<div class="ca-section-heading">
+      <span class="ca-section-heading-icon">{icon}</span>
+      <span class="ca-section-heading-text">{text}</span>
+    </div>""", unsafe_allow_html=True)
+
 def radar(categories, values1, values2, name1, name2, color1, color2, title):
-    """Radar / spider chart for head-to-head comparisons."""
+    """
+    Radar chart for head-to-head comparison.
+    FIX: BASE contains xaxis, yaxis, hovermode AND legend — all of which either
+    conflict with polar layout keys or are re-specified explicitly here, causing
+    a 'multiple values for keyword argument' TypeError.  Strip them all out first.
+    """
+    # Keys in BASE that are either cartesian-only or re-defined below
+    _POLAR_STRIP = ("xaxis", "yaxis", "hovermode", "legend")
+    POLAR_BASE = {k: v for k, v in BASE.items() if k not in _POLAR_STRIP}
+
     cats = categories + [categories[0]]
-    v1 = values1 + [values1[0]]
-    v2 = values2 + [values2[0]]
-    fig = go.Figure()
-    fig.add_trace(go.Scatterpolar(r=v1, theta=cats, fill="toself", name=name1,
+    v1   = values1   + [values1[0]]
+    v2   = values2   + [values2[0]]
+    fig  = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=v1, theta=cats, fill="toself", name=name1,
         line=dict(color=color1, width=2.5),
-        fillcolor=_hex_to_rgba(color1, 0.18),
+        fillcolor=_hex_to_rgba(color1, 0.22),
         hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra>" + name1 + "</extra>"))
-    fig.add_trace(go.Scatterpolar(r=v2, theta=cats, fill="toself", name=name2,
+    fig.add_trace(go.Scatterpolar(
+        r=v2, theta=cats, fill="toself", name=name2,
         line=dict(color=color2, width=2.5),
-        fillcolor=_hex_to_rgba(color2, 0.18),
+        fillcolor=_hex_to_rgba(color2, 0.22),
         hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra>" + name2 + "</extra>"))
-    fig.update_layout(**BASE, title=title, height=440,
-        polar=dict(bgcolor="rgba(0,0,0,0)",
-            radialaxis=dict(visible=True, gridcolor=GRID, color=TEXT,
-                            tickfont=dict(size=9), range=[0,110]),
-            angularaxis=dict(gridcolor=GRID, linecolor=GRID,
-                             tickfont=dict(size=12, color=TEXT))),
-        margin=dict(l=50,r=50,t=60,b=50))
+    fig.update_layout(
+        **POLAR_BASE,
+        title=title,
+        height=460,
+        hovermode="closest",
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(
+                visible=True, gridcolor=GRID, color=TEXT,
+                tickfont=dict(size=9), range=[0, 110],
+                tickvals=[20, 40, 60, 80, 100],
+                ticktext=["20", "40", "60", "80", "100"]),
+            angularaxis=dict(
+                gridcolor=GRID, linecolor=GRID,
+                tickfont=dict(size=12, color=TEXT),
+                rotation=90, direction="clockwise")),
+        legend=dict(
+            orientation="h", yanchor="bottom", y=-0.12,
+            xanchor="center", x=0.5,
+            bgcolor="rgba(0,0,0,0)", font=dict(size=12)),
+        margin=dict(l=60, r=60, t=70, b=60))
     return fig
 
 def scatter(df, x, y, text_col, color, title, x_label="", y_label=""):
-    """Scatter plot with player name labels."""
     if df.empty: return go.Figure()
     fig = px.scatter(df, x=x, y=y, text=text_col, title=title,
                      color_discrete_sequence=[color])
@@ -433,7 +436,6 @@ def scatter(df, x, y, text_col, color, title, x_label="", y_label=""):
     return fig
 
 def form_delta_html(recent_val, career_val, label, higher_is_better=True):
-    """Return a styled HTML badge showing form vs career average."""
     if not recent_val or not career_val: return ""
     diff = recent_val - career_val
     pct = (diff / career_val * 100) if career_val else 0
@@ -444,7 +446,6 @@ def form_delta_html(recent_val, career_val, label, higher_is_better=True):
             f'color:{color};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">'
             f'{arrow} {abs(pct):.1f}% vs career {label}</span>')
 
-# ── V12 page_banner (richer gradient + pattern) ──────────────────────────────
 def page_banner(emoji, title, subtitle, ga, gb, glow):
     st.markdown(f"""<div class="ca-fade" style="
       background:linear-gradient(120deg,{ga} 0%,{gb} 100%);
@@ -487,6 +488,9 @@ NAME_ALIASES={
     "sciver":"NR Sciver","tahlia":"TM McGrath","mcgrath":"TM McGrath",
     "amelia":"AMC Kerr","kerr":"AMC Kerr","devine":"SFM Devine",
     "kl rahul":"KL Rahul","rahul":"KL Rahul",
+    # FIX: add common PSL / Pakistan player aliases
+    "salman":"Salman Ali Agha","salman ali agha":"Salman Ali Agha","salman ali":"Salman Ali Agha",
+    "agha":"Salman Ali Agha",
 }
 CRICSHEET_NAME={"Smriti Mandhana":"S Mandhana","Harmanpreet Kaur":"H Kaur",
                 "Shafali Verma":"Shafali Verma","Deepti Sharma":"Deepti Sharma",
@@ -516,6 +520,7 @@ WIKI_NAMES={
     "EA Perry":"Ellyse Perry","A Gardner":"Ashleigh Gardner",
     "NR Sciver":"Nat Sciver-Brunt","TM McGrath":"Tahlia McGrath",
     "AMC Kerr":"Amelia Kerr","SFM Devine":"Sophie Devine","KL Rahul":"KL Rahul cricketer",
+    "Salman Ali Agha":"Salman Ali Agha cricketer",
 }
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -529,10 +534,7 @@ def get_wiki(cricsheet_name, search_name):
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         sr.raise_for_status()
         results=sr.json().get("query",{}).get("search",[])
-        if not results:
-            st.session_state.setdefault("wiki_missing_full", []).append(
-                (cricsheet_name, f"no Wikipedia search results for '{wiki_title}'"))
-            return None
+        if not results: return None
         page_title=results[0]["title"]
         safe=page_title.replace(" ","_")
         rr=requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe}",
@@ -540,6 +542,14 @@ def get_wiki(cricsheet_name, search_name):
         rr.raise_for_status(); data=rr.json()
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
+        # Reject extract if it contains HTML structure (disambiguation or bad page)
+        if "<div" in bio or "<table" in bio or "<span" in bio:
+            # Try to get just plain text by stripping all tags
+            bio = re.sub(r"<[^>]+>", " ", bio)
+            bio = re.sub(r"\s+", " ", bio).strip()
+        # Strip any remaining HTML tags
+        bio=re.sub(r"<[^>]+>","",bio)
+        bio=bio.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
         bio=". ".join(sents[:5])+"." if sents else bio[:600]
         bio=bio.replace("..",".")
@@ -605,86 +615,51 @@ def get_wiki(cricsheet_name, search_name):
         if not role_raw or "[[" in role_raw or len(role_raw)<3:
             role_raw=desc[:60] if desc else ""
         nation=ef(wt,["country","nationality","national_side","national side"])
-        result = {"title":data.get("title",page_title),"bio":bio,"img":img,
+        return {"title":data.get("title",page_title),"bio":bio,"img":img,
                 "born":born[:60] if born else "",
                 "odi_debut":odi_d or any_d,"test_debut":test_d or any_d,"t20_debut":t20_d or any_d,
                 "ipl_debut":"","psl_debut":"","wpl_debut":"",
                 "role":role_raw[:60] if role_raw else "",
                 "nation":nation[:40] if nation else ""}
-        # Previously a missing birth date was silently invisible — you'd only
-        # notice by scrolling every player card and eyeballing which ones lack
-        # a 🎂 pill. Now we log it once per session so you can see exactly
-        # which names need a manual entry in WIKI_NAMES (usually a nickname/
-        # spelling mismatch, or the infobox using a template this regex
-        # doesn't cover yet).
-        if not result["born"]:
-            st.session_state.setdefault("wiki_missing_field", []).append(
-                (cricsheet_name, "no birth date found on matched page: " + result["title"]))
-        return result
-    except Exception as e:
-        # Previously a bare `except: return None` meant every failure —
-        # network timeout, no search results, wrong page match, malformed
-        # infobox — looked identical: a blank "Profile unavailable" card.
-        # Logging the real reason here means you can tell "Wikipedia has no
-        # page for this name" apart from "the request timed out."
-        st.session_state.setdefault("wiki_missing_full", []).append((cricsheet_name, str(e)))
-        return None
-
-# ── V12 show_player_card (pill helper + border-left accent + mobile classes) ──
-import html as _html
+    except: return None
 
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     if not card:
-        st.markdown(f"""<div style="background:var(--card);border-radius:var(--radius);padding:14px 16px;
-          margin:0 0 16px;border:1px solid var(--border)">
-          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {_html.escape(cricsheet_name)}</div>
-        </div>""", unsafe_allow_html=True)
+        st.info(f"📖 Profile unavailable for {cricsheet_name}")
         return
-    img_sz=72 if compact else 96
-    acl=FC.get(fmt,"#00e5a0")
     fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
              "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
     debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    def pill(icon,text,color):
-        # NOTE: previously this inserted Wikipedia-sourced text (name, role,
-        # nationality, dates) straight into raw HTML with zero escaping. If
-        # any of that text contained a stray '<', '>', or '"' — which does
-        # happen with messy/leftover wiki-markup in some infoboxes — it would
-        # break the surrounding tag structure. Once one tag breaks, the
-        # browser can end up displaying the rest of the card's HTML as
-        # literal visible text instead of rendering it, which is exactly the
-        # "raw HTML shown on screen" bug. html.escape() neutralizes this.
-        return f'<span class="ca-pill" style="color:{color}">{icon} {_html.escape(str(text))}</span>'
-    pills=""
-    if card["born"]: pills+=pill("🎂",card["born"],"#fbbf24")
-    if card["nation"]: pills+=pill("🌍",card["nation"],"#3d8bff")
-    if card["role"]: pills+=pill("🏏",card["role"][:30],"#00e5a0")
-    if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
     max_sents=2 if compact else 4
     short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    short_bio=_html.escape(short_bio)
-    safe_title=_html.escape(str(card["title"]))
-    name_sz="14px" if compact else "18px"
-    # Also escape the image URL's quote character specifically, since a
-    # malformed URL containing a stray '"' would break out of the src
-    # attribute the same way.
-    safe_img=_html.escape(card["img"], quote=True) if card["img"] else ""
-    img_html=f'<div class="ca-player-img"><img src="{safe_img}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if safe_img else ""
-    st.markdown(f"""<div class="ca-fade ca-player-card" style="
-      background:linear-gradient(135deg,var(--card),var(--surface));
-      border-radius:var(--radius);padding:14px;margin:0 0 14px 0;
-      border:1px solid var(--border);border-left:3px solid {acl};
-      box-sizing:border-box;width:100%">
-      {img_html}
-      <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_sz}">{safe_title}</div>
-        <div class="ca-player-pills">{pills}</div>
-        <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
+    short_bio=re.sub(r"<[^>]+>","",short_bio)
 
-# ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
+    # Use native Streamlit columns for layout
+    if card.get("img"):
+        col_img, col_info = st.columns([1, 4])
+        with col_img:
+            st.image(card["img"], width=72 if compact else 96)
+    else:
+        col_info = st.container()
+
+    def _strip(t):
+        t = re.sub(r"<[^>]+>", "", t or "")
+        t = t.replace("&amp;","&").replace("&lt;","<").replace("&gt;",">").replace("&quot;",'"').replace("&#39;","'")
+        return t.strip()
+
+    with col_info:
+        st.markdown(f"### {_strip(card['title'])}" if not compact else f"**{_strip(card['title'])}**")
+        pills_text = ""
+        if card["born"]:    pills_text += f"🎂 {_strip(card['born'])}  "
+        if card["nation"]:  pills_text += f"🌍 {_strip(card['nation'])}  "
+        if card["role"]:    pills_text += f"🏏 {_strip(card['role'])[:30]}  "
+        if debut:           pills_text += f"🎯 {fmt} debut: {_strip(debut)}"
+        if pills_text:
+            st.caption(pills_text)
+        if short_bio:
+            st.caption(_strip(short_bio))
+# ── TOP NAVIGATION BAR ──────────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
        "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
@@ -692,7 +667,6 @@ PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue"
 if "page" not in st.session_state: st.session_state["page"]="🏠 Home"
 if "nav_history" not in st.session_state: st.session_state["nav_history"]=[]
 
-# Apply any pending navigation BEFORE widgets are rendered
 if st.session_state.get("_go"):
     dest = st.session_state["_go"]
     del st.session_state["_go"]
@@ -701,7 +675,6 @@ if st.session_state.get("_go"):
         st.session_state["nav_history"].append(cur)
     st.session_state["page"] = dest
 
-# Handle in-app back navigation
 if st.session_state.get("_back"):
     del st.session_state["_back"]
     hist = st.session_state.get("nav_history",[])
@@ -722,30 +695,22 @@ for i,p in enumerate(PAGES):
 nav_html+=f'</div><div class="ca-topnav-status"><span class="ca-live"></span>{status_txt}</div></div>'
 st.markdown(nav_html, unsafe_allow_html=True)
 
-# JS: wire nav buttons to sidebar radio + block browser back
 pages_json = str([p for p in PAGES]).replace("'",'"')
 st.markdown(f"""<script>
 const PAGES = {pages_json};
 function navigateTo(idx) {{
-  // Find the sidebar radio buttons and click the matching one
   const labels = window.parent.document.querySelectorAll('[data-testid="stSidebar"] [role="radiogroup"] label');
   if (labels && labels[idx]) {{
     labels[idx].click();
   }}
 }}
-// Prevent browser back/forward from leaving the app
 (function() {{
-  // Push a dummy state so there's always something to "back" into
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', function(e) {{
-    // Re-push state to trap the user in the SPA
     history.pushState(null, '', location.href);
-    // Trigger in-app back via the hidden back button
-    const backBtn = window.parent.document.querySelector('[data-testid="stButton"] button[kind="secondary"]');
-    // Find back button by key
     const btns = window.parent.document.querySelectorAll('button');
     for (const b of btns) {{
-      if (b.innerText && b.innerText.trim() === '← Back') {{
+      if (b.innerText && b.innerText.trim().startsWith('←')) {{
         b.click();
         break;
       }}
@@ -757,14 +722,16 @@ function navigateTo(idx) {{
 with st.sidebar:
     section=st.radio("",PAGES,key="page",label_visibility="collapsed")
 
-st.markdown('<div class="ca-content">', unsafe_allow_html=True)
+# ca-content padding applied via CSS on .block-container instead of a wrapper div
 section=st.session_state.get("page","🏠 Home")
 
-# ── In-app Back button (shown on all pages except Home) ──────────────────────
+# ── FIX: Back button — shows correct previous page name ──────────────────────
 if section != "🏠 Home" and st.session_state.get("nav_history"):
     prev_page = st.session_state["nav_history"][-1]
-    prev_label = " ".join(prev_page.split()[1:]) if len(prev_page.split()) > 1 else prev_page
-    if st.button(f"← Back  to {prev_label}", key="_back_btn", type="secondary"):
+    # Extract readable label — strip leading emoji and "🏠 " → "Home"
+    prev_parts = prev_page.split(" ", 1)
+    prev_label = prev_parts[1] if len(prev_parts) > 1 else prev_page
+    if st.button(f"← Back to {prev_label}", key="_back_btn", type="secondary"):
         st.session_state["_back"] = True
         st.rerun()
 
@@ -836,9 +803,8 @@ if section=="🏠 Home":
         top_bowl=bowl_fmt[bowl_fmt["format"]==ql_fmt].sort_values("wickets",ascending=False).head(5)[["bowler","wickets","economy","average"]] if not bowl_fmt.empty else pd.DataFrame()
         if not top_bowl.empty: st.dataframe(top_bowl.reset_index(drop=True),hide_index=True)
 
-# ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
+# ══ PLAYER SEARCH ════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
-    # Pre-fill search box via session state key (value= param removed in new Streamlit)
     if st.session_state.get("ps_name","") and "ps_input" not in st.session_state:
         st.session_state["ps_input"] = st.session_state["ps_name"]
     st.session_state["ps_name"] = ""
@@ -881,7 +847,6 @@ elif section=="🔍 Player Search":
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
         show_player_card(display_name,name,fmt)
 
-        # Data freshness banner
         lu=get_last_updated()
         if lu:
             st.markdown(f"""<div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);
@@ -948,11 +913,10 @@ elif section=="🔍 Player Search":
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
-                        # V12 extra: dot ball % chart
                         if "dot_pct" in by2.columns:
                             ch(line(by2,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
 
-# ══ HEAD TO HEAD ══════════════════════════════════════════════════════════════
+# ══ HEAD TO HEAD ═════════════════════════════════════════════════════════════
 elif section=="⚔️ Head to Head":
     page_banner("⚔️","Head to Head","Pick two players and see who dominates across formats","#1a0a2e","#2d1b4e","#6c5ce7")
     c1,c2=st.columns(2)
@@ -1006,7 +970,6 @@ elif section=="⚔️ Head to Head":
                 fy.update_xaxes(title="Year",tickmode="linear",dtick=2,showgrid=True,gridcolor=GRID)
                 fy.update_yaxes(title="Runs",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy,**CFG)
-                # V12 extra: average comparison over years
                 fy2=px.line(combined,x="year",y="average",color="player",markers=True,
                             title=f"Batting Average — {fmt}",
                             color_discrete_map={p1n:FC["ODI"],p2n:FC["Test"]})
@@ -1016,24 +979,49 @@ elif section=="⚔️ Head to Head":
                 fy2.update_yaxes(title="Average",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy2,**CFG)
 
-            # ── Radar chart comparison ────────────────────────────────────────
-            st.markdown("### 🕸️ Head-to-Head Radar")
-            st.markdown('<div class="ca-insight">Each axis is <strong>normalized 0–100</strong> relative to both players — so the shape shows who dominates which dimension, not raw values. A larger filled area = more rounded player.</div>', unsafe_allow_html=True)
-            radar_metrics=["average","strike_rate","boundary_pct","dot_pct"]
-            radar_labels=["Average","Strike Rate","Boundary %","Dot %"]
-            # Normalize each metric 0-100 across both players for radar
-            v1_raw=[float(p1.get(m,0)) for m in radar_metrics]
-            v2_raw=[float(p2_.get(m,0)) for m in radar_metrics]
-            combined_max=[max(a,b,0.001) for a,b in zip(v1_raw,v2_raw)]
-            v1_norm=[round(a/mx*100,1) for a,mx in zip(v1_raw,combined_max)]
-            v2_norm=[round(b/mx*100,1) for b,mx in zip(v2_raw,combined_max)]
-            st.plotly_chart(radar(radar_labels,v1_norm,v2_norm,p1n,p2n,FC["ODI"],FC["Test"],
-                f"Batting Profile — {fmt}"),**CFG)
+            # ── FIX: Improved Radar chart — 6 dimensions, better normalization ──
+            section_heading("🕸️", "Head-to-Head Radar")
+            st.markdown("""<div class="ca-radar-note">
+              Each axis is <strong>normalized 0–100</strong> relative to both players.
+              A <strong>larger filled area</strong> = more rounded player across all dimensions.
+              When two players are very similar, shapes will naturally overlap — the legend colors identify each player.
+            </div>""", unsafe_allow_html=True)
+
+            # FIX: Use 6 metrics for richer radar — Dot% is inverted (lower = better → invert for display)
+            radar_metrics = ["average", "strike_rate", "boundary_pct", "runs", "sixes", "dot_pct"]
+            radar_labels  = ["Average", "Strike Rate", "Boundary %", "Run Volume", "Sixes", "Dot % (inv.)"]
+            v1_raw = [float(p1.get(m, 0)) for m in radar_metrics]
+            v2_raw = [float(p2_.get(m, 0)) for m in radar_metrics]
+            # FIX: Invert dot_pct (last metric) — lower dot% is better for batters
+            max_dot = max(v1_raw[-1], v2_raw[-1], 0.001)
+            v1_raw[-1] = max_dot - v1_raw[-1]   # invert
+            v2_raw[-1] = max_dot - v2_raw[-1]   # invert
+            # Normalize 0-100 per metric
+            combined_max = [max(a, b, 0.001) for a, b in zip(v1_raw, v2_raw)]
+            v1_norm = [round(a / mx * 100, 1) for a, mx in zip(v1_raw, combined_max)]
+            v2_norm = [round(b / mx * 100, 1) for b, mx in zip(v2_raw, combined_max)]
+            st.plotly_chart(radar(radar_labels, v1_norm, v2_norm, p1n, p2n,
+                                  FC["ODI"], FC["Test"], f"Batting Profile — {fmt}"), **CFG)
+
+            # FIX: Add a raw stat comparison table below the radar for reference
+            st.markdown("""<div class="ca-insight">
+              💡 <strong>Tip:</strong> The radar shows relative dominance between the two players.
+              For absolute values, see the bar charts above or the raw stats table below.
+            </div>""", unsafe_allow_html=True)
+            raw_comparison = {
+                "Metric": ["Average", "Strike Rate", "Boundary %", "Total Runs", "Sixes", "Dot Ball %"],
+                p1n: [round(float(p1.get(m, 0)), 2) for m in ["average","strike_rate","boundary_pct","runs","sixes","dot_pct"]],
+                p2n: [round(float(p2_.get(m, 0)), 2) for m in ["average","strike_rate","boundary_pct","runs","sixes","dot_pct"]],
+            }
+            st.dataframe(pd.DataFrame(raw_comparison), hide_index=True, use_container_width=True)
 
 # ══ VS VENUE ══════════════════════════════════════════════════════════════════
 elif section=="🏟️ vs Venue":
     page_banner("🏟️","Player vs Venue","How does a player perform at different grounds?","#0a1a1a","#0d2b2b","#00b894")
-    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=st.text_input("Player name","Kohli")
+    # FIX: label_visibility hidden to avoid floating "Type" label box
+    st_=st.radio("Type",["Batting","Bowling"],horizontal=True,label_visibility="collapsed")
+    st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_ven,"striker",sname) if st_=="Batting" else find_rows(bowl_ven,"bowler",sname)
@@ -1046,9 +1034,8 @@ elif section=="🏟️ vs Venue":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_top=df_v.sort_values(m,ascending=False).head(20)
                 ch(bar_h(df_top,m,"venue",m,"Greens",f"{df_top['striker'].iloc[0]} — {m} by Venue ({fmt})"))
-                # Scatter: innings vs average per venue — reveals consistency
                 if "innings" in df_v.columns and "average" in df_v.columns and len(df_v)>=3:
-                    st.markdown("#### 📍 Consistency Map — Innings vs Average per Venue")
+                    section_heading("📍", "Consistency Map — Innings vs Average per Venue")
                     st.caption("Top-right = visits often AND scores big. Bubble size = total runs.")
                     df_sc=df_v.copy()
                     bsz=df_sc["runs"].fillna(0) if "runs" in df_sc.columns else None
@@ -1069,7 +1056,7 @@ elif section=="🏟️ vs Venue":
                 df_top=df_v.sort_values(m,ascending=False).head(20)
                 ch(bar_h(df_top,m,"venue",m,"Reds",f"{df_top['bowler'].iloc[0]} — {m} by Venue ({fmt})"))
                 if "innings" in df_v.columns and "economy" in df_v.columns and len(df_v)>=3:
-                    st.markdown("#### 📍 Economy Map — Innings vs Economy per Venue")
+                    section_heading("📍", "Economy Map — Innings vs Economy per Venue")
                     st.caption("Bottom-right = bowls a lot AND stays economical. Bubble size = wickets.")
                     df_sc2=df_v.copy()
                     bsz2=df_sc2["wickets"].fillna(0) if "wickets" in df_sc2.columns else None
@@ -1089,7 +1076,10 @@ elif section=="🏟️ vs Venue":
 # ══ VS OPPONENT ═══════════════════════════════════════════════════════════════
 elif section=="🌍 vs Opponent":
     page_banner("🌍","Player vs Opponent","Find which teams a player dominates — and which trouble them","#0a1020","#0d1e3a","#0984e3")
-    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=st.text_input("Player name","Kohli")
+    # FIX: label_visibility hidden to avoid floating "Type" label
+    st_=st.radio("Type",["Batting","Bowling"],horizontal=True,label_visibility="collapsed")
+    st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_opp,"striker",sname) if st_=="Batting" else find_rows(bowl_opp,"bowler",sname)
@@ -1101,9 +1091,8 @@ elif section=="🌍 vs Opponent":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_o_s=df_o.sort_values(m,ascending=False)
                 ch(bar_h(df_o_s,m,"opponent",m,"Blues",f"{df_o_s['striker'].iloc[0]} — {m} vs Teams ({fmt})"))
-                # Dominance scatter: innings vs average per opponent
                 if "innings" in df_o.columns and "average" in df_o.columns and len(df_o)>=3:
-                    st.markdown("#### 🎯 Dominance Map — Which Teams Does He Master?")
+                    section_heading("🎯", "Dominance Map — Which Teams Does He Master?")
                     st.caption("Top-right = plays them often AND scores big. Bottom-left = struggles.")
                     med_avg = float(df_o["average"].median()) if "average" in df_o.columns else 0
                     med_inn = float(df_o["innings"].median()) if "innings" in df_o.columns else 0
@@ -1113,7 +1102,6 @@ elif section=="🌍 vs Opponent":
                         title=f"Batting Dominance by Opponent ({fmt})")
                     fig_dom.update_traces(textposition="top center",textfont=dict(size=9,color=TEXT),
                         hovertemplate="<b>%{text}</b><br>Innings: %{x}<br>Avg: %{y:.1f}<extra></extra>")
-                    # Quadrant lines
                     fig_dom.add_hline(y=med_avg,line_dash="dot",line_color=GRID,
                                       annotation_text="Median avg",annotation_font=dict(size=9,color=TEXT))
                     fig_dom.add_vline(x=med_inn,line_dash="dot",line_color=GRID,
@@ -1129,7 +1117,7 @@ elif section=="🌍 vs Opponent":
                 df_o_s=df_o.sort_values(m,ascending=False)
                 ch(bar_h(df_o_s,m,"opponent",m,"Purples",f"{df_o_s['bowler'].iloc[0]} — {m} vs Teams ({fmt})"))
                 if "innings" in df_o.columns and "economy" in df_o.columns and len(df_o)>=3:
-                    st.markdown("#### 🎯 Bowling Dominance Map")
+                    section_heading("🎯", "Bowling Dominance Map")
                     st.caption("Top-right = bowls them often AND takes wickets. Bottom = struggles for wickets.")
                     fig_dom2=px.scatter(df_o,x="innings",y="wickets" if "wickets" in df_o.columns else "economy",
                         text="opponent",size="wickets" if "wickets" in df_o.columns else None,size_max=50,
@@ -1149,7 +1137,7 @@ elif section=="🤜 Batter vs Bowler":
     page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a0a","#2e1010","#d63031")
     mt=st.radio("Look up a...",["Batter","Bowler"],horizontal=True)
     if mt=="Batter":
-        name=player_input("Batter name",resolve("Babar Azam"),key="bvb_batter")
+        name=st.text_input("Batter name","Babar Azam")
         if name:
             sname=resolve(name)
             src=find_rows(bvb,"striker",sname)
@@ -1162,7 +1150,7 @@ elif section=="🤜 Batter vs Bowler":
                 ch(bar_h(df_m,m,"bowler",m,"Greens",f"Top 20 bowlers faced — {m} ({fmt})"))
                 st.dataframe(df_m[["bowler","balls_faced","runs","strike_rate","dismissals"]].reset_index(drop=True))
     else:
-        name=player_input("Bowler name",resolve("Shaheen"),key="bvb_bowler")
+        name=st.text_input("Bowler name","Shaheen")
         if name:
             sname=resolve(name)
             src=find_rows(wvb,"bowler",sname)
@@ -1178,7 +1166,10 @@ elif section=="🤜 Batter vs Bowler":
 # ══ PERFORMANCE OVER YEARS ════════════════════════════════════════════════════
 elif section=="📈 Over Years":
     page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#0a150a","#0d2a10","#00b894")
-    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=st.text_input("Player name","Kohli")
+    # FIX: label_visibility hidden to avoid floating "Type" label
+    st_=st.radio("Type",["Batting","Bowling"],horizontal=True,label_visibility="collapsed")
+    st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_yr,"striker",sname) if st_=="Batting" else find_rows(bowl_yr,"bowler",sname)
@@ -1197,7 +1188,6 @@ elif section=="📈 Over Years":
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
-                # V12 bonus: dot ball % over years
                 if "dot_pct" in by.columns:
                     ch(line(by,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
                 st.dataframe(by[["year","matches","wickets","economy","average","dot_pct","balls"]].reset_index(drop=True) if "balls" in by.columns else by[["year","matches","wickets","economy","average","dot_pct"]].reset_index(drop=True))
@@ -1215,11 +1205,9 @@ elif section=="🏆 Leaderboard":
         lb=bs[bs["runs"]>=mr].sort_values(sb,ascending=False).head(tn).reset_index(drop=True)
         lb.insert(0,"Rank",range(1,len(lb)+1))
         ch(bar_h(lb,sb,"striker",sb,"Teal",f"Top {tn} {fmt} Batters — {sb}"))
-        # Scatter: runs vs average — the classic "who's elite" plot
         if "runs" in lb.columns and "average" in lb.columns and len(lb)>=4:
-            st.markdown("#### 💠 Runs vs Average — The Elite Quadrant")
+            section_heading("💠", "Runs vs Average — The Elite Quadrant")
             st.markdown('<div class="ca-insight"><strong>Top-right</strong> = high volume AND high quality. <strong>Color</strong> = strike rate. The dotted lines are median splits — names above both lines are the true greats of this format.</div>', unsafe_allow_html=True)
-            st.caption("Top-right = high volume AND high quality. The true greats live there.")
             med_r=float(lb["runs"].median()); med_a=float(lb["average"].median())
             fig_sc=px.scatter(lb,x="runs",y="average",text="striker",
                 color="strike_rate" if "strike_rate" in lb.columns else None,
@@ -1247,9 +1235,8 @@ elif section=="🏆 Leaderboard":
         lb2=ws[ws["wickets"]>=mw].sort_values(sb2,ascending=(sb2 in ["economy","average"])).head(tn2).reset_index(drop=True)
         lb2.insert(0,"Rank",range(1,len(lb2)+1))
         ch(bar_h(lb2,"wickets","bowler","economy","Sunset",f"Top {tn2} {fmt} Bowlers"))
-        # Scatter: wickets vs economy
         if "wickets" in lb2.columns and "economy" in lb2.columns and len(lb2)>=4:
-            st.markdown("#### 💠 Wickets vs Economy — The Elite Quadrant")
+            section_heading("💠", "Wickets vs Economy — The Elite Quadrant")
             st.caption("Top-right = high wickets AND economical. The match-winners.")
             fig_sc2=px.scatter(lb2,x="wickets",y="economy",text="bowler",
                 color="average" if "average" in lb2.columns else None,
@@ -1276,7 +1263,7 @@ elif section=="🤖 Similar Players":
     page_banner("🤖","Similar Players","ML-powered: find cricketers who play just like your favourite","#0a0a1a","#1a1a3a","#a29bfe")
     st.markdown("Uses **KMeans clustering + cosine similarity** on career stats to find statistically similar players.")
     st_type=st.radio("Type",["Batter","Bowler"],horizontal=True)
-    name=player_input("Player name",resolve("Babar"),key="leaderboard_player"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
+    name=st.text_input("Player name","Babar"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
     if name:
         sname=resolve(name)
         if st_type=="Batter":
@@ -1293,8 +1280,7 @@ elif section=="🤖 Similar Players":
                 st.subheader(f"Players most similar to {p['striker']} in {fmt}")
                 st.caption(f"⭐ Player Score: {p.get('player_score','—')} | Cluster #{cluster} | {len(same)} similar players found")
                 ch(bar_h(same,"average","striker","average","Purples",f"Similar batters — {fmt}"))
-                # Show compact player cards for top 4 matches
-                st.markdown("#### 🎴 Top Similar Players")
+                section_heading("🎴", "Top Similar Players")
                 top4=same.head(4)["striker"].tolist()
                 card_cols=st.columns(min(len(top4),2))
                 for i,pname_s in enumerate(top4):
@@ -1316,7 +1302,7 @@ elif section=="🤖 Similar Players":
                 st.caption(f"Cluster #{cluster} | {len(same)} similar bowlers found")
                 ch(bar_h(same,"wickets","bowler","economy","Reds",f"Similar bowlers — {fmt}"))
                 top4b=same.head(4)["bowler"].tolist()
-                st.markdown("#### 🎴 Top Similar Bowlers")
+                section_heading("🎴", "Top Similar Bowlers")
                 card_cols2=st.columns(min(len(top4b),2))
                 for i,bname_s in enumerate(top4b):
                     with card_cols2[i%2]:
@@ -1331,9 +1317,11 @@ elif section=="🔥 Form & Ratings":
 
     # ── Tab 1: Player year-by-year form ──────────────────────────────────────
     with tab1:
-        st.markdown("#### Year-by-year form with career reference lines")
-        fname=player_input("Player name",resolve("Kohli"),key="form_player")
-        ftype=st.radio("Type",["Batting","Bowling"],horizontal=True,key="form_type")
+        section_heading("📅", "Year-by-year form with career reference lines")
+        fname=st.text_input("Player name","Kohli",key="form_player")
+        # FIX: label_visibility="collapsed" + manual label to avoid floating "Type" label
+        ftype=st.radio("Type",["Batting","Bowling"],horizontal=True,key="form_type",label_visibility="collapsed")
+        st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
         if fname:
             fsname=resolve(fname)
             if ftype=="Batting":
@@ -1352,7 +1340,6 @@ elif section=="🔥 Form & Ratings":
                              "Avg (latest)":round(float(latest["average"]),1),
                              "SR (latest)":round(float(latest["strike_rate"]),1),
                              "Matches":int(latest["matches"])})
-                    # Form delta badges vs career
                     if cavg or csr:
                         badges=""
                         if cavg: badges+=form_delta_html(float(latest["average"]),cavg,"avg",True)+" "
@@ -1404,7 +1391,6 @@ elif section=="🔥 Form & Ratings":
                              "Economy (latest)":round(float(latest["economy"]),2),
                              "Average (latest)":round(float(latest["average"]),1),
                              "Matches":int(latest["matches"])})
-                    # Form delta badges vs career
                     if cecon or cavg:
                         badges2=""
                         if cecon: badges2+=form_delta_html(float(latest["economy"]),cecon,"econ",False)+" "
@@ -1434,7 +1420,6 @@ elif section=="🔥 Form & Ratings":
                                            annotation_font=dict(color="#fdcb6e",size=11))
                     fig_avg2.update_layout(**BASE,height=300,margin=M_DEFAULT)
                     with c2: st.plotly_chart(fig_avg2,**CFG)
-                    # V12 bonus: dot ball % trend
                     if "dot_pct" in pyr.columns:
                         fig_dot=px.line(pyr,x="year",y="dot_pct",markers=True,title=f"{pname} — Dot Ball % by Year")
                         fig_dot.update_traces(line=dict(color="#00cec9",width=3),marker=dict(size=8,color="#00cec9"))
@@ -1445,7 +1430,9 @@ elif section=="🔥 Form & Ratings":
 
     # ── Tab 2: Hot List ───────────────────────────────────────────────────────
     with tab2:
-        ftype2=st.radio("Type",["Batting","Bowling"],horizontal=True,key="hot_type")
+        # FIX: label_visibility="collapsed" to fix floating "Type" label
+        ftype2=st.radio("Type",["Batting","Bowling"],horizontal=True,key="hot_type",label_visibility="collapsed")
+        st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
         n_yrs=st.slider("Recent window (years)",1,5,1,key="hot_yrs")
         min_inn=st.slider("Min innings",3,20,5,key="hot_inn")
         if ftype2=="Batting" and not bat_yr.empty:
@@ -1481,7 +1468,9 @@ elif section=="🔥 Form & Ratings":
 
     # ── Tab 3: Cold List ──────────────────────────────────────────────────────
     with tab3:
-        ftype3=st.radio("Type",["Batting","Bowling"],horizontal=True,key="cold_type")
+        # FIX: label_visibility="collapsed" to fix floating "Type" label
+        ftype3=st.radio("Type",["Batting","Bowling"],horizontal=True,key="cold_type",label_visibility="collapsed")
+        st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
         min_career=st.slider("Min career matches",5,30,10,key="cold_min")
         if ftype3=="Batting" and not bat_form.empty:
             src=bat_form[bat_form["format"]==fmt].copy()
@@ -1506,7 +1495,9 @@ elif section=="🔥 Form & Ratings":
 
     # ── Tab 4: Player Scores ──────────────────────────────────────────────────
     with tab4:
-        ps_type=st.radio("Type",["Batting","Bowling"],horizontal=True,key="ps_type")
+        # FIX: label_visibility="collapsed" to fix floating "Type" label
+        ps_type=st.radio("Type",["Batting","Bowling"],horizontal=True,key="ps_type",label_visibility="collapsed")
+        st.markdown('<div style="font-size:11px;color:var(--muted);font-weight:600;margin:-8px 0 6px;text-transform:uppercase;letter-spacing:.8px">Type</div>', unsafe_allow_html=True)
         if ps_type=="Batting":
             ps=bat_sim[bat_sim["format"]==fmt].sort_values("player_score",ascending=False).head(25) if not bat_sim.empty else pd.DataFrame()
             if len(ps)>0:
@@ -1523,21 +1514,4 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(ps2[show_bowl].reset_index(drop=True))
             else: st.info(f"No bowling player score data for {fmt} yet.")
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ── Diagnostics panel ─────────────────────────────────────────────────────────
-# Collects everything logged by load() and get_wiki() during this session so
-# missing data has a visible, debuggable trail instead of just looking like
-# "some stuff is randomly blank." Only shows up if something actually failed.
-_missing_full = st.session_state.get("wiki_missing_full", [])
-_missing_field = st.session_state.get("wiki_missing_field", [])
-if _missing_full or _missing_field:
-    with st.expander(f"🔧 Data diagnostics — {len(_missing_full)+len(_missing_field)} profile lookup issue(s) this session", expanded=False):
-        if _missing_full:
-            st.caption("**Profiles that failed to load entirely** (add a manual entry to WIKI_NAMES to fix):")
-            for name, reason in _missing_full:
-                st.caption(f"• {name} — {reason}")
-        if _missing_field:
-            st.caption("**Profiles found but missing birth date** (infobox format not recognized):")
-            for name, reason in _missing_field:
-                st.caption(f"• {name} — {reason}")
+# end of content
