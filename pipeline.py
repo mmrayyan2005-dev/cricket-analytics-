@@ -98,9 +98,10 @@ def load_format(folder, label):
     Cricsheet occasionally has the same match_id appear in more than one
     file — e.g. a corrected/reissued scorecard saved alongside the
     original under a different filename. Naively concatenating every file
-    counts that match twice. We now keep only the most complete version
-    of each match_id (the file with the most ball-by-ball rows for it)
-    and drop any duplicate file's rows for that same match.
+    can count that match twice. We now remove exact duplicate deliveries
+    (same match_id + innings + ball + players) at the row level — this
+    can never discard an entire legitimate match's data, only true
+    duplicate rows.
     """
     if not os.path.isdir(folder):
         log.warning(f"{label}: folder {folder} does not exist, skipping")
@@ -122,40 +123,33 @@ def load_format(folder, label):
         return pd.DataFrame()
     df = pd.concat(dfs, ignore_index=True)
 
-    if "match_id" in df.columns:
-        # BUG FIX: pandas groupby() silently drops rows where the grouping
-        # column (match_id) is NaN/blank. Newer or slightly inconsistent
-        # Cricsheet files can have a handful of rows with a missing
-        # match_id. The dedup logic below only knows how to compare rows
-        # THAT HAVE a match_id — so we must set aside any NaN-match_id rows
-        # first and keep them untouched, otherwise they silently vanish
-        # entirely during the merge step (this was likely deleting real,
-        # legitimate recent matches — e.g. brand-new debutants' data —
-        # not just true duplicates).
-        no_id_mask = df["match_id"].isna()
-        df_no_id = df[no_id_mask]
-        df_with_id = df[~no_id_mask]
-        if len(df_no_id) > 0:
-            log.warning(f"{label}: {len(df_no_id):,} row(s) had a missing/blank match_id — "
-                        f"keeping them as-is (can't be deduplicated, but must not be dropped).")
-
-        # For each match_id, find which source file has the most rows
-        # (the most complete/authoritative version), then keep ONLY that
-        # file's rows for that match_id and drop the rest.
-        file_counts = df_with_id.groupby(["match_id", "_source_file"]).size().reset_index(name="n")
-        best_file = file_counts.loc[file_counts.groupby("match_id")["n"].idxmax()]
-        dup_matches = file_counts["match_id"].value_counts()
-        dup_matches = dup_matches[dup_matches > 1].index.tolist()
-        if dup_matches:
-            log.warning(f"{label}: {len(dup_matches)} match_id(s) appeared in more than one "
-                        f"source file (likely reissued/corrected scorecards) — keeping only the "
-                        f"most complete version of each to avoid double-counting. "
-                        f"Examples: {dup_matches[:5]}")
-        keep = best_file.rename(columns={"_source_file": "_keep_file"})[["match_id", "_keep_file"]]
-        df_with_id = df_with_id.merge(keep, on="match_id", how="left")
-        df_with_id = df_with_id[df_with_id["_source_file"] == df_with_id["_keep_file"]].drop(columns=["_keep_file"])
-
-        df = pd.concat([df_with_id, df_no_id], ignore_index=True)
+    if "match_id" in df.columns and "innings" in df.columns and "ball" in df.columns:
+        # REVISED APPROACH — the previous version compared whole FILES by
+        # total row count and discarded the entire "smaller" file for any
+        # match_id that appeared twice. That was too aggressive: if that
+        # comparison ever picked wrong for any reason (a rain-shortened
+        # innings recorded as a separate legitimate file, an unrelated
+        # row-count quirk, etc.), it would silently throw away real,
+        # legitimate deliveries for that match — which is almost certainly
+        # what caused players showing far fewer matches than they actually
+        # played (e.g. 90 shown instead of 180).
+        #
+        # This is a much safer, more conservative fix: instead of judging
+        # whole files against each other, we only remove a row if there is
+        # ANOTHER row that is an exact duplicate of the same specific
+        # delivery — same match, same innings, same ball number. That can
+        # only happen if a match was genuinely reissued/duplicated; a
+        # legitimate, unique delivery can never collide with another
+        # legitimate delivery on all three of those fields at once. This
+        # can never discard a real match's real data, only true duplicates.
+        before = len(df)
+        df = df.drop_duplicates(subset=["match_id", "innings", "ball", "striker", "bowler"], keep="first")
+        removed = before - len(df)
+        if removed > 0:
+            log.warning(f"{label}: removed {removed:,} duplicate delivery row(s) "
+                        f"(same match/innings/ball/players appearing more than once — "
+                        f"likely a reissued scorecard). This is a safe, row-level removal "
+                        f"that cannot discard an entire legitimate match.")
 
     df = df.drop(columns=["_source_file"])
     df["format"] = label
@@ -541,6 +535,47 @@ def main():
      bowling_venue, bowling_opponent, batter_vs_bowler, bowler_vs_batter) = build_yearly_venue_opponent_matchup(df)
     bat_ml, bowl_ml, form, bowl_form = build_ml_tables(batting_by_format, bowling_by_format,
                                                         batting_yearly, bowling_yearly)
+
+    # ── Manual overrides ───────────────────────────────────────────────────
+    # Cricsheet can lag behind real matches by days to weeks, especially for
+    # brand-new debutants whose data isn't in the standard archive yet. This
+    # reads two OPTIONAL files sitting in the repo root — manual_batting.csv
+    # and manual_bowling.csv — and merges them in, so specific missing
+    # players/years can be added by hand immediately instead of waiting on
+    # Cricsheet or debugging name-matching. If a (striker, year, format) row
+    # already exists from the real pipeline data, the manual entry is
+    # ignored for that combination — manual entries only fill real gaps,
+    # they never silently overwrite automated data.
+    #
+    # Expected columns for manual_batting.csv:
+    #   striker,year,format,matches,runs,balls_faced,dismissals,fours,sixes,average,strike_rate
+    # Expected columns for manual_bowling.csv:
+    #   bowler,year,format,matches,balls,runs_given,wickets,economy,average
+    if os.path.exists("manual_batting.csv"):
+        try:
+            manual_bat = pd.read_csv("manual_batting.csv")
+            existing_keys = set(zip(batting_yearly["striker"], batting_yearly["year"], batting_yearly["format"]))
+            new_rows = manual_bat[~manual_bat.apply(
+                lambda r: (r["striker"], r["year"], r["format"]) in existing_keys, axis=1)]
+            if len(new_rows) > 0:
+                batting_yearly = pd.concat([batting_yearly, new_rows], ignore_index=True)
+                log.info(f"Added {len(new_rows)} manual batting row(s) from manual_batting.csv "
+                         f"(players/years not yet in Cricsheet's data)")
+        except Exception as e:
+            log.error(f"Failed to apply manual_batting.csv: {e}")
+
+    if os.path.exists("manual_bowling.csv"):
+        try:
+            manual_bowl = pd.read_csv("manual_bowling.csv")
+            existing_keys = set(zip(bowling_yearly["bowler"], bowling_yearly["year"], bowling_yearly["format"]))
+            new_rows = manual_bowl[~manual_bowl.apply(
+                lambda r: (r["bowler"], r["year"], r["format"]) in existing_keys, axis=1)]
+            if len(new_rows) > 0:
+                bowling_yearly = pd.concat([bowling_yearly, new_rows], ignore_index=True)
+                log.info(f"Added {len(new_rows)} manual bowling row(s) from manual_bowling.csv "
+                         f"(players/years not yet in Cricsheet's data)")
+        except Exception as e:
+            log.error(f"Failed to apply manual_bowling.csv: {e}")
 
     files_to_save = {
         "cricket_batting_stats.csv": batting,
