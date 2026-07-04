@@ -907,7 +907,15 @@ elif section=="🔍 Player Search":
                 st.warning(f"No exact match for '{name}'. Did you mean one of these?")
                 for s in suggestions:
                     if st.button(s, key=f"suggest_{s}"):
-                        st.session_state["ps_input"] = s
+                        # NOTE: cannot set st.session_state["ps_input"] directly here —
+                        # Streamlit forbids overwriting a widget's own bound key after
+                        # that widget has already been instantiated in this run, and
+                        # raises a StreamlitAPIException. "ps_name" is the existing
+                        # hand-off variable (see top of this section) that gets copied
+                        # into "ps_input" BEFORE the widget is created on the next run.
+                        st.session_state["ps_name"] = s
+                        if "ps_input" in st.session_state:
+                            del st.session_state["ps_input"]
                         st.rerun()
             else:
                 st.error(f"No data found for '{name}', and no similar name exists anywhere in the dataset. "
