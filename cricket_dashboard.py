@@ -525,7 +525,7 @@ def get_wiki(cricsheet_name, search_name):
         wiki_title=WIKI_NAMES.get(cricsheet_name, search_name+" cricketer")
         sr=requests.get("https://en.wikipedia.org/w/api.php",
             params={"action":"query","list":"search","srsearch":wiki_title,
-                    "format":"json","utf8":1,"srlimit":3},
+                    "format":"json","utf8":1,"srlimit":5},
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         sr.raise_for_status()
         results=sr.json().get("query",{}).get("search",[])
@@ -533,7 +533,36 @@ def get_wiki(cricsheet_name, search_name):
             st.session_state.setdefault("wiki_missing_full", []).append(
                 (cricsheet_name, f"no Wikipedia search results for '{wiki_title}'"))
             return None
-        page_title=results[0]["title"]
+
+        # Previously this always took results[0] — Wikipedia's plain text
+        # search often ranks a more famous, unrelated person with a similar
+        # surname above the actual (often less famous/younger) cricketer,
+        # which is exactly how a wrong photo/bio ends up attached to the
+        # right stats. Instead, score every candidate in the top 5 and pick
+        # whichever one actually looks like a cricketer, rather than
+        # trusting Wikipedia's raw ranking blindly.
+        def _score(result):
+            snippet = re.sub(r"<[^>]+>", "", result.get("snippet", "")).lower()
+            title = result.get("title", "").lower()
+            score = 0
+            if "cricket" in snippet: score += 5
+            if "batsman" in snippet or "bowler" in snippet or "batter" in snippet: score += 2
+            if "wicket-keeper" in snippet or "all-rounder" in snippet: score += 2
+            # Penalize obvious non-cricketer pages that still matched the name
+            if any(w in snippet for w in ["footballer","actor","musician","politician","author"]) \
+               and "cricket" not in snippet:
+                score -= 5
+            return score
+
+        scored = sorted(results, key=_score, reverse=True)
+        best_score = _score(scored[0])
+        if best_score <= 0:
+            # None of the candidates clearly look like a cricketer — flag
+            # this as a low-confidence match instead of silently attaching
+            # a possibly-wrong bio/photo, so it shows up in diagnostics.
+            st.session_state.setdefault("wiki_low_confidence", []).append(
+                (cricsheet_name, f"no candidate clearly matched 'cricketer' — using best guess '{scored[0]['title']}'"))
+        page_title=scored[0]["title"]
         safe=page_title.replace(" ","_")
         rr=requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe}",
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
@@ -859,7 +888,33 @@ elif section=="🔍 Player Search":
         aw=aw_qual["format"].unique().tolist() if not aw_qual.empty else []
         avl=sorted(set(ab+aw),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
         if not avl:
-            st.error(f"No data found for '{name}'. Try a different spelling or ensure their format data is loaded.")
+            # Previously this just said "try a different spelling" with no
+            # actual help — every missing-player report in this project
+            # turned into a slow manual CSV search to find out why. Now we
+            # search the actual list of every player name in the dataset
+            # for close matches, so the app tells you immediately whether
+            # this is a name-spelling issue (here are the close matches you
+            # probably meant) or a genuine data gap (no close match exists
+            # at all, meaning Cricsheet likely doesn't have this player yet).
+            import difflib
+            close = difflib.get_close_matches(name, ALL_PLAYER_NAMES, n=5, cutoff=0.5)
+            # Also check for simple substring matches (catches cases like
+            # searching "Vaibhav" when the full name is "Vaibhav Suryavanshi"
+            # but the fuzzy ratio above might not rank it highly enough)
+            substr = [n for n in ALL_PLAYER_NAMES if name.lower() in n.lower()][:5]
+            suggestions = list(dict.fromkeys(close + substr))  # dedupe, keep order
+            if suggestions:
+                st.warning(f"No exact match for '{name}'. Did you mean one of these?")
+                for s in suggestions:
+                    if st.button(s, key=f"suggest_{s}"):
+                        st.session_state["ps_input"] = s
+                        st.rerun()
+            else:
+                st.error(f"No data found for '{name}', and no similar name exists anywhere in the dataset. "
+                         f"This most likely means Cricsheet doesn't have this player's match data yet "
+                         f"(common for very recent debuts) — not a search/spelling issue. "
+                         f"You can add their stats manually via manual_batting.csv / manual_bowling.csv "
+                         f"in the repo until Cricsheet catches up.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
         clr=FC.get(fmt,"#00e5a0")
@@ -1518,8 +1573,15 @@ st.markdown('</div>', unsafe_allow_html=True)
 # "some stuff is randomly blank." Only shows up if something actually failed.
 _missing_full = st.session_state.get("wiki_missing_full", [])
 _missing_field = st.session_state.get("wiki_missing_field", [])
-if _missing_full or _missing_field:
-    with st.expander(f"🔧 Data diagnostics — {len(_missing_full)+len(_missing_field)} profile lookup issue(s) this session", expanded=False):
+_low_confidence = st.session_state.get("wiki_low_confidence", [])
+_total_issues = len(_missing_full) + len(_missing_field) + len(_low_confidence)
+if _total_issues:
+    with st.expander(f"🔧 Data diagnostics — {_total_issues} profile lookup issue(s) this session", expanded=False):
+        if _low_confidence:
+            st.caption("**⚠️ Possibly wrong photo/bio** (no search result clearly matched 'cricketer' — "
+                       "add a manual entry to WIKI_NAMES with the exact Wikipedia page title to fix):")
+            for name, reason in _low_confidence:
+                st.caption(f"• {name} — {reason}")
         if _missing_full:
             st.caption("**Profiles that failed to load entirely** (add a manual entry to WIKI_NAMES to fix):")
             for name, reason in _missing_full:
