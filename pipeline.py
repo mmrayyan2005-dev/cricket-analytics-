@@ -65,11 +65,20 @@ log = logging.getLogger("cricket_pipeline")
 
 def download_and_extract(name, url, workdir):
     """Download one Cricsheet zip and extract it. Logs failures instead of
-    letting a bad download silently produce zero data for a format."""
+    letting a bad download silently produce zero data for a format.
+
+    Includes a browser-like User-Agent header — Cricsheet's server can
+    reject plain script requests with a 415 error otherwise, which is what
+    caused a full pipeline failure (every format returned 0 rows)."""
     folder = os.path.join(workdir, f"{name.lower()}_data")
     os.makedirs(folder, exist_ok=True)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; CricketAnalyticsPipeline/1.0; "
+                      "+https://github.com/mmrayyan2005-dev/cricket-analytics_-)",
+        "Accept": "*/*",
+    }
     try:
-        resp = requests.get(url, timeout=60)
+        resp = requests.get(url, timeout=60, headers=headers)
         resp.raise_for_status()
         with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
             z.extractall(folder)
@@ -473,6 +482,18 @@ def main():
         load_format(os.path.join(WORKDIR, "psl_data"), "PSL"),
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
+
+    # If every download failed (e.g. Cricsheet rejected our requests, or
+    # their site was temporarily down), df will be empty here. Previously
+    # this would crash 15+ seconds later inside clean_and_validate() with a
+    # confusing KeyError that gave no hint the real problem was upstream.
+    # Stopping here with a clear message points straight at the real cause.
+    if df.empty:
+        log.error("No data was loaded from ANY format — every Cricsheet download likely "
+                   "failed. Check the download errors logged above (e.g. HTTP errors) "
+                   "before re-running. Stopping here instead of crashing later with a "
+                   "confusing error.")
+        sys.exit(1)
 
     # ── Diagnostic: what's the most recent date Cricsheet actually gave us,
     # per format, BEFORE any cleaning? This directly answers "is 2025/2026
