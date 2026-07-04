@@ -630,59 +630,46 @@ def get_wiki(cricsheet_name, search_name):
         st.session_state.setdefault("wiki_missing_full", []).append((cricsheet_name, str(e)))
         return None
 
-# ── V12 show_player_card (pill helper + border-left accent + mobile classes) ──
+# ── show_player_card (rebuilt on native Streamlit components) ────────────────
+# Previously this built one large custom HTML block via an f-string and
+# rendered it with st.markdown(unsafe_allow_html=True). Even with every text
+# field escaped, some players' cards still rendered as literal visible tags
+# instead of a styled card for reasons that were hard to pin down further
+# without live access to the deployed app. Rather than keep chasing the
+# exact character/condition causing it, this rebuilds the same visual layout
+# using Streamlit's own components (st.columns, st.image, st.caption) —
+# these can't "leak" as raw text the way hand-built HTML can, since
+# Streamlit itself controls how they render rather than relying on the
+# browser to correctly parse a hand-assembled string.
 import html as _html
 
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
-    if not card:
-        st.markdown(f"""<div style="background:var(--card);border-radius:var(--radius);padding:14px 16px;
-          margin:0 0 16px;border:1px solid var(--border)">
-          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {_html.escape(cricsheet_name)}</div>
-        </div>""", unsafe_allow_html=True)
-        return
-    img_sz=72 if compact else 96
-    acl=FC.get(fmt,"#00e5a0")
-    fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
-             "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
-    debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    def pill(icon,text,color):
-        # NOTE: previously this inserted Wikipedia-sourced text (name, role,
-        # nationality, dates) straight into raw HTML with zero escaping. If
-        # any of that text contained a stray '<', '>', or '"' — which does
-        # happen with messy/leftover wiki-markup in some infoboxes — it would
-        # break the surrounding tag structure. Once one tag breaks, the
-        # browser can end up displaying the rest of the card's HTML as
-        # literal visible text instead of rendering it, which is exactly the
-        # "raw HTML shown on screen" bug. html.escape() neutralizes this.
-        return f'<span class="ca-pill" style="color:{color}">{icon} {_html.escape(str(text))}</span>'
-    pills=""
-    if card["born"]: pills+=pill("🎂",card["born"],"#fbbf24")
-    if card["nation"]: pills+=pill("🌍",card["nation"],"#3d8bff")
-    if card["role"]: pills+=pill("🏏",card["role"][:30],"#00e5a0")
-    if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
-    max_sents=2 if compact else 4
-    short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    short_bio=_html.escape(short_bio)
-    safe_title=_html.escape(str(card["title"]))
-    name_sz="14px" if compact else "18px"
-    # Also escape the image URL's quote character specifically, since a
-    # malformed URL containing a stray '"' would break out of the src
-    # attribute the same way.
-    safe_img=_html.escape(card["img"], quote=True) if card["img"] else ""
-    img_html=f'<div class="ca-player-img"><img src="{safe_img}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if safe_img else ""
-    st.markdown(f"""<div class="ca-fade ca-player-card" style="
-      background:linear-gradient(135deg,var(--card),var(--surface));
-      border-radius:var(--radius);padding:14px;margin:0 0 14px 0;
-      border:1px solid var(--border);border-left:3px solid {acl};
-      box-sizing:border-box;width:100%">
-      {img_html}
-      <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_sz}">{safe_title}</div>
-        <div class="ca-player-pills">{pills}</div>
-        <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
+    with st.container(border=True):
+        if not card:
+            st.caption(f"📖 Profile unavailable for {cricsheet_name}")
+            return
+        img_col, info_col = st.columns([1,4]) if not compact else st.columns([1,5])
+        with img_col:
+            if card["img"]:
+                st.image(card["img"], width=72 if compact else 96)
+        with info_col:
+            name_sz = "##### " if compact else "#### "
+            st.markdown(f"{name_sz}{card['title']}")
+            fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
+                     "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
+            debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
+            pill_parts=[]
+            if card["born"]: pill_parts.append(f"🎂 {card['born']}")
+            if card["nation"]: pill_parts.append(f"🌍 {card['nation']}")
+            if card["role"]: pill_parts.append(f"🏏 {card['role'][:30]}")
+            if debut: pill_parts.append(f"🎯 {fmt} debut {debut}")
+            if pill_parts:
+                st.caption("  •  ".join(pill_parts))
+            max_sents=2 if compact else 4
+            short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+            if short_bio:
+                st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
