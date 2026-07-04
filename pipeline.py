@@ -82,7 +82,17 @@ def download_and_extract(name, url, workdir):
 
 def load_format(folder, label):
     """Load all per-match CSVs for one format. Logs which individual match
-    files failed to parse instead of the previous bare `except: pass`."""
+    files failed to parse instead of the previous bare `except: pass`.
+
+    Also guards against a real bug that was causing doubled stats (e.g.
+    Kohli showing 1350 IPL runs in 2026 when the true figure was 675):
+    Cricsheet occasionally has the same match_id appear in more than one
+    file — e.g. a corrected/reissued scorecard saved alongside the
+    original under a different filename. Naively concatenating every file
+    counts that match twice. We now keep only the most complete version
+    of each match_id (the file with the most ball-by-ball rows for it)
+    and drop any duplicate file's rows for that same match.
+    """
     if not os.path.isdir(folder):
         log.warning(f"{label}: folder {folder} does not exist, skipping")
         return pd.DataFrame()
@@ -90,7 +100,9 @@ def load_format(folder, label):
     dfs, failed = [], []
     for f in sorted(files):
         try:
-            dfs.append(pd.read_csv(os.path.join(folder, f)))
+            d = pd.read_csv(os.path.join(folder, f))
+            d["_source_file"] = f
+            dfs.append(d)
         except Exception as e:
             failed.append((f, str(e)))
     if failed:
@@ -100,8 +112,27 @@ def load_format(folder, label):
         log.warning(f"{label}: no valid match files found in {folder}")
         return pd.DataFrame()
     df = pd.concat(dfs, ignore_index=True)
+
+    if "match_id" in df.columns:
+        # For each match_id, find which source file has the most rows
+        # (the most complete/authoritative version), then keep ONLY that
+        # file's rows for that match_id and drop the rest.
+        file_counts = df.groupby(["match_id", "_source_file"]).size().reset_index(name="n")
+        best_file = file_counts.loc[file_counts.groupby("match_id")["n"].idxmax()]
+        dup_matches = file_counts["match_id"].value_counts()
+        dup_matches = dup_matches[dup_matches > 1].index.tolist()
+        if dup_matches:
+            log.warning(f"{label}: {len(dup_matches)} match_id(s) appeared in more than one "
+                        f"source file (likely reissued/corrected scorecards) — keeping only the "
+                        f"most complete version of each to avoid double-counting. "
+                        f"Examples: {dup_matches[:5]}")
+        keep = best_file.rename(columns={"_source_file": "_keep_file"})[["match_id", "_keep_file"]]
+        df = df.merge(keep, on="match_id", how="left")
+        df = df[df["_source_file"] == df["_keep_file"]].drop(columns=["_keep_file"])
+
+    df = df.drop(columns=["_source_file"])
     df["format"] = label
-    log.info(f"{label}: loaded {df.shape[0]:,} rows from {len(dfs)} matches")
+    log.info(f"{label}: loaded {df.shape[0]:,} rows from {df['match_id'].nunique() if 'match_id' in df.columns else len(dfs)} unique matches")
     return df
 
 
