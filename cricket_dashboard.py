@@ -190,12 +190,6 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
   .ca-feature-icon{font-size:22px;margin-bottom:6px}
   .ca-feature-title{font-size:13px}
   .ca-feature-desc{display:none}
-  .ca-player-card{flex-direction:column!important;align-items:center!important;text-align:center!important}
-  .ca-player-img{flex-shrink:0;margin-bottom:10px}
-  .ca-player-info{min-width:0;width:100%}
-  .ca-player-name{white-space:normal!important;overflow:visible!important;text-overflow:unset!important;text-align:center}
-  .ca-player-pills{justify-content:center}
-  .ca-player-bio{-webkit-line-clamp:unset!important;display:block!important;overflow:visible!important}
   [data-testid="stPlotlyChart"]{border-radius:var(--radius-sm)!important}
 }
 @media(min-width:641px) and (max-width:900px){
@@ -678,7 +672,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
         if not card:
             st.caption(f"📖 Profile unavailable for {cricsheet_name}")
             return
-        img_col, info_col = st.columns([1,4]) if not compact else st.columns([1,5])
+        img_col, info_col = st.columns([1,9], gap="small") if not compact else st.columns([1,12], gap="small")
         with img_col:
             if card["img"]:
                 st.image(card["img"], width=72 if compact else 96)
@@ -937,14 +931,16 @@ elif section=="🔍 Player Search":
             st.markdown(f"""<div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>✅</span>
-              <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span>
-            </div>""", unsafe_allow_html=True)
+              <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
               <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
             </div>""", unsafe_allow_html=True)
+        st.caption("ℹ️ Stats reflect matches Cricsheet has ball-by-ball data for. Cricsheet is a community-maintained "
+                   "open archive and doesn't have complete coverage of every officially recognized match, especially "
+                   "older ones — so totals here may be lower than official career records for veteran players.")
 
         if len(bat)==0 and len(bowl)==0:
             st.warning(f"No {fmt} data for '{display_name}'.")
