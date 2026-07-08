@@ -561,6 +561,20 @@ def get_wiki(cricsheet_name, search_name):
         rr=requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe}",
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         rr.raise_for_status(); data=rr.json()
+
+        # Wikipedia's own API flags disambiguation pages explicitly via
+        # this "type" field. Previously we had no check for this, so a
+        # common name (e.g. "Shoaib Khan", shared by 6+ real cricketers)
+        # would pull the disambiguation page's "X may refer to..." text
+        # and display it as if it were one specific person's biography —
+        # visibly wrong and confusing. Reject it outright instead.
+        if data.get("type") == "disambiguation":
+            st.session_state.setdefault("wiki_low_confidence", []).append(
+                (cricsheet_name, f"'{page_title}' is a Wikipedia disambiguation page "
+                                  f"(name shared by multiple real people) — profile withheld "
+                                  f"rather than showing the wrong person's bio."))
+            return None
+
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
