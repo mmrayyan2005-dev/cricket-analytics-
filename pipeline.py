@@ -611,6 +611,27 @@ def main():
     push_text_to_github(timestamp, "last_updated.txt", GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
     log.info(f"Wrote last_updated.txt = {timestamp}")
 
+    # ── Coverage report ──────────────────────────────────────────────────
+    # This is honest, verifiable visibility into exactly what this run
+    # actually covers — not a claim that "every player" is included, since
+    # that depends entirely on what Cricsheet itself has published. Check
+    # this log every run to track coverage growing (or spot a regression)
+    # over time, instead of guessing.
+    log.info("=== COVERAGE REPORT ===")
+    total_batters = batting["striker"].nunique() if not batting.empty else 0
+    total_bowlers = bowling["bowler"].nunique() if not bowling.empty else 0
+    log.info(f"Unique batters captured: {total_batters:,}")
+    log.info(f"Unique bowlers captured: {total_bowlers:,}")
+    for fmt in df["format"].unique():
+        fmt_df = df[df["format"] == fmt]
+        n_matches = fmt_df["match_id"].nunique()
+        n_players = pd.concat([fmt_df["striker"], fmt_df["bowler"]]).nunique()
+        date_min = pd.to_datetime(fmt_df["start_date"]).min()
+        date_max = pd.to_datetime(fmt_df["start_date"]).max()
+        log.info(f"  {fmt}: {n_matches:,} matches | {n_players:,} unique players | "
+                 f"date range {date_min.date()} to {date_max.date()}")
+    log.info("=== END COVERAGE REPORT ===")
+
     if failures:
         log.error(f"Pipeline finished WITH {len(failures)} failed file push(es): {failures}")
         sys.exit(1)
