@@ -979,6 +979,37 @@ elif section=="🔍 Player Search":
                     metrics({"100s":h100,"50s":h50,"Highest":hs,"Ducks":dk,"⭐ Score":ps_})
                     fr=int(p["fours"])*4; sr_=int(p["sixes"])*6; or_=max(0,int(p["runs"])-fr-sr_)
                     ch(donut(["Fours","Sixes","Other"],[fr,sr_,or_],[clr,"#d63031","#636e72"],"Scoring Breakdown"),300)
+
+                    # ── Raw data verification ──────────────────────────
+                    # This recomputes the match count completely
+                    # independently of everything above — directly from
+                    # cricket_bat_innings.csv (one row per match+player,
+                    # the most granular data we have), with no
+                    # aggregation, caching, or display logic in between.
+                    # If this number matches the "Matches" card above,
+                    # that PROVES the card is accurately reflecting what's
+                    # actually in the CSV — a low number is then a real
+                    # Cricsheet coverage gap, not a display bug. If they
+                    # ever differ, that's a genuine bug to report back.
+                    with st.expander("🔍 Verify this player's raw match count (bypasses all display logic)"):
+                        if not bat_inn.empty and "striker" in bat_inn.columns:
+                            raw_rows = bat_inn[(bat_inn["striker"]==en) & (bat_inn["format"]==fmt)]
+                            raw_match_count = raw_rows["match_id"].nunique()
+                            st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {en} ({fmt}): {raw_match_count}**")
+                            st.write(f"**Matches shown in the card above: {int(p['matches'])}**")
+                            if raw_match_count == int(p["matches"]):
+                                st.success("✅ These match exactly — the card is correctly displaying everything "
+                                           "that exists in the CSV. If this number is lower than the player's real "
+                                           "career total, that's Cricsheet's own data coverage, not an app bug.")
+                            else:
+                                st.error(f"⚠️ These DON'T match ({raw_match_count} vs {int(p['matches'])}) — "
+                                         f"this is a genuine display/aggregation bug, please report this exact "
+                                         f"player name and both numbers.")
+                            if raw_match_count > 0:
+                                dates = pd.to_datetime(raw_rows["start_date"])
+                                st.caption(f"Date range of matches found: {dates.min().date()} to {dates.max().date()}")
+                        else:
+                            st.warning("Raw innings data not available to verify against.")
                 ti+=1
             if len(bowl)>0:
                 with tabs[ti]:
