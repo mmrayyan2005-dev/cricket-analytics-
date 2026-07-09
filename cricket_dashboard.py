@@ -498,6 +498,8 @@ NAME_ALIASES={
     "sciver":"NR Sciver","tahlia":"TM McGrath","mcgrath":"TM McGrath",
     "amelia":"AMC Kerr","kerr":"AMC Kerr","devine":"SFM Devine",
     "kl rahul":"KL Rahul","rahul":"KL Rahul",
+    "vaibhav":"V Suryavanshi","vaibhav suryavanshi":"V Suryavanshi",
+    "suryavanshi":"V Suryavanshi",
 }
 CRICSHEET_NAME={"Smriti Mandhana":"S Mandhana","Harmanpreet Kaur":"H Kaur",
                 "Shafali Verma":"Shafali Verma","Deepti Sharma":"Deepti Sharma",
@@ -890,7 +892,13 @@ elif section=="🔍 Player Search":
         aw=aw_qual["format"].unique().tolist() if not aw_qual.empty else []
         avl=sorted(set(ab+aw),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
         if not avl:
-            st.error(f"No data found for '{name}'. Try a different spelling or ensure their format data is loaded.")
+            surname_guess = name.strip().split()[-1] if name.strip() else name
+            surname_hits = find_rows(bat_fmt,"striker",surname_guess) if len(name.strip().split())>1 else pd.DataFrame()
+            if not surname_hits.empty:
+                st.error(f"No exact data found for '{name}'.")
+                st.caption(f"This dataset stores players as initial + surname (e.g. 'V Suryavanshi', not a full first name). Try searching **'{surname_guess}'** instead.")
+            else:
+                st.error(f"No data found for '{name}'. Try searching by surname only, or check the spelling used in official scorecards.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
         clr=FC.get(fmt,"#00e5a0")
