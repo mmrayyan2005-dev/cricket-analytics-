@@ -993,9 +993,10 @@ elif section=="🔍 Player Search":
                     # ever differ, that's a genuine bug to report back.
                     with st.expander("🔍 Verify this player's raw match count (bypasses all display logic)"):
                         if not bat_inn.empty and "striker" in bat_inn.columns:
-                            raw_rows = bat_inn[(bat_inn["striker"]==en) & (bat_inn["format"]==fmt)]
+                            _verify_name = p["striker"]
+                            raw_rows = bat_inn[(bat_inn["striker"]==_verify_name) & (bat_inn["format"]==fmt)]
                             raw_match_count = raw_rows["match_id"].nunique()
-                            st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {en} ({fmt}): {raw_match_count}**")
+                            st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {_verify_name} ({fmt}): {raw_match_count}**")
                             st.write(f"**Matches shown in the card above: {int(p['matches'])}**")
                             if raw_match_count == int(p["matches"]):
                                 st.success("✅ These match exactly — the card is correctly displaying everything "
