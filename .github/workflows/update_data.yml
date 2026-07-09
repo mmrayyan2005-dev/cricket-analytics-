@@ -1,6 +1,6 @@
 name: Update Cricket Data
 
-# Runs automatically every Sunday at 03:00 UTC, and can also be triggered
+# Runs automatically every day at 03:00 UTC, and can also be triggered
 # manually from the GitHub Actions tab ("Run workflow" button) whenever you
 # want fresh data immediately — no Colab required either way.
 on:
