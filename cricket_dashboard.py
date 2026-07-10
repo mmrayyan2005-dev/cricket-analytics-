@@ -206,13 +206,21 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 </style>""", unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
-# NOTE: previously this fetched 18 CSVs one-by-one over the network in sequence.
-# Each fetch has its own round-trip latency, so 18 sequential calls meant the
-# app waited for #1 to fully finish before even starting #2, and so on.
-# Fetching them concurrently (ThreadPoolExecutor) means all 18 requests are
-# in flight at once, so total load time ≈ the slowest single file, not the sum
-# of all 18. This is the main fix for "the app takes forever after the cache
-# expires every hour."
+# Fetches CSVs concurrently (ThreadPoolExecutor) rather than one-by-one, so
+# total load time ≈ the slowest single file's latency, not the sum of all 18.
+#
+# IMPORTANT FIX: max_workers is capped at 4 (not len(CSV_FILES)=18).
+# Firing all 18 downloads+parses at the exact same instant stacks their
+# transient parsing memory (pandas' CSV parser can spike 2-4x a dataframe's
+# final size while it's actively parsing) on top of each other and on top of
+# Streamlit/Plotly's own baseline memory. On a ~1GB Streamlit Community Cloud
+# instance that combined peak was enough to trigger the OS's OOM killer —
+# the process gets SIGKILLed with no Python traceback at all, which is why
+# the app just showed the generic "Oh no. Error running app." screen with
+# nothing underneath it (Cloud logs showed "... Killed" instead of a
+# traceback). Capping to 4 concurrent workers keeps almost all of the
+# wall-clock speedup (this is I/O-bound, so 4-in-flight already hides most of
+# the network latency) while bounding how many CSV parses can peak at once.
 from concurrent.futures import ThreadPoolExecutor
 
 CSV_FILES = [
@@ -231,17 +239,17 @@ def _read_one(name):
     try:
         return (name, pd.read_csv(f"{RAW_BASE}/{name}"), None)
     except Exception as e:
-        # Previously a bare `except: return pd.DataFrame()` swallowed every
-        # error silently, so a renamed/missing file just quietly became an
-        # empty table with zero indication anything went wrong. Now we
-        # collect the failure so it can be shown in the app (see load_errors).
+        # A bare `except: return pd.DataFrame()` would swallow every error
+        # silently, so a renamed/missing file just quietly became an empty
+        # table with zero indication anything went wrong. We collect the
+        # failure so it can be shown in the app (see load_errors).
         return (name, pd.DataFrame(), str(e))
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load():
     results = {}
     errors = []
-    with ThreadPoolExecutor(max_workers=len(CSV_FILES)) as ex:
+    with ThreadPoolExecutor(max_workers=4) as ex:
         for name, df, err in ex.map(_read_one, CSV_FILES):
             results[name] = df
             if err:
@@ -263,8 +271,6 @@ with st.spinner("Loading cricket data..."):
      load_errors) = load()
 
 # Surface load failures instead of hiding them as silently-empty tables.
-# This is what was previously making "some data missing" impossible to debug —
-# a failed fetch just looked like a normal empty dataset with no explanation.
 if load_errors:
     with st.expander(f"⚠️ {len(load_errors)} data file(s) failed to load — click for details", expanded=False):
         for name, err in load_errors:
@@ -577,12 +583,6 @@ def get_wiki(cricsheet_name, search_name):
             role_raw=desc[:60] if desc else ""
         nation=ef(wt,["country","nationality","national_side","national side"])
 
-        # Career TOTALS straight from the infobox's "International career
-        # statistics" sub-table — e.g. |matches1=200 |runs1=15921 for column1.
-        # This is a full-career number (not ball-by-ball), so it's kept
-        # separate from the Cricsheet-derived stats rather than blended in —
-        # see show_player_card, which displays it as "career total per
-        # Wikipedia" alongside (not added to) the Cricsheet numbers.
         wiki_career={}
         def _clean_col(v):
             v=v.strip()
@@ -602,22 +602,11 @@ def get_wiki(cricsheet_name, search_name):
                 "role":role_raw[:60] if role_raw else "",
                 "nation":nation[:40] if nation else "",
                 "wiki_career":wiki_career}
-        # Previously a missing birth date was silently invisible — you'd only
-        # notice by scrolling every player card and eyeballing which ones lack
-        # a 🎂 pill. Now we log it once per session so you can see exactly
-        # which names need a manual entry in WIKI_NAMES (usually a nickname/
-        # spelling mismatch, or the infobox using a template this regex
-        # doesn't cover yet).
         if not result["born"]:
             st.session_state.setdefault("wiki_missing_field", []).append(
                 (cricsheet_name, "no birth date found on matched page: " + result["title"]))
         return result
     except Exception as e:
-        # Previously a bare `except: return None` meant every failure —
-        # network timeout, no search results, wrong page match, malformed
-        # infobox — looked identical: a blank "Profile unavailable" card.
-        # Logging the real reason here means you can tell "Wikipedia has no
-        # page for this name" apart from "the request timed out."
         st.session_state.setdefault("wiki_missing_full", []).append((cricsheet_name, str(e)))
         return None
 
@@ -659,11 +648,6 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
       </div>
     </div>""", unsafe_allow_html=True)
 
-    # Wikipedia's career TOTAL for this format — shown as its own labeled
-    # number, never added to or blended with the Cricsheet-derived stats
-    # below. This is what closes the "pre-2002" / "Afghanistan withheld" /
-    # "not yet published" gaps: Wikipedia has the true lifetime total, while
-    # Cricsheet has ball-by-ball detail for whatever portion it's covered.
     wc = (card.get("wiki_career") or {}).get(fmt) if not compact else None
     if wc and wc.get("matches"):
         parts=[f"{wc['matches']} matches"]
@@ -721,22 +705,15 @@ pages_json = str([p for p in PAGES]).replace("'",'"')
 st.markdown(f"""<script>
 const PAGES = {pages_json};
 function navigateTo(idx) {{
-  // Find the sidebar radio buttons and click the matching one
   const labels = window.parent.document.querySelectorAll('[data-testid="stSidebar"] [role="radiogroup"] label');
   if (labels && labels[idx]) {{
     labels[idx].click();
   }}
 }}
-// Prevent browser back/forward from leaving the app
 (function() {{
-  // Push a dummy state so there's always something to "back" into
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', function(e) {{
-    // Re-push state to trap the user in the SPA
     history.pushState(null, '', location.href);
-    // Trigger in-app back via the hidden back button
-    const backBtn = window.parent.document.querySelector('[data-testid="stButton"] button[kind="secondary"]');
-    // Find back button by key
     const btns = window.parent.document.querySelectorAll('button');
     for (const b of btns) {{
       if (b.innerText && b.innerText.trim() === '← Back') {{
@@ -832,7 +809,6 @@ if section=="🏠 Home":
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
-    # Pre-fill search box via session state key (value= param removed in new Streamlit)
     if st.session_state.get("ps_name","") and "ps_input" not in st.session_state:
         st.session_state["ps_input"] = st.session_state["ps_name"]
     st.session_state["ps_name"] = ""
@@ -875,7 +851,6 @@ elif section=="🔍 Player Search":
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
         show_player_card(display_name,name,fmt)
 
-        # Data freshness banner
         lu=get_last_updated()
         if lu:
             st.markdown(f"""<div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);
@@ -942,7 +917,6 @@ elif section=="🔍 Player Search":
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
-                        # V12 extra: dot ball % chart
                         if "dot_pct" in by2.columns:
                             ch(line(by2,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
 
@@ -1000,7 +974,6 @@ elif section=="⚔️ Head to Head":
                 fy.update_xaxes(title="Year",tickmode="linear",dtick=2,showgrid=True,gridcolor=GRID)
                 fy.update_yaxes(title="Runs",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy,**CFG)
-                # V12 extra: average comparison over years
                 fy2=px.line(combined,x="year",y="average",color="player",markers=True,
                             title=f"Batting Average — {fmt}",
                             color_discrete_map={p1n:FC["ODI"],p2n:FC["Test"]})
@@ -1010,12 +983,10 @@ elif section=="⚔️ Head to Head":
                 fy2.update_yaxes(title="Average",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy2,**CFG)
 
-            # ── Radar chart comparison ────────────────────────────────────────
             st.markdown("### 🕸️ Head-to-Head Radar")
             st.markdown('<div class="ca-insight">Each axis is <strong>normalized 0–100</strong> relative to both players — so the shape shows who dominates which dimension, not raw values. A larger filled area = more rounded player.</div>', unsafe_allow_html=True)
             radar_metrics=["average","strike_rate","boundary_pct","dot_pct"]
             radar_labels=["Average","Strike Rate","Boundary %","Dot %"]
-            # Normalize each metric 0-100 across both players for radar
             v1_raw=[float(p1.get(m,0)) for m in radar_metrics]
             v2_raw=[float(p2_.get(m,0)) for m in radar_metrics]
             combined_max=[max(a,b,0.001) for a,b in zip(v1_raw,v2_raw)]
@@ -1040,7 +1011,6 @@ elif section=="🏟️ vs Venue":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_top=df_v.sort_values(m,ascending=False).head(20)
                 ch(bar_h(df_top,m,"venue",m,"Greens",f"{df_top['striker'].iloc[0]} — {m} by Venue ({fmt})"))
-                # Scatter: innings vs average per venue — reveals consistency
                 if "innings" in df_v.columns and "average" in df_v.columns and len(df_v)>=3:
                     st.markdown("#### 📍 Consistency Map — Innings vs Average per Venue")
                     st.caption("Top-right = visits often AND scores big. Bubble size = total runs.")
@@ -1095,7 +1065,6 @@ elif section=="🌍 vs Opponent":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_o_s=df_o.sort_values(m,ascending=False)
                 ch(bar_h(df_o_s,m,"opponent",m,"Blues",f"{df_o_s['striker'].iloc[0]} — {m} vs Teams ({fmt})"))
-                # Dominance scatter: innings vs average per opponent
                 if "innings" in df_o.columns and "average" in df_o.columns and len(df_o)>=3:
                     st.markdown("#### 🎯 Dominance Map — Which Teams Does He Master?")
                     st.caption("Top-right = plays them often AND scores big. Bottom-left = struggles.")
@@ -1107,7 +1076,6 @@ elif section=="🌍 vs Opponent":
                         title=f"Batting Dominance by Opponent ({fmt})")
                     fig_dom.update_traces(textposition="top center",textfont=dict(size=9,color=TEXT),
                         hovertemplate="<b>%{text}</b><br>Innings: %{x}<br>Avg: %{y:.1f}<extra></extra>")
-                    # Quadrant lines
                     fig_dom.add_hline(y=med_avg,line_dash="dot",line_color=GRID,
                                       annotation_text="Median avg",annotation_font=dict(size=9,color=TEXT))
                     fig_dom.add_vline(x=med_inn,line_dash="dot",line_color=GRID,
@@ -1191,7 +1159,6 @@ elif section=="📈 Over Years":
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
-                # V12 bonus: dot ball % over years
                 if "dot_pct" in by.columns:
                     ch(line(by,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
                 st.dataframe(by[["year","matches","wickets","economy","average","dot_pct","balls"]].reset_index(drop=True) if "balls" in by.columns else by[["year","matches","wickets","economy","average","dot_pct"]].reset_index(drop=True))
@@ -1209,7 +1176,6 @@ elif section=="🏆 Leaderboard":
         lb=bs[bs["runs"]>=mr].sort_values(sb,ascending=False).head(tn).reset_index(drop=True)
         lb.insert(0,"Rank",range(1,len(lb)+1))
         ch(bar_h(lb,sb,"striker",sb,"Teal",f"Top {tn} {fmt} Batters — {sb}"))
-        # Scatter: runs vs average — the classic "who's elite" plot
         if "runs" in lb.columns and "average" in lb.columns and len(lb)>=4:
             st.markdown("#### 💠 Runs vs Average — The Elite Quadrant")
             st.markdown('<div class="ca-insight"><strong>Top-right</strong> = high volume AND high quality. <strong>Color</strong> = strike rate. The dotted lines are median splits — names above both lines are the true greats of this format.</div>', unsafe_allow_html=True)
@@ -1241,7 +1207,6 @@ elif section=="🏆 Leaderboard":
         lb2=ws[ws["wickets"]>=mw].sort_values(sb2,ascending=(sb2 in ["economy","average"])).head(tn2).reset_index(drop=True)
         lb2.insert(0,"Rank",range(1,len(lb2)+1))
         ch(bar_h(lb2,"wickets","bowler","economy","Sunset",f"Top {tn2} {fmt} Bowlers"))
-        # Scatter: wickets vs economy
         if "wickets" in lb2.columns and "economy" in lb2.columns and len(lb2)>=4:
             st.markdown("#### 💠 Wickets vs Economy — The Elite Quadrant")
             st.caption("Top-right = high wickets AND economical. The match-winners.")
@@ -1287,7 +1252,6 @@ elif section=="🤖 Similar Players":
                 st.subheader(f"Players most similar to {p['striker']} in {fmt}")
                 st.caption(f"⭐ Player Score: {p.get('player_score','—')} | Cluster #{cluster} | {len(same)} similar players found")
                 ch(bar_h(same,"average","striker","average","Purples",f"Similar batters — {fmt}"))
-                # Show compact player cards for top 4 matches
                 st.markdown("#### 🎴 Top Similar Players")
                 top4=same.head(4)["striker"].tolist()
                 card_cols=st.columns(min(len(top4),2))
@@ -1323,7 +1287,6 @@ elif section=="🔥 Form & Ratings":
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2,tab3,tab4=st.tabs(["🔍 Player Form","🔥 Hot List","📉 Cold List","⭐ Player Scores"])
 
-    # ── Tab 1: Player year-by-year form ──────────────────────────────────────
     with tab1:
         st.markdown("#### Year-by-year form with career reference lines")
         fname=st.text_input("Player name","Kohli",key="form_player")
@@ -1346,7 +1309,6 @@ elif section=="🔥 Form & Ratings":
                              "Avg (latest)":round(float(latest["average"]),1),
                              "SR (latest)":round(float(latest["strike_rate"]),1),
                              "Matches":int(latest["matches"])})
-                    # Form delta badges vs career
                     if cavg or csr:
                         badges=""
                         if cavg: badges+=form_delta_html(float(latest["average"]),cavg,"avg",True)+" "
@@ -1398,7 +1360,6 @@ elif section=="🔥 Form & Ratings":
                              "Economy (latest)":round(float(latest["economy"]),2),
                              "Average (latest)":round(float(latest["average"]),1),
                              "Matches":int(latest["matches"])})
-                    # Form delta badges vs career
                     if cecon or cavg:
                         badges2=""
                         if cecon: badges2+=form_delta_html(float(latest["economy"]),cecon,"econ",False)+" "
@@ -1428,7 +1389,6 @@ elif section=="🔥 Form & Ratings":
                                            annotation_font=dict(color="#fdcb6e",size=11))
                     fig_avg2.update_layout(**BASE,height=300,margin=M_DEFAULT)
                     with c2: st.plotly_chart(fig_avg2,**CFG)
-                    # V12 bonus: dot ball % trend
                     if "dot_pct" in pyr.columns:
                         fig_dot=px.line(pyr,x="year",y="dot_pct",markers=True,title=f"{pname} — Dot Ball % by Year")
                         fig_dot.update_traces(line=dict(color="#00cec9",width=3),marker=dict(size=8,color="#00cec9"))
@@ -1437,7 +1397,6 @@ elif section=="🔥 Form & Ratings":
                     show_cols=[c for c in ["year","matches","wickets","economy","average","dot_pct","balls"] if c in pyr.columns]
                     st.dataframe(pyr[show_cols].reset_index(drop=True))
 
-    # ── Tab 2: Hot List ───────────────────────────────────────────────────────
     with tab2:
         ftype2=st.radio("Type",["Batting","Bowling"],horizontal=True,key="hot_type")
         n_yrs=st.slider("Recent window (years)",1,5,1,key="hot_yrs")
@@ -1473,7 +1432,6 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(agg[["bowler","innings","wickets","econ","avg","dot_pct"]].reset_index(drop=True))
             else: st.info("No bowlers meet the minimum innings threshold.")
 
-    # ── Tab 3: Cold List ──────────────────────────────────────────────────────
     with tab3:
         ftype3=st.radio("Type",["Batting","Bowling"],horizontal=True,key="cold_type")
         min_career=st.slider("Min career matches",5,30,10,key="cold_min")
@@ -1498,7 +1456,6 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(cold2[sc2].reset_index(drop=True))
             else: st.info("No bowlers in poor form right now.")
 
-    # ── Tab 4: Player Scores ──────────────────────────────────────────────────
     with tab4:
         ps_type=st.radio("Type",["Batting","Bowling"],horizontal=True,key="ps_type")
         if ps_type=="Batting":
@@ -1520,9 +1477,6 @@ elif section=="🔥 Form & Ratings":
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Diagnostics panel ─────────────────────────────────────────────────────────
-# Collects everything logged by load() and get_wiki() during this session so
-# missing data has a visible, debuggable trail instead of just looking like
-# "some stuff is randomly blank." Only shows up if something actually failed.
 _missing_full = st.session_state.get("wiki_missing_full", [])
 _missing_field = st.session_state.get("wiki_missing_field", [])
 if _missing_full or _missing_field:
