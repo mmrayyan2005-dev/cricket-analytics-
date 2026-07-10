@@ -237,14 +237,7 @@ def _read_one(name):
         # collect the failure so it can be shown in the app (see load_errors).
         return (name, pd.DataFrame(), str(e))
 
-# NOTE: 3600s (1hr) caching meant new commits to the CSVs (e.g. a player added
-# by update_data.yml) could take up to an hour to appear on the live app, and
-# looked identical to a "missing player" bug from the user's side. Cutting this
-# to 5 minutes plus a manual "Refresh data now" button (below) closes that gap
-# without hammering GitHub on every page interaction.
-DATA_TTL = 300  # seconds
-
-@st.cache_data(ttl=DATA_TTL, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def load():
     results = {}
     errors = []
@@ -256,37 +249,13 @@ def load():
     ordered = [results[name] for name in CSV_FILES]
     return (*ordered, errors)
 
-@st.cache_data(ttl=DATA_TTL, show_spinner=False)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_last_updated():
     try:
         r=requests.get(f"{RAW_BASE}/last_updated.txt",timeout=5)
         if r.status_code==200: return r.text.strip()
     except: pass
     return None
-
-@st.cache_data(ttl=DATA_TTL, show_spinner=False)
-def get_coverage_range():
-    """Compute the actual earliest/latest match date covered per format,
-    straight from the innings-level data — not hardcoded. This is what
-    powers the coverage disclaimer: a player's shown career total is only
-    ever as complete as the data that exists for their format."""
-    coverage = {}
-    try:
-        for df in [bat_inn, bowl_inn]:
-            if df.empty or "start_date" not in df.columns or "format" not in df.columns:
-                continue
-            dates = pd.to_datetime(df["start_date"], errors="coerce")
-            tmp = pd.DataFrame({"format": df["format"], "date": dates}).dropna()
-            for fmt, g in tmp.groupby("format"):
-                lo, hi = g["date"].min(), g["date"].max()
-                if fmt not in coverage:
-                    coverage[fmt] = [lo, hi]
-                else:
-                    coverage[fmt][0] = min(coverage[fmt][0], lo)
-                    coverage[fmt][1] = max(coverage[fmt][1], hi)
-    except Exception:
-        pass
-    return coverage
 
 with st.spinner("Loading cricket data..."):
     (batting,bowling,bat_fmt,bowl_fmt,bat_yr,bowl_yr,bat_ven,bat_opp,
@@ -300,15 +269,6 @@ if load_errors:
     with st.expander(f"⚠️ {len(load_errors)} data file(s) failed to load — click for details", expanded=False):
         for name, err in load_errors:
             st.caption(f"**{name}**: {err}")
-
-COVERAGE = get_coverage_range()
-
-with st.sidebar:
-    if st.button("🔄 Refresh data now", help="Bypass the 5-min cache and re-pull the CSVs from GitHub immediately"):
-        load.clear()
-        get_last_updated.clear()
-        get_coverage_range.clear()
-        st.rerun()
 
 def get_all_formats(df,col="format"):
     if df.empty or col not in df.columns: return ["ODI","Test","T20I","IPL","PSL"]
@@ -498,8 +458,6 @@ NAME_ALIASES={
     "sciver":"NR Sciver","tahlia":"TM McGrath","mcgrath":"TM McGrath",
     "amelia":"AMC Kerr","kerr":"AMC Kerr","devine":"SFM Devine",
     "kl rahul":"KL Rahul","rahul":"KL Rahul",
-    "vaibhav":"V Suryavanshi","vaibhav suryavanshi":"V Suryavanshi",
-    "suryavanshi":"V Suryavanshi",
 }
 CRICSHEET_NAME={"Smriti Mandhana":"S Mandhana","Harmanpreet Kaur":"H Kaur",
                 "Shafali Verma":"Shafali Verma","Deepti Sharma":"Deepti Sharma",
@@ -618,12 +576,32 @@ def get_wiki(cricsheet_name, search_name):
         if not role_raw or "[[" in role_raw or len(role_raw)<3:
             role_raw=desc[:60] if desc else ""
         nation=ef(wt,["country","nationality","national_side","national side"])
+
+        # Career TOTALS straight from the infobox's "International career
+        # statistics" sub-table — e.g. |matches1=200 |runs1=15921 for column1.
+        # This is a full-career number (not ball-by-ball), so it's kept
+        # separate from the Cricsheet-derived stats rather than blended in —
+        # see show_player_card, which displays it as "career total per
+        # Wikipedia" alongside (not added to) the Cricsheet numbers.
+        wiki_career={}
+        def _clean_col(v):
+            v=v.strip()
+            m=re.search(r"\[\[([^\]|]+\|)?([^\]]+)\]\]",v)
+            return m.group(2).strip() if m else v
+        columns=dict(re.findall(r"\|\s*column(\d)\s*=\s*([^\n]+)",wt))
+        columns={k:_clean_col(v) for k,v in columns.items()}
+        for field in ["matches","runs","bat avg","100s/50s","top score","wickets","bowl avg","best bowling"]:
+            for col_num,val in re.findall(rf"\|\s*{re.escape(field)}(\d)\s*=\s*([^\|\n]+)",wt):
+                fmt_label=columns.get(col_num,f"col{col_num}")
+                wiki_career.setdefault(fmt_label,{})[field]=val.strip()
+
         result = {"title":data.get("title",page_title),"bio":bio,"img":img,
                 "born":born[:60] if born else "",
                 "odi_debut":odi_d or any_d,"test_debut":test_d or any_d,"t20_debut":t20_d or any_d,
                 "ipl_debut":"","psl_debut":"","wpl_debut":"",
                 "role":role_raw[:60] if role_raw else "",
-                "nation":nation[:40] if nation else ""}
+                "nation":nation[:40] if nation else "",
+                "wiki_career":wiki_career}
         # Previously a missing birth date was silently invisible — you'd only
         # notice by scrolling every player card and eyeballing which ones lack
         # a 🎂 pill. Now we log it once per session so you can see exactly
@@ -680,6 +658,25 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
         <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
       </div>
     </div>""", unsafe_allow_html=True)
+
+    # Wikipedia's career TOTAL for this format — shown as its own labeled
+    # number, never added to or blended with the Cricsheet-derived stats
+    # below. This is what closes the "pre-2002" / "Afghanistan withheld" /
+    # "not yet published" gaps: Wikipedia has the true lifetime total, while
+    # Cricsheet has ball-by-ball detail for whatever portion it's covered.
+    wc = (card.get("wiki_career") or {}).get(fmt) if not compact else None
+    if wc and wc.get("matches"):
+        parts=[f"{wc['matches']} matches"]
+        if wc.get("runs"): parts.append(f"{wc['runs']} runs")
+        if wc.get("bat avg"): parts.append(f"avg {wc['bat avg']}")
+        if wc.get("100s/50s"): parts.append(f"{wc['100s/50s']} 100s/50s")
+        if wc.get("wickets"): parts.append(f"{wc['wickets']} wkts")
+        st.markdown(f"""<div style="background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);
+          border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
+          <span>📚</span>
+          <span style="font-size:11px;color:#c084fc"><strong>Career total (Wikipedia): {' · '.join(parts)}</strong> —
+          full lifetime {fmt} record. Detailed ball-by-ball stats below cover whatever Cricsheet has captured, which may be fewer matches.</span>
+        </div>""", unsafe_allow_html=True)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
@@ -863,42 +860,13 @@ elif section=="🔍 Player Search":
         sname=resolve(name)
         ab_rows=find_rows(bat_fmt,"striker",sname)
         aw_rows=find_rows(bowl_fmt,"bowler",sname)
-
-        # Disambiguation: a loose/partial query (e.g. "Azan") can substring-match
-        # several unrelated players (e.g. "Azan Awais" AND "Mohammad Ghazanfar",
-        # since "azan" sits inside "Ghazanfar"). Previously all matching rows were
-        # silently pooled together and the highest-runs row won by default — which
-        # could show a completely different player's stats under your search, and
-        # looked like "this player's record is wrong/incomplete." Now: if more than
-        # one distinct player name is present and the query isn't an exact full-name
-        # match to one of them, ask which player was meant instead of guessing.
-        candidates = sorted(set(ab_rows["striker"].unique().tolist() if not ab_rows.empty else [])
-                            | set(aw_rows["bowler"].unique().tolist() if not aw_rows.empty else []))
-        exact = [c for c in candidates if c.strip().lower()==sname.strip().lower()]
-        if len(candidates) > 1 and not exact:
-            st.info(f"'{name}' matches multiple players — which one did you mean?")
-            picked = st.radio("Select player", candidates, horizontal=True, label_visibility="collapsed")
-            sname = picked
-            ab_rows = ab_rows[ab_rows["striker"]==picked] if not ab_rows.empty else ab_rows
-            aw_rows = aw_rows[aw_rows["bowler"]==picked] if not aw_rows.empty else aw_rows
-        elif exact:
-            sname = exact[0]
-            ab_rows = ab_rows[ab_rows["striker"]==sname] if not ab_rows.empty else ab_rows
-            aw_rows = aw_rows[aw_rows["bowler"]==sname] if not aw_rows.empty else aw_rows
-
         ab_qual=ab_rows[ab_rows["matches"]>=3] if not ab_rows.empty and "matches" in ab_rows.columns else ab_rows
         aw_qual=aw_rows[aw_rows["matches"]>=3] if not aw_rows.empty and "matches" in aw_rows.columns else aw_rows
         ab=ab_qual["format"].unique().tolist() if not ab_qual.empty else []
         aw=aw_qual["format"].unique().tolist() if not aw_qual.empty else []
         avl=sorted(set(ab+aw),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
         if not avl:
-            surname_guess = name.strip().split()[-1] if name.strip() else name
-            surname_hits = find_rows(bat_fmt,"striker",surname_guess) if len(name.strip().split())>1 else pd.DataFrame()
-            if not surname_hits.empty:
-                st.error(f"No exact data found for '{name}'.")
-                st.caption(f"This dataset stores players as initial + surname (e.g. 'V Suryavanshi', not a full first name). Try searching **'{surname_guess}'** instead.")
-            else:
-                st.error(f"No data found for '{name}'. Try searching by surname only, or check the spelling used in official scorecards.")
+            st.error(f"No data found for '{name}'. Try a different spelling or ensure their format data is loaded.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
         clr=FC.get(fmt,"#00e5a0")
@@ -920,22 +888,6 @@ elif section=="🔍 Player Search":
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
               <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
-            </div>""", unsafe_allow_html=True)
-
-        # Coverage disclaimer — computed live from the innings data, not hardcoded.
-        # If this player's format-coverage window starts after a plausible career
-        # start, the shown totals are necessarily partial (source data limitation,
-        # not a bug), so say so explicitly instead of implying it's a full record.
-        cov_lines=[]
-        for f_ in avl:
-            if f_ in COVERAGE:
-                lo,hi=COVERAGE[f_]
-                cov_lines.append(f"{f_}: {lo.strftime('%b %Y')}–{hi.strftime('%b %Y')}")
-        if cov_lines:
-            st.markdown(f"""<div style="background:rgba(61,139,255,.06);border:1px solid rgba(61,139,255,.2);
-              border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
-              <span>ℹ️</span>
-              <span style="font-size:11px;color:#6aa8ff">Ball-by-ball coverage window — {" · ".join(cov_lines)}. Matches played before a format's window aren't in this dataset, so career totals reflect only matches within it.</span>
             </div>""", unsafe_allow_html=True)
 
         if len(bat)==0 and len(bowl)==0:
