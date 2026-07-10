@@ -749,7 +749,7 @@ function navigateTo(idx) {{
 </script>""", unsafe_allow_html=True)
 
 with st.sidebar:
-    section=st.radio("",PAGES,key="page",label_visibility="collapsed")
+    section=st.radio("Navigation",PAGES,key="page",label_visibility="collapsed")
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
 section=st.session_state.get("page","🏠 Home")
@@ -793,7 +793,7 @@ if section=="🏠 Home":
     </div>""", unsafe_allow_html=True)
 
     st.markdown("#### 🔍 Quick Player Search")
-    qname=st.text_input("","",placeholder="Type a player name — Babar, Kohli, Smriti, Shaheen, Maxwell...",
+    qname=st.text_input("Player search","",placeholder="Type a player name — Babar, Kohli, Smriti, Shaheen, Maxwell...",
                         key="home_search",label_visibility="collapsed")
     if qname:
         st.session_state["_go"]="🔍 Player Search"
@@ -853,7 +853,7 @@ elif section=="🔍 Player Search":
       <p style="color:var(--muted);font-size:12px;margin:10px 0 0">Search any player across all formats · Ball-by-ball stats · Wikipedia profiles</p>
     </div>""", unsafe_allow_html=True)
 
-    name=st.text_input("",placeholder="🔍  Player name — e.g. Babar, Kohli, Smriti, Shaheen...",
+    name=st.text_input("Player search",placeholder="🔍  Player name — e.g. Babar, Kohli, Smriti, Shaheen...",
                        label_visibility="collapsed",key="ps_input")
     name = st.session_state.get("ps_input","") or ""
     if name:
