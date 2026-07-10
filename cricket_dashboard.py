@@ -190,12 +190,6 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
   .ca-feature-icon{font-size:22px;margin-bottom:6px}
   .ca-feature-title{font-size:13px}
   .ca-feature-desc{display:none}
-  .ca-player-card{flex-direction:column!important;align-items:center!important;text-align:center!important}
-  .ca-player-img{flex-shrink:0;margin-bottom:10px}
-  .ca-player-info{min-width:0;width:100%}
-  .ca-player-name{white-space:normal!important;overflow:visible!important;text-overflow:unset!important;text-align:center}
-  .ca-player-pills{justify-content:center}
-  .ca-player-bio{-webkit-line-clamp:unset!important;display:block!important;overflow:visible!important}
   [data-testid="stPlotlyChart"]{border-radius:var(--radius-sm)!important}
 }
 @media(min-width:641px) and (max-width:900px){
@@ -206,21 +200,13 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 </style>""", unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
-# Fetches CSVs concurrently (ThreadPoolExecutor) rather than one-by-one, so
-# total load time ≈ the slowest single file's latency, not the sum of all 18.
-#
-# IMPORTANT FIX: max_workers is capped at 4 (not len(CSV_FILES)=18).
-# Firing all 18 downloads+parses at the exact same instant stacks their
-# transient parsing memory (pandas' CSV parser can spike 2-4x a dataframe's
-# final size while it's actively parsing) on top of each other and on top of
-# Streamlit/Plotly's own baseline memory. On a ~1GB Streamlit Community Cloud
-# instance that combined peak was enough to trigger the OS's OOM killer —
-# the process gets SIGKILLed with no Python traceback at all, which is why
-# the app just showed the generic "Oh no. Error running app." screen with
-# nothing underneath it (Cloud logs showed "... Killed" instead of a
-# traceback). Capping to 4 concurrent workers keeps almost all of the
-# wall-clock speedup (this is I/O-bound, so 4-in-flight already hides most of
-# the network latency) while bounding how many CSV parses can peak at once.
+# NOTE: previously this fetched 18 CSVs one-by-one over the network in sequence.
+# Each fetch has its own round-trip latency, so 18 sequential calls meant the
+# app waited for #1 to fully finish before even starting #2, and so on.
+# Fetching them concurrently (ThreadPoolExecutor) means all 18 requests are
+# in flight at once, so total load time ≈ the slowest single file, not the sum
+# of all 18. This is the main fix for "the app takes forever after the cache
+# expires every hour."
 from concurrent.futures import ThreadPoolExecutor
 
 CSV_FILES = [
@@ -239,17 +225,17 @@ def _read_one(name):
     try:
         return (name, pd.read_csv(f"{RAW_BASE}/{name}"), None)
     except Exception as e:
-        # A bare `except: return pd.DataFrame()` would swallow every error
-        # silently, so a renamed/missing file just quietly became an empty
-        # table with zero indication anything went wrong. We collect the
-        # failure so it can be shown in the app (see load_errors).
+        # Previously a bare `except: return pd.DataFrame()` swallowed every
+        # error silently, so a renamed/missing file just quietly became an
+        # empty table with zero indication anything went wrong. Now we
+        # collect the failure so it can be shown in the app (see load_errors).
         return (name, pd.DataFrame(), str(e))
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load():
     results = {}
     errors = []
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    with ThreadPoolExecutor(max_workers=len(CSV_FILES)) as ex:
         for name, df, err in ex.map(_read_one, CSV_FILES):
             results[name] = df
             if err:
@@ -271,6 +257,8 @@ with st.spinner("Loading cricket data..."):
      load_errors) = load()
 
 # Surface load failures instead of hiding them as silently-empty tables.
+# This is what was previously making "some data missing" impossible to debug —
+# a failed fetch just looked like a normal empty dataset with no explanation.
 if load_errors:
     with st.expander(f"⚠️ {len(load_errors)} data file(s) failed to load — click for details", expanded=False):
         for name, err in load_errors:
@@ -284,6 +272,35 @@ ALL_FMT=get_all_formats(bat_fmt)
 
 def avail(df,col):
     return sorted(df[col].unique().tolist(),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
+
+# ── Player name autocomplete ──────────────────────────────────────────────────
+# Previously every player search was a plain free-text box — you had to know
+# and correctly spell the exact Cricsheet name (e.g. "V Kohli" not "Kohli").
+# This builds one master list of every player name that exists in the data
+# (batters + bowlers, all formats) so we can offer live suggestions as you
+# type, similar to a Google search dropdown.
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_all_player_names():
+    names = set()
+    if not batting.empty and "striker" in batting.columns:
+        names.update(batting["striker"].dropna().unique().tolist())
+    if not bowling.empty and "bowler" in bowling.columns:
+        names.update(bowling["bowler"].dropna().unique().tolist())
+    return sorted(names)
+
+ALL_PLAYER_NAMES = get_all_player_names()
+
+def player_input(label, default, key=None):
+    """Dropdown with every known player name, searchable by typing — this is
+    what gives the 'type ba, see Babar Azam / Brad Hogg' suggestion behavior.
+    Falls back gracefully if the default isn't in the list (e.g. first run)."""
+    options = ALL_PLAYER_NAMES if ALL_PLAYER_NAMES else [default]
+    try:
+        idx = options.index(default)
+    except ValueError:
+        idx = 0
+    return st.selectbox(label, options, index=idx, key=key,
+                         help="Start typing to search — matches filter as you type, like a search engine.")
 
 # ── V12 smart find_rows (more thorough) ──────────────────────────────────────
 def find_rows(df, name_col, query):
@@ -502,7 +519,7 @@ def get_wiki(cricsheet_name, search_name):
         wiki_title=WIKI_NAMES.get(cricsheet_name, search_name+" cricketer")
         sr=requests.get("https://en.wikipedia.org/w/api.php",
             params={"action":"query","list":"search","srsearch":wiki_title,
-                    "format":"json","utf8":1,"srlimit":3},
+                    "format":"json","utf8":1,"srlimit":5},
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         sr.raise_for_status()
         results=sr.json().get("query",{}).get("search",[])
@@ -510,11 +527,54 @@ def get_wiki(cricsheet_name, search_name):
             st.session_state.setdefault("wiki_missing_full", []).append(
                 (cricsheet_name, f"no Wikipedia search results for '{wiki_title}'"))
             return None
-        page_title=results[0]["title"]
+
+        # Previously this always took results[0] — Wikipedia's plain text
+        # search often ranks a more famous, unrelated person with a similar
+        # surname above the actual (often less famous/younger) cricketer,
+        # which is exactly how a wrong photo/bio ends up attached to the
+        # right stats. Instead, score every candidate in the top 5 and pick
+        # whichever one actually looks like a cricketer, rather than
+        # trusting Wikipedia's raw ranking blindly.
+        def _score(result):
+            snippet = re.sub(r"<[^>]+>", "", result.get("snippet", "")).lower()
+            title = result.get("title", "").lower()
+            score = 0
+            if "cricket" in snippet: score += 5
+            if "batsman" in snippet or "bowler" in snippet or "batter" in snippet: score += 2
+            if "wicket-keeper" in snippet or "all-rounder" in snippet: score += 2
+            # Penalize obvious non-cricketer pages that still matched the name
+            if any(w in snippet for w in ["footballer","actor","musician","politician","author"]) \
+               and "cricket" not in snippet:
+                score -= 5
+            return score
+
+        scored = sorted(results, key=_score, reverse=True)
+        best_score = _score(scored[0])
+        if best_score <= 0:
+            # None of the candidates clearly look like a cricketer — flag
+            # this as a low-confidence match instead of silently attaching
+            # a possibly-wrong bio/photo, so it shows up in diagnostics.
+            st.session_state.setdefault("wiki_low_confidence", []).append(
+                (cricsheet_name, f"no candidate clearly matched 'cricketer' — using best guess '{scored[0]['title']}'"))
+        page_title=scored[0]["title"]
         safe=page_title.replace(" ","_")
         rr=requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{safe}",
             timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
         rr.raise_for_status(); data=rr.json()
+
+        # Wikipedia's own API flags disambiguation pages explicitly via
+        # this "type" field. Previously we had no check for this, so a
+        # common name (e.g. "Shoaib Khan", shared by 6+ real cricketers)
+        # would pull the disambiguation page's "X may refer to..." text
+        # and display it as if it were one specific person's biography —
+        # visibly wrong and confusing. Reject it outright instead.
+        if data.get("type") == "disambiguation":
+            st.session_state.setdefault("wiki_low_confidence", []).append(
+                (cricsheet_name, f"'{page_title}' is a Wikipedia disambiguation page "
+                                  f"(name shared by multiple real people) — profile withheld "
+                                  f"rather than showing the wrong person's bio."))
+            return None
+
         img=data.get("thumbnail",{}).get("source","")
         bio=data.get("extract","")
         sents=[s.strip() for s in bio.split(".") if len(s.strip())>15]
@@ -582,85 +642,71 @@ def get_wiki(cricsheet_name, search_name):
         if not role_raw or "[[" in role_raw or len(role_raw)<3:
             role_raw=desc[:60] if desc else ""
         nation=ef(wt,["country","nationality","national_side","national side"])
-
-        wiki_career={}
-        def _clean_col(v):
-            v=v.strip()
-            m=re.search(r"\[\[([^\]|]+\|)?([^\]]+)\]\]",v)
-            return m.group(2).strip() if m else v
-        columns=dict(re.findall(r"\|\s*column(\d)\s*=\s*([^\n]+)",wt))
-        columns={k:_clean_col(v) for k,v in columns.items()}
-        for field in ["matches","runs","bat avg","100s/50s","top score","wickets","bowl avg","best bowling"]:
-            for col_num,val in re.findall(rf"\|\s*{re.escape(field)}(\d)\s*=\s*([^\|\n]+)",wt):
-                fmt_label=columns.get(col_num,f"col{col_num}")
-                wiki_career.setdefault(fmt_label,{})[field]=val.strip()
-
         result = {"title":data.get("title",page_title),"bio":bio,"img":img,
                 "born":born[:60] if born else "",
                 "odi_debut":odi_d or any_d,"test_debut":test_d or any_d,"t20_debut":t20_d or any_d,
                 "ipl_debut":"","psl_debut":"","wpl_debut":"",
                 "role":role_raw[:60] if role_raw else "",
-                "nation":nation[:40] if nation else "",
-                "wiki_career":wiki_career}
+                "nation":nation[:40] if nation else ""}
+        # Previously a missing birth date was silently invisible — you'd only
+        # notice by scrolling every player card and eyeballing which ones lack
+        # a 🎂 pill. Now we log it once per session so you can see exactly
+        # which names need a manual entry in WIKI_NAMES (usually a nickname/
+        # spelling mismatch, or the infobox using a template this regex
+        # doesn't cover yet).
         if not result["born"]:
             st.session_state.setdefault("wiki_missing_field", []).append(
                 (cricsheet_name, "no birth date found on matched page: " + result["title"]))
         return result
     except Exception as e:
+        # Previously a bare `except: return None` meant every failure —
+        # network timeout, no search results, wrong page match, malformed
+        # infobox — looked identical: a blank "Profile unavailable" card.
+        # Logging the real reason here means you can tell "Wikipedia has no
+        # page for this name" apart from "the request timed out."
         st.session_state.setdefault("wiki_missing_full", []).append((cricsheet_name, str(e)))
         return None
 
-# ── V12 show_player_card (pill helper + border-left accent + mobile classes) ──
+# ── show_player_card (rebuilt on native Streamlit components) ────────────────
+# Previously this built one large custom HTML block via an f-string and
+# rendered it with st.markdown(unsafe_allow_html=True). Even with every text
+# field escaped, some players' cards still rendered as literal visible tags
+# instead of a styled card for reasons that were hard to pin down further
+# without live access to the deployed app. Rather than keep chasing the
+# exact character/condition causing it, this rebuilds the same visual layout
+# using Streamlit's own components (st.columns, st.image, st.caption) —
+# these can't "leak" as raw text the way hand-built HTML can, since
+# Streamlit itself controls how they render rather than relying on the
+# browser to correctly parse a hand-assembled string.
+import html as _html
+
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
-    if not card:
-        st.markdown(f"""<div style="background:var(--card);border-radius:var(--radius);padding:14px 16px;
-          margin:0 0 16px;border:1px solid var(--border)">
-          <div style="color:var(--muted);font-size:12px">📖 Profile unavailable for {cricsheet_name}</div>
-        </div>""", unsafe_allow_html=True)
-        return
-    img_sz=72 if compact else 96
-    acl=FC.get(fmt,"#00e5a0")
-    fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
-             "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
-    debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
-    def pill(icon,text,color):
-        return f'<span class="ca-pill" style="color:{color}">{icon} {text}</span>'
-    pills=""
-    if card["born"]: pills+=pill("🎂",card["born"],"#fbbf24")
-    if card["nation"]: pills+=pill("🌍",card["nation"],"#3d8bff")
-    if card["role"]: pills+=pill("🏏",card["role"][:30],"#00e5a0")
-    if debut: pills+=pill(f"🎯 {fmt} debut",debut,"#e17055")
-    max_sents=2 if compact else 4
-    short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
-    name_sz="14px" if compact else "18px"
-    img_html=f'<div class="ca-player-img"><img src="{card["img"]}" style="width:{img_sz}px;height:{int(img_sz*1.2)}px;object-fit:cover;border-radius:10px;border:2px solid var(--border);display:block"></div>' if card["img"] else ""
-    st.markdown(f"""<div class="ca-fade ca-player-card" style="
-      background:linear-gradient(135deg,var(--card),var(--surface));
-      border-radius:var(--radius);padding:14px;margin:0 0 14px 0;
-      border:1px solid var(--border);border-left:3px solid {acl};
-      box-sizing:border-box;width:100%">
-      {img_html}
-      <div class="ca-player-info">
-        <div class="ca-player-name" style="font-size:{name_sz}">{card["title"]}</div>
-        <div class="ca-player-pills">{pills}</div>
-        <div class="ca-player-bio" style="-webkit-line-clamp:{max_sents+1}">{short_bio}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
-    wc = (card.get("wiki_career") or {}).get(fmt) if not compact else None
-    if wc and wc.get("matches"):
-        parts=[f"{wc['matches']} matches"]
-        if wc.get("runs"): parts.append(f"{wc['runs']} runs")
-        if wc.get("bat avg"): parts.append(f"avg {wc['bat avg']}")
-        if wc.get("100s/50s"): parts.append(f"{wc['100s/50s']} 100s/50s")
-        if wc.get("wickets"): parts.append(f"{wc['wickets']} wkts")
-        st.markdown(f"""<div style="background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);
-          border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
-          <span>📚</span>
-          <span style="font-size:11px;color:#c084fc"><strong>Career total (Wikipedia): {' · '.join(parts)}</strong> —
-          full lifetime {fmt} record. Detailed ball-by-ball stats below cover whatever Cricsheet has captured, which may be fewer matches.</span>
-        </div>""", unsafe_allow_html=True)
+    with st.container(border=True):
+        if not card:
+            st.caption(f"📖 Profile unavailable for {cricsheet_name}")
+            return
+        img_col, info_col = st.columns([1,9], gap="small") if not compact else st.columns([1,12], gap="small")
+        with img_col:
+            if card["img"]:
+                st.image(card["img"], width=72 if compact else 96)
+        with info_col:
+            name_sz = "##### " if compact else "#### "
+            st.markdown(f"{name_sz}{card['title']}")
+            fmt_key={"ODI":"odi_debut","Test":"test_debut","T20I":"t20_debut","IPL":"ipl_debut",
+                     "PSL":"psl_debut","WPL":"wpl_debut","BBL":"odi_debut","CPL":"odi_debut"}.get(fmt,"odi_debut")
+            debut=card.get(fmt_key,"") or card.get("odi_debut","") or card.get("test_debut","") or card.get("t20_debut","")
+            pill_parts=[]
+            if card["born"]: pill_parts.append(f"🎂 {card['born']}")
+            if card["nation"]: pill_parts.append(f"🌍 {card['nation']}")
+            if card["role"]: pill_parts.append(f"🏏 {card['role'][:30]}")
+            if debut: pill_parts.append(f"🎯 {fmt} debut {debut}")
+            if pill_parts:
+                st.caption("  •  ".join(pill_parts))
+            max_sents=2 if compact else 4
+            short_bio=". ".join(card["bio"].split(". ")[:max_sents])+"." if card["bio"] else ""
+            if short_bio:
+                st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
 PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
@@ -705,15 +751,22 @@ pages_json = str([p for p in PAGES]).replace("'",'"')
 st.markdown(f"""<script>
 const PAGES = {pages_json};
 function navigateTo(idx) {{
+  // Find the sidebar radio buttons and click the matching one
   const labels = window.parent.document.querySelectorAll('[data-testid="stSidebar"] [role="radiogroup"] label');
   if (labels && labels[idx]) {{
     labels[idx].click();
   }}
 }}
+// Prevent browser back/forward from leaving the app
 (function() {{
+  // Push a dummy state so there's always something to "back" into
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', function(e) {{
+    // Re-push state to trap the user in the SPA
     history.pushState(null, '', location.href);
+    // Trigger in-app back via the hidden back button
+    const backBtn = window.parent.document.querySelector('[data-testid="stButton"] button[kind="secondary"]');
+    // Find back button by key
     const btns = window.parent.document.querySelectorAll('button');
     for (const b of btns) {{
       if (b.innerText && b.innerText.trim() === '← Back') {{
@@ -726,7 +779,7 @@ function navigateTo(idx) {{
 </script>""", unsafe_allow_html=True)
 
 with st.sidebar:
-    section=st.radio("Navigation",PAGES,key="page",label_visibility="collapsed")
+    section=st.radio("",PAGES,key="page",label_visibility="collapsed")
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
 section=st.session_state.get("page","🏠 Home")
@@ -770,7 +823,7 @@ if section=="🏠 Home":
     </div>""", unsafe_allow_html=True)
 
     st.markdown("#### 🔍 Quick Player Search")
-    qname=st.text_input("Player search","",placeholder="Type a player name — Babar, Kohli, Smriti, Shaheen, Maxwell...",
+    qname=st.text_input("","",placeholder="Type a player name — Babar, Kohli, Smriti, Shaheen, Maxwell...",
                         key="home_search",label_visibility="collapsed")
     if qname:
         st.session_state["_go"]="🔍 Player Search"
@@ -809,6 +862,7 @@ if section=="🏠 Home":
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
+    # Pre-fill search box via session state key (value= param removed in new Streamlit)
     if st.session_state.get("ps_name","") and "ps_input" not in st.session_state:
         st.session_state["ps_input"] = st.session_state["ps_name"]
     st.session_state["ps_name"] = ""
@@ -829,7 +883,7 @@ elif section=="🔍 Player Search":
       <p style="color:var(--muted);font-size:12px;margin:10px 0 0">Search any player across all formats · Ball-by-ball stats · Wikipedia profiles</p>
     </div>""", unsafe_allow_html=True)
 
-    name=st.text_input("Player search",placeholder="🔍  Player name — e.g. Babar, Kohli, Smriti, Shaheen...",
+    name=st.text_input("",placeholder="🔍  Player name — e.g. Babar, Kohli, Smriti, Shaheen...",
                        label_visibility="collapsed",key="ps_input")
     name = st.session_state.get("ps_input","") or ""
     if name:
@@ -842,7 +896,41 @@ elif section=="🔍 Player Search":
         aw=aw_qual["format"].unique().tolist() if not aw_qual.empty else []
         avl=sorted(set(ab+aw),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
         if not avl:
-            st.error(f"No data found for '{name}'. Try a different spelling or ensure their format data is loaded.")
+            # Previously this just said "try a different spelling" with no
+            # actual help — every missing-player report in this project
+            # turned into a slow manual CSV search to find out why. Now we
+            # search the actual list of every player name in the dataset
+            # for close matches, so the app tells you immediately whether
+            # this is a name-spelling issue (here are the close matches you
+            # probably meant) or a genuine data gap (no close match exists
+            # at all, meaning Cricsheet likely doesn't have this player yet).
+            import difflib
+            close = difflib.get_close_matches(name, ALL_PLAYER_NAMES, n=5, cutoff=0.5)
+            # Also check for simple substring matches (catches cases like
+            # searching "Vaibhav" when the full name is "Vaibhav Suryavanshi"
+            # but the fuzzy ratio above might not rank it highly enough)
+            substr = [n for n in ALL_PLAYER_NAMES if name.lower() in n.lower()][:5]
+            suggestions = list(dict.fromkeys(close + substr))  # dedupe, keep order
+            if suggestions:
+                st.warning(f"No exact match for '{name}'. Did you mean one of these?")
+                for s in suggestions:
+                    if st.button(s, key=f"suggest_{s}"):
+                        # NOTE: cannot set st.session_state["ps_input"] directly here —
+                        # Streamlit forbids overwriting a widget's own bound key after
+                        # that widget has already been instantiated in this run, and
+                        # raises a StreamlitAPIException. "ps_name" is the existing
+                        # hand-off variable (see top of this section) that gets copied
+                        # into "ps_input" BEFORE the widget is created on the next run.
+                        st.session_state["ps_name"] = s
+                        if "ps_input" in st.session_state:
+                            del st.session_state["ps_input"]
+                        st.rerun()
+            else:
+                st.error(f"No data found for '{name}', and no similar name exists anywhere in the dataset. "
+                         f"This most likely means Cricsheet doesn't have this player's match data yet "
+                         f"(common for very recent debuts) — not a search/spelling issue. "
+                         f"You can add their stats manually via manual_batting.csv / manual_bowling.csv "
+                         f"in the repo until Cricsheet catches up.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
         clr=FC.get(fmt,"#00e5a0")
@@ -851,19 +939,22 @@ elif section=="🔍 Player Search":
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
         show_player_card(display_name,name,fmt)
 
+        # Data freshness banner
         lu=get_last_updated()
         if lu:
             st.markdown(f"""<div style="background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>✅</span>
-              <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span>
-            </div>""", unsafe_allow_html=True)
+              <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span></div>""", unsafe_allow_html=True)
         else:
             st.markdown("""<div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
               <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
             </div>""", unsafe_allow_html=True)
+        st.caption("ℹ️ Stats reflect matches Cricsheet has ball-by-ball data for. Cricsheet is a community-maintained "
+                   "open archive and doesn't have complete coverage of every officially recognized match, especially "
+                   "older ones — so totals here may be lower than official career records for veteran players.")
 
         if len(bat)==0 and len(bowl)==0:
             st.warning(f"No {fmt} data for '{display_name}'.")
@@ -888,6 +979,38 @@ elif section=="🔍 Player Search":
                     metrics({"100s":h100,"50s":h50,"Highest":hs,"Ducks":dk,"⭐ Score":ps_})
                     fr=int(p["fours"])*4; sr_=int(p["sixes"])*6; or_=max(0,int(p["runs"])-fr-sr_)
                     ch(donut(["Fours","Sixes","Other"],[fr,sr_,or_],[clr,"#d63031","#636e72"],"Scoring Breakdown"),300)
+
+                    # ── Raw data verification ──────────────────────────
+                    # This recomputes the match count completely
+                    # independently of everything above — directly from
+                    # cricket_bat_innings.csv (one row per match+player,
+                    # the most granular data we have), with no
+                    # aggregation, caching, or display logic in between.
+                    # If this number matches the "Matches" card above,
+                    # that PROVES the card is accurately reflecting what's
+                    # actually in the CSV — a low number is then a real
+                    # Cricsheet coverage gap, not a display bug. If they
+                    # ever differ, that's a genuine bug to report back.
+                    with st.expander("🔍 Verify this player's raw match count (bypasses all display logic)"):
+                        if not bat_inn.empty and "striker" in bat_inn.columns:
+                            _verify_name = p["striker"]
+                            raw_rows = bat_inn[(bat_inn["striker"]==_verify_name) & (bat_inn["format"]==fmt)]
+                            raw_match_count = raw_rows["match_id"].nunique()
+                            st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {_verify_name} ({fmt}): {raw_match_count}**")
+                            st.write(f"**Matches shown in the card above: {int(p['matches'])}**")
+                            if raw_match_count == int(p["matches"]):
+                                st.success("✅ These match exactly — the card is correctly displaying everything "
+                                           "that exists in the CSV. If this number is lower than the player's real "
+                                           "career total, that's Cricsheet's own data coverage, not an app bug.")
+                            else:
+                                st.error(f"⚠️ These DON'T match ({raw_match_count} vs {int(p['matches'])}) — "
+                                         f"this is a genuine display/aggregation bug, please report this exact "
+                                         f"player name and both numbers.")
+                            if raw_match_count > 0:
+                                dates = pd.to_datetime(raw_rows["start_date"])
+                                st.caption(f"Date range of matches found: {dates.min().date()} to {dates.max().date()}")
+                        else:
+                            st.warning("Raw innings data not available to verify against.")
                 ti+=1
             if len(bowl)>0:
                 with tabs[ti]:
@@ -917,6 +1040,7 @@ elif section=="🔍 Player Search":
                         c1,c2=st.columns(2)
                         with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
                         with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
+                        # V12 extra: dot ball % chart
                         if "dot_pct" in by2.columns:
                             ch(line(by2,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
 
@@ -974,6 +1098,7 @@ elif section=="⚔️ Head to Head":
                 fy.update_xaxes(title="Year",tickmode="linear",dtick=2,showgrid=True,gridcolor=GRID)
                 fy.update_yaxes(title="Runs",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy,**CFG)
+                # V12 extra: average comparison over years
                 fy2=px.line(combined,x="year",y="average",color="player",markers=True,
                             title=f"Batting Average — {fmt}",
                             color_discrete_map={p1n:FC["ODI"],p2n:FC["Test"]})
@@ -983,10 +1108,12 @@ elif section=="⚔️ Head to Head":
                 fy2.update_yaxes(title="Average",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy2,**CFG)
 
+            # ── Radar chart comparison ────────────────────────────────────────
             st.markdown("### 🕸️ Head-to-Head Radar")
             st.markdown('<div class="ca-insight">Each axis is <strong>normalized 0–100</strong> relative to both players — so the shape shows who dominates which dimension, not raw values. A larger filled area = more rounded player.</div>', unsafe_allow_html=True)
             radar_metrics=["average","strike_rate","boundary_pct","dot_pct"]
             radar_labels=["Average","Strike Rate","Boundary %","Dot %"]
+            # Normalize each metric 0-100 across both players for radar
             v1_raw=[float(p1.get(m,0)) for m in radar_metrics]
             v2_raw=[float(p2_.get(m,0)) for m in radar_metrics]
             combined_max=[max(a,b,0.001) for a,b in zip(v1_raw,v2_raw)]
@@ -998,7 +1125,7 @@ elif section=="⚔️ Head to Head":
 # ══ VS VENUE ══════════════════════════════════════════════════════════════════
 elif section=="🏟️ vs Venue":
     page_banner("🏟️","Player vs Venue","How does a player perform at different grounds?","#0a1a1a","#0d2b2b","#00b894")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_ven,"striker",sname) if st_=="Batting" else find_rows(bowl_ven,"bowler",sname)
@@ -1011,6 +1138,7 @@ elif section=="🏟️ vs Venue":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_top=df_v.sort_values(m,ascending=False).head(20)
                 ch(bar_h(df_top,m,"venue",m,"Greens",f"{df_top['striker'].iloc[0]} — {m} by Venue ({fmt})"))
+                # Scatter: innings vs average per venue — reveals consistency
                 if "innings" in df_v.columns and "average" in df_v.columns and len(df_v)>=3:
                     st.markdown("#### 📍 Consistency Map — Innings vs Average per Venue")
                     st.caption("Top-right = visits often AND scores big. Bubble size = total runs.")
@@ -1053,7 +1181,7 @@ elif section=="🏟️ vs Venue":
 # ══ VS OPPONENT ═══════════════════════════════════════════════════════════════
 elif section=="🌍 vs Opponent":
     page_banner("🌍","Player vs Opponent","Find which teams a player dominates — and which trouble them","#0a1020","#0d1e3a","#0984e3")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_opp,"striker",sname) if st_=="Batting" else find_rows(bowl_opp,"bowler",sname)
@@ -1065,6 +1193,7 @@ elif section=="🌍 vs Opponent":
                 m=st.selectbox("Metric",["runs","average","strike_rate","fours","sixes"])
                 df_o_s=df_o.sort_values(m,ascending=False)
                 ch(bar_h(df_o_s,m,"opponent",m,"Blues",f"{df_o_s['striker'].iloc[0]} — {m} vs Teams ({fmt})"))
+                # Dominance scatter: innings vs average per opponent
                 if "innings" in df_o.columns and "average" in df_o.columns and len(df_o)>=3:
                     st.markdown("#### 🎯 Dominance Map — Which Teams Does He Master?")
                     st.caption("Top-right = plays them often AND scores big. Bottom-left = struggles.")
@@ -1076,6 +1205,7 @@ elif section=="🌍 vs Opponent":
                         title=f"Batting Dominance by Opponent ({fmt})")
                     fig_dom.update_traces(textposition="top center",textfont=dict(size=9,color=TEXT),
                         hovertemplate="<b>%{text}</b><br>Innings: %{x}<br>Avg: %{y:.1f}<extra></extra>")
+                    # Quadrant lines
                     fig_dom.add_hline(y=med_avg,line_dash="dot",line_color=GRID,
                                       annotation_text="Median avg",annotation_font=dict(size=9,color=TEXT))
                     fig_dom.add_vline(x=med_inn,line_dash="dot",line_color=GRID,
@@ -1111,7 +1241,7 @@ elif section=="🤜 Batter vs Bowler":
     page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a0a","#2e1010","#d63031")
     mt=st.radio("Look up a...",["Batter","Bowler"],horizontal=True)
     if mt=="Batter":
-        name=st.text_input("Batter name","Babar Azam")
+        name=player_input("Batter name",resolve("Babar Azam"),key="bvb_batter")
         if name:
             sname=resolve(name)
             src=find_rows(bvb,"striker",sname)
@@ -1124,7 +1254,7 @@ elif section=="🤜 Batter vs Bowler":
                 ch(bar_h(df_m,m,"bowler",m,"Greens",f"Top 20 bowlers faced — {m} ({fmt})"))
                 st.dataframe(df_m[["bowler","balls_faced","runs","strike_rate","dismissals"]].reset_index(drop=True))
     else:
-        name=st.text_input("Bowler name","Shaheen")
+        name=player_input("Bowler name",resolve("Shaheen"),key="bvb_bowler")
         if name:
             sname=resolve(name)
             src=find_rows(wvb,"bowler",sname)
@@ -1140,7 +1270,7 @@ elif section=="🤜 Batter vs Bowler":
 # ══ PERFORMANCE OVER YEARS ════════════════════════════════════════════════════
 elif section=="📈 Over Years":
     page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#0a150a","#0d2a10","#00b894")
-    name=st.text_input("Player name","Kohli"); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
+    name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
         src=find_rows(bat_yr,"striker",sname) if st_=="Batting" else find_rows(bowl_yr,"bowler",sname)
@@ -1159,6 +1289,7 @@ elif section=="📈 Over Years":
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
+                # V12 bonus: dot ball % over years
                 if "dot_pct" in by.columns:
                     ch(line(by,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
                 st.dataframe(by[["year","matches","wickets","economy","average","dot_pct","balls"]].reset_index(drop=True) if "balls" in by.columns else by[["year","matches","wickets","economy","average","dot_pct"]].reset_index(drop=True))
@@ -1176,6 +1307,7 @@ elif section=="🏆 Leaderboard":
         lb=bs[bs["runs"]>=mr].sort_values(sb,ascending=False).head(tn).reset_index(drop=True)
         lb.insert(0,"Rank",range(1,len(lb)+1))
         ch(bar_h(lb,sb,"striker",sb,"Teal",f"Top {tn} {fmt} Batters — {sb}"))
+        # Scatter: runs vs average — the classic "who's elite" plot
         if "runs" in lb.columns and "average" in lb.columns and len(lb)>=4:
             st.markdown("#### 💠 Runs vs Average — The Elite Quadrant")
             st.markdown('<div class="ca-insight"><strong>Top-right</strong> = high volume AND high quality. <strong>Color</strong> = strike rate. The dotted lines are median splits — names above both lines are the true greats of this format.</div>', unsafe_allow_html=True)
@@ -1207,6 +1339,7 @@ elif section=="🏆 Leaderboard":
         lb2=ws[ws["wickets"]>=mw].sort_values(sb2,ascending=(sb2 in ["economy","average"])).head(tn2).reset_index(drop=True)
         lb2.insert(0,"Rank",range(1,len(lb2)+1))
         ch(bar_h(lb2,"wickets","bowler","economy","Sunset",f"Top {tn2} {fmt} Bowlers"))
+        # Scatter: wickets vs economy
         if "wickets" in lb2.columns and "economy" in lb2.columns and len(lb2)>=4:
             st.markdown("#### 💠 Wickets vs Economy — The Elite Quadrant")
             st.caption("Top-right = high wickets AND economical. The match-winners.")
@@ -1235,7 +1368,7 @@ elif section=="🤖 Similar Players":
     page_banner("🤖","Similar Players","ML-powered: find cricketers who play just like your favourite","#0a0a1a","#1a1a3a","#a29bfe")
     st.markdown("Uses **KMeans clustering + cosine similarity** on career stats to find statistically similar players.")
     st_type=st.radio("Type",["Batter","Bowler"],horizontal=True)
-    name=st.text_input("Player name","Babar"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
+    name=player_input("Player name",resolve("Babar"),key="leaderboard_player"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
     if name:
         sname=resolve(name)
         if st_type=="Batter":
@@ -1252,6 +1385,7 @@ elif section=="🤖 Similar Players":
                 st.subheader(f"Players most similar to {p['striker']} in {fmt}")
                 st.caption(f"⭐ Player Score: {p.get('player_score','—')} | Cluster #{cluster} | {len(same)} similar players found")
                 ch(bar_h(same,"average","striker","average","Purples",f"Similar batters — {fmt}"))
+                # Show compact player cards for top 4 matches
                 st.markdown("#### 🎴 Top Similar Players")
                 top4=same.head(4)["striker"].tolist()
                 card_cols=st.columns(min(len(top4),2))
@@ -1287,9 +1421,10 @@ elif section=="🔥 Form & Ratings":
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2,tab3,tab4=st.tabs(["🔍 Player Form","🔥 Hot List","📉 Cold List","⭐ Player Scores"])
 
+    # ── Tab 1: Player year-by-year form ──────────────────────────────────────
     with tab1:
         st.markdown("#### Year-by-year form with career reference lines")
-        fname=st.text_input("Player name","Kohli",key="form_player")
+        fname=player_input("Player name",resolve("Kohli"),key="form_player")
         ftype=st.radio("Type",["Batting","Bowling"],horizontal=True,key="form_type")
         if fname:
             fsname=resolve(fname)
@@ -1309,6 +1444,7 @@ elif section=="🔥 Form & Ratings":
                              "Avg (latest)":round(float(latest["average"]),1),
                              "SR (latest)":round(float(latest["strike_rate"]),1),
                              "Matches":int(latest["matches"])})
+                    # Form delta badges vs career
                     if cavg or csr:
                         badges=""
                         if cavg: badges+=form_delta_html(float(latest["average"]),cavg,"avg",True)+" "
@@ -1360,6 +1496,7 @@ elif section=="🔥 Form & Ratings":
                              "Economy (latest)":round(float(latest["economy"]),2),
                              "Average (latest)":round(float(latest["average"]),1),
                              "Matches":int(latest["matches"])})
+                    # Form delta badges vs career
                     if cecon or cavg:
                         badges2=""
                         if cecon: badges2+=form_delta_html(float(latest["economy"]),cecon,"econ",False)+" "
@@ -1389,6 +1526,7 @@ elif section=="🔥 Form & Ratings":
                                            annotation_font=dict(color="#fdcb6e",size=11))
                     fig_avg2.update_layout(**BASE,height=300,margin=M_DEFAULT)
                     with c2: st.plotly_chart(fig_avg2,**CFG)
+                    # V12 bonus: dot ball % trend
                     if "dot_pct" in pyr.columns:
                         fig_dot=px.line(pyr,x="year",y="dot_pct",markers=True,title=f"{pname} — Dot Ball % by Year")
                         fig_dot.update_traces(line=dict(color="#00cec9",width=3),marker=dict(size=8,color="#00cec9"))
@@ -1397,6 +1535,7 @@ elif section=="🔥 Form & Ratings":
                     show_cols=[c for c in ["year","matches","wickets","economy","average","dot_pct","balls"] if c in pyr.columns]
                     st.dataframe(pyr[show_cols].reset_index(drop=True))
 
+    # ── Tab 2: Hot List ───────────────────────────────────────────────────────
     with tab2:
         ftype2=st.radio("Type",["Batting","Bowling"],horizontal=True,key="hot_type")
         n_yrs=st.slider("Recent window (years)",1,5,1,key="hot_yrs")
@@ -1432,6 +1571,7 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(agg[["bowler","innings","wickets","econ","avg","dot_pct"]].reset_index(drop=True))
             else: st.info("No bowlers meet the minimum innings threshold.")
 
+    # ── Tab 3: Cold List ──────────────────────────────────────────────────────
     with tab3:
         ftype3=st.radio("Type",["Batting","Bowling"],horizontal=True,key="cold_type")
         min_career=st.slider("Min career matches",5,30,10,key="cold_min")
@@ -1456,6 +1596,7 @@ elif section=="🔥 Form & Ratings":
                 st.dataframe(cold2[sc2].reset_index(drop=True))
             else: st.info("No bowlers in poor form right now.")
 
+    # ── Tab 4: Player Scores ──────────────────────────────────────────────────
     with tab4:
         ps_type=st.radio("Type",["Batting","Bowling"],horizontal=True,key="ps_type")
         if ps_type=="Batting":
@@ -1477,10 +1618,20 @@ elif section=="🔥 Form & Ratings":
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ── Diagnostics panel ─────────────────────────────────────────────────────────
+# Collects everything logged by load() and get_wiki() during this session so
+# missing data has a visible, debuggable trail instead of just looking like
+# "some stuff is randomly blank." Only shows up if something actually failed.
 _missing_full = st.session_state.get("wiki_missing_full", [])
 _missing_field = st.session_state.get("wiki_missing_field", [])
-if _missing_full or _missing_field:
-    with st.expander(f"🔧 Data diagnostics — {len(_missing_full)+len(_missing_field)} profile lookup issue(s) this session", expanded=False):
+_low_confidence = st.session_state.get("wiki_low_confidence", [])
+_total_issues = len(_missing_full) + len(_missing_field) + len(_low_confidence)
+if _total_issues:
+    with st.expander(f"🔧 Data diagnostics — {_total_issues} profile lookup issue(s) this session", expanded=False):
+        if _low_confidence:
+            st.caption("**⚠️ Possibly wrong photo/bio** (no search result clearly matched 'cricketer' — "
+                       "add a manual entry to WIKI_NAMES with the exact Wikipedia page title to fix):")
+            for name, reason in _low_confidence:
+                st.caption(f"• {name} — {reason}")
         if _missing_full:
             st.caption("**Profiles that failed to load entirely** (add a manual entry to WIKI_NAMES to fix):")
             for name, reason in _missing_full:
