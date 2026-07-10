@@ -577,6 +577,113 @@ def main():
         except Exception as e:
             log.error(f"Failed to apply manual_bowling.csv: {e}")
 
+    # ── Career-total overrides (targets the file that actually feeds the
+    # summary cards: batting_by_format / bowling_by_format) ────────────────
+    # The manual_batting.csv / manual_bowling.csv overrides above only add
+    # missing YEARLY rows (for the trend chart). They do NOT touch the
+    # career summary cards (Matches/Runs/Average/etc.) shown on a player's
+    # main page — those come from batting_by_format.csv, a completely
+    # different file. This section is the correct, tested mechanism for
+    # that: an optional career_overrides_batting.csv (and _bowling.csv) in
+    # the repo root can supply verified official totals for specific
+    # players/formats, to correct Cricsheet's known partial coverage for
+    # veteran players. Unlike the yearly override (which only fills gaps),
+    # this DELIBERATELY overwrites matching (player, format) rows, since
+    # the entire point is correcting known-incomplete automated numbers
+    # with verified real totals — every overwrite is logged so it's never
+    # silent or hidden.
+    #
+    # Expected columns for career_overrides_batting.csv (any subset of the
+    # non-key columns is fine — only the columns you provide get updated):
+    #   striker,format,matches,runs,balls_faced,dismissals,fours,sixes,
+    #   average,strike_rate,dot_pct,boundary_pct,hundreds,fifties,
+    #   thirties,highest,ducks
+    if os.path.exists("career_overrides_batting.csv"):
+        try:
+            overrides = pd.read_csv("career_overrides_batting.csv")
+            override_cols = [c for c in overrides.columns if c not in ("striker", "format")]
+            applied, added = 0, 0
+            for _, row in overrides.iterrows():
+                mask = (batting_by_format["striker"] == row["striker"]) & (batting_by_format["format"] == row["format"])
+                if mask.any():
+                    for col in override_cols:
+                        if pd.notna(row[col]):
+                            batting_by_format.loc[mask, col] = row[col]
+                    applied += 1
+                else:
+                    new_row = {c: np.nan for c in batting_by_format.columns}
+                    new_row["striker"] = row["striker"]
+                    new_row["format"] = row["format"]
+                    for col in override_cols:
+                        if pd.notna(row[col]):
+                            new_row[col] = row[col]
+                    batting_by_format = pd.concat([batting_by_format, pd.DataFrame([new_row])], ignore_index=True)
+                    added += 1
+            log.info(f"Career overrides (batting): corrected {applied} existing player/format row(s), "
+                     f"added {added} new row(s), from career_overrides_batting.csv")
+        except Exception as e:
+            log.error(f"Failed to apply career_overrides_batting.csv: {e}")
+
+    if os.path.exists("career_overrides_bowling.csv"):
+        try:
+            overrides = pd.read_csv("career_overrides_bowling.csv")
+            override_cols = [c for c in overrides.columns if c not in ("bowler", "format")]
+            applied, added = 0, 0
+            for _, row in overrides.iterrows():
+                mask = (bowling_by_format["bowler"] == row["bowler"]) & (bowling_by_format["format"] == row["format"])
+                if mask.any():
+                    for col in override_cols:
+                        if pd.notna(row[col]):
+                            bowling_by_format.loc[mask, col] = row[col]
+                    applied += 1
+                else:
+                    new_row = {c: np.nan for c in bowling_by_format.columns}
+                    new_row["bowler"] = row["bowler"]
+                    new_row["format"] = row["format"]
+                    for col in override_cols:
+                        if pd.notna(row[col]):
+                            new_row[col] = row[col]
+                    bowling_by_format = pd.concat([bowling_by_format, pd.DataFrame([new_row])], ignore_index=True)
+                    added += 1
+            log.info(f"Career overrides (bowling): corrected {applied} existing player/format row(s), "
+                     f"added {added} new row(s), from career_overrides_bowling.csv")
+        except Exception as e:
+            log.error(f"Failed to apply career_overrides_bowling.csv: {e}")
+
+    # ── Dtype safety pass ────────────────────────────────────────────────
+    # Manual override rows (career_overrides_*.csv, manual_*.csv) can
+    # legitimately leave some numeric columns blank/NaN for a given row
+    # (e.g. we didn't have verified fours/sixes for an override). When
+    # that gets concatenated into a column that was previously clean
+    # all-integer data, pandas silently converts the WHOLE column to a
+    # mixed/ambiguous dtype. Streamlit then has to serialize these tables
+    # to Arrow format for its charts and widgets — and Arrow can crash
+    # natively (a segfault, not a normal Python exception) on certain
+    # mixed-dtype columns. This explicitly normalizes every numeric
+    # column to a safe, consistent float dtype (which handles NaN
+    # cleanly) right before saving, so this can't happen regardless of
+    # which fields a manual override does or doesn't provide.
+    def _safe_numeric_dtypes(df):
+        for col in df.columns:
+            # Only touch columns that are ALREADY numeric (int64/float64).
+            # Explicitly checking for numeric dtypes (rather than trying to
+            # exclude text columns by name, e.g. "object") is the safe
+            # direction — pandas 3.x uses a native string dtype for text
+            # columns by default, which an object-only exclusion check
+            # misses, and would otherwise convert player names/format
+            # labels into NaN. Only ever widen known-numeric columns.
+            if pd.api.types.is_integer_dtype(df[col]) or pd.api.types.is_float_dtype(df[col]):
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+        return df
+
+    batting = _safe_numeric_dtypes(batting)
+    bowling = _safe_numeric_dtypes(bowling)
+    batting_by_format = _safe_numeric_dtypes(batting_by_format)
+    bowling_by_format = _safe_numeric_dtypes(bowling_by_format)
+    batting_yearly = _safe_numeric_dtypes(batting_yearly)
+    bowling_yearly = _safe_numeric_dtypes(bowling_yearly)
+    log.info("Applied dtype-safety pass to prevent mixed-type columns from override merges")
+
     files_to_save = {
         "cricket_batting_stats.csv": batting,
         "cricket_bowling_stats.csv": bowling,
