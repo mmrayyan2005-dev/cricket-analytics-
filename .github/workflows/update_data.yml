@@ -1,6 +1,6 @@
 name: Update Cricket Data
 
-# Runs automatically every day at 03:00 UTC, and can also be triggered
+# Runs automatically every Sunday at 03:00 UTC, and can also be triggered
 # manually from the GitHub Actions tab ("Run workflow" button) whenever you
 # want fresh data immediately — no Colab required either way.
 on:
@@ -29,6 +29,7 @@ jobs:
           GITHUB_USER: ${{ github.repository_owner }}
           GITHUB_REPO: cricket-analytics_-
           BRANCH: main
+          WATCH_PLAYERS: "Suryavanshi,Sooryavanshi,Awais,Fazal"
         run: python pipeline.py
 
       - name: Upload run log (for debugging failed runs)
