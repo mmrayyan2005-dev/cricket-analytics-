@@ -28,6 +28,7 @@ import io
 import zipfile
 import base64
 import logging
+import time
 from datetime import datetime, timezone
 
 import requests
@@ -110,7 +111,7 @@ def load_format(folder, label):
     dfs, failed = [], []
     for f in sorted(files):
         try:
-            d = pd.read_csv(os.path.join(folder, f))
+            d = pd.read_csv(os.path.join(folder, f), low_memory=False)
             d["_source_file"] = f
             dfs.append(d)
         except Exception as e:
@@ -436,27 +437,54 @@ def build_ml_tables(batting_by_format, bowling_by_format, batting_yearly, bowlin
 
 def push_csv_to_github(df, filename, token, user, repo, branch="main"):
     """Push a DataFrame as CSV to GitHub. Returns True/False so the caller
-    can track failures instead of just printing and moving on."""
+    can track failures instead of just printing and moving on.
+
+    Includes retry logic for the sha lookup — pushing 18 files means 36+
+    rapid sequential GitHub API calls, and an occasional transient
+    hiccup (rate limiting, brief network blip) can make the sha lookup
+    silently return nothing even though the file exists. Previously that
+    meant the whole push failed with a 422 'sha wasn't supplied' error.
+    Now it retries the lookup a few times with backoff before giving up,
+    and if the PUT itself still fails due to a missing sha, it retries
+    the entire lookup+push cycle once more from scratch."""
     url = f"https://api.github.com/repos/{user}/{repo}/contents/{filename}"
     headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
-
-    r = requests.get(url, headers=headers)
-    sha = r.json().get("sha") if r.status_code == 200 else None
-
     csv_bytes = df.to_csv(index=False).encode("utf-8")
     content_b64 = base64.b64encode(csv_bytes).decode("utf-8")
 
-    payload = {"message": f"Update {filename}", "content": content_b64, "branch": branch}
-    if sha:
-        payload["sha"] = sha
+    def _get_sha():
+        for attempt in range(3):
+            r = requests.get(url, headers=headers, timeout=15)
+            if r.status_code == 200:
+                return r.json().get("sha")
+            elif r.status_code == 404:
+                return None  # file genuinely doesn't exist yet — not an error
+            else:
+                log.warning(f"{filename}: sha lookup attempt {attempt+1} got "
+                            f"unexpected status {r.status_code}, retrying...")
+                time.sleep(1.5 * (attempt + 1))
+        return None
 
-    resp = requests.put(url, headers=headers, json=payload)
-    if resp.status_code in (200, 201):
-        log.info(f"Pushed {filename} ({len(df):,} rows)")
-        return True
-    else:
-        log.error(f"FAILED to push {filename}: {resp.status_code} {resp.json().get('message')}")
-        return False
+    for overall_attempt in range(3):
+        sha = _get_sha()
+        payload = {"message": f"Update {filename}", "content": content_b64, "branch": branch}
+        if sha:
+            payload["sha"] = sha
+
+        resp = requests.put(url, headers=headers, json=payload, timeout=30)
+        if resp.status_code in (200, 201):
+            log.info(f"Pushed {filename} ({len(df):,} rows)")
+            return True
+        elif "sha" in resp.text.lower() and overall_attempt < 2:
+            wait = 3 * (overall_attempt + 1)
+            log.warning(f"{filename}: push failed due to sha issue on attempt "
+                        f"{overall_attempt+1} ({resp.status_code}), waiting {wait}s and retrying...")
+            time.sleep(wait)
+            continue
+        else:
+            log.error(f"FAILED to push {filename}: {resp.status_code} {resp.json().get('message')}")
+            return False
+    return False
 
 
 def push_text_to_github(text, filename, token, user, repo, branch="main"):
@@ -713,6 +741,8 @@ def main():
         ok = push_csv_to_github(df_out, fn, GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
         if not ok:
             failures.append(fn)
+        time.sleep(0.5)  # small gap between pushes — reduces the chance of tripping
+                          # GitHub's secondary rate limit from 18 rapid-fire requests
 
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     push_text_to_github(timestamp, "last_updated.txt", GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
