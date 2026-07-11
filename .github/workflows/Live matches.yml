@@ -1,0 +1,36 @@
+name: Update Live Matches
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch:          # lets you trigger it manually from the Actions tab
+
+jobs:
+  update-live-matches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run recent_matches.py
+        env:
+          CRICKETDATA_API_KEY: ${{ secrets.CRICKETDATA_API_KEY }}
+        run: python recent_matches.py
+
+      - name: Commit and push if changed
+        env:
+          DATA_PUSH_TOKEN: ${{ secrets.DATA_PUSH_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add cricket_live_matches.csv
+          git diff --staged --quiet || git commit -m "Update live matches [auto]"
+          git push https://x-access-token:${DATA_PUSH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
