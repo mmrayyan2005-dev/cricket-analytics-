@@ -281,11 +281,24 @@ def avail(df,col):
 # type, similar to a Google search dropdown.
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_all_player_names():
+    # Previously only pulled from the overall career-totals files
+    # (cricket_batting_stats.csv / cricket_bowling_stats.csv). Anyone
+    # added via career_overrides_batting.csv (e.g. a brand-new debutant
+    # whose match Cricsheet doesn't have yet) only gets written into
+    # batting_by_format/bowling_by_format, not those two files — so their
+    # name never made it into this list, and searching their exact name
+    # incorrectly fell through to "no exact match, did you mean...?"
+    # instead of finding them directly. Pulling from all four sources
+    # fixes this generally, for any current or future override.
     names = set()
     if not batting.empty and "striker" in batting.columns:
         names.update(batting["striker"].dropna().unique().tolist())
     if not bowling.empty and "bowler" in bowling.columns:
         names.update(bowling["bowler"].dropna().unique().tolist())
+    if not bat_fmt.empty and "striker" in bat_fmt.columns:
+        names.update(bat_fmt["striker"].dropna().unique().tolist())
+    if not bowl_fmt.empty and "bowler" in bowl_fmt.columns:
+        names.update(bowl_fmt["bowler"].dropna().unique().tolist())
     return sorted(names)
 
 ALL_PLAYER_NAMES = get_all_player_names()
@@ -353,6 +366,8 @@ def bar_v(df, x, y, title, color, h=360):
     fig.update_layout(**BASE,height=h,showlegend=False,margin=M_BARV)
     fig.update_xaxes(tickmode="linear",tickangle=-40,showgrid=False,tickfont=dict(size=12),automargin=True)
     fig.update_yaxes(showgrid=True,gridcolor=GRID)
+    if x == "year":
+        fig.update_xaxes(dtick=1, tickformat="d")
     return fig
 
 def line(df, x, y, title, color, h=280):
@@ -362,6 +377,12 @@ def line(df, x, y, title, color, h=280):
                       marker=dict(size=8,color=color,line=dict(width=2,color=BG)),
                       hovertemplate="<b>%{x}</b><br>" + y + ": <b>%{y:.2f}</b><extra></extra>")
     fig.update_layout(**BASE,height=h,margin=M_DEFAULT)
+    if x == "year":
+        # Defensive safeguard: force whole-number ticks on year axes so a
+        # short data range (e.g. only 2 years) can't make Plotly's default
+        # auto-tick logic show fractional years like 2025.2, 2025.4 —
+        # regardless of the underlying column's exact dtype.
+        fig.update_xaxes(dtick=1, tickformat="d")
     return fig
 
 def donut(labels, values, colors, title):
@@ -890,10 +911,15 @@ elif section=="🔍 Player Search":
         sname=resolve(name)
         ab_rows=find_rows(bat_fmt,"striker",sname)
         aw_rows=find_rows(bowl_fmt,"bowler",sname)
-        ab_qual=ab_rows[ab_rows["matches"]>=3] if not ab_rows.empty and "matches" in ab_rows.columns else ab_rows
-        aw_qual=aw_rows[aw_rows["matches"]>=3] if not aw_rows.empty and "matches" in aw_rows.columns else aw_rows
-        ab=ab_qual["format"].unique().tolist() if not ab_qual.empty else []
-        aw=aw_qual["format"].unique().tolist() if not aw_qual.empty else []
+        # BUG FIX: this used to require >=3 matches before a player's format
+        # was even considered "available", which silently made ANY player
+        # with 1-2 recorded matches (debutants, associate-nation players,
+        # part-timers) completely unfindable via search — not a display
+        # issue, an invisibility issue. A player who's played even one
+        # real match should be findable; we just note the small sample
+        # size instead of hiding them entirely.
+        ab=ab_rows["format"].unique().tolist() if not ab_rows.empty else []
+        aw=aw_rows["format"].unique().tolist() if not aw_rows.empty else []
         avl=sorted(set(ab+aw),key=lambda x:FORMATS.index(x) if x in FORMATS else 99)
         if not avl:
             # Previously this just said "try a different spelling" with no
