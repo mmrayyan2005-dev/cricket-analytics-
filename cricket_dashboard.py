@@ -243,6 +243,14 @@ def load():
     ordered = [results[name] for name in CSV_FILES]
     return (*ordered, errors)
 
+@st.cache_data(ttl=300, show_spinner=False)  # 5 min cache — this data updates every 30 min via Action
+def load_live_matches():
+    try:
+        df = pd.read_csv(f"{RAW_BASE}/cricket_live_matches.csv")
+        return df
+    except Exception:
+        return pd.DataFrame()
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_last_updated():
     try:
@@ -730,7 +738,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
                 st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
-PAGES=["🏠 Home","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
+PAGES=["🏠 Home","🔴 Live Matches","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
        "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
 
@@ -880,6 +888,25 @@ if section=="🏠 Home":
         st.markdown("**Top 5 Bowlers by Wickets**")
         top_bowl=bowl_fmt[bowl_fmt["format"]==ql_fmt].sort_values("wickets",ascending=False).head(5)[["bowler","wickets","economy","average"]] if not bowl_fmt.empty else pd.DataFrame()
         if not top_bowl.empty: st.dataframe(top_bowl.reset_index(drop=True),hide_index=True)
+
+# ══ LIVE MATCHES ══════════════════════════════════════════════════════════════
+elif section=="🔴 Live Matches":
+    page_banner("🔴","Live Matches","Matches currently in progress — from CricketData.org, updated every 30 min","#1a0508","#2e0a12","#ff4d6d")
+    live_df = load_live_matches()
+    if live_df.empty:
+        st.info("No matches are live right now. Check back soon — this refreshes every 30 minutes.")
+    else:
+        for _, m in live_df.iterrows():
+            with st.container(border=True):
+                c1, c2 = st.columns([3,1])
+                with c1:
+                    st.markdown(f"**{m.get('match_name','')}**")
+                    st.caption(f"📍 {m.get('venue','')}  •  {m.get('match_type','').upper()}  •  {m.get('status','')}")
+                    if m.get('score_summary'):
+                        st.markdown(f"`{m['score_summary']}`")
+                with c2:
+                    st.caption(f"{m.get('team1','')} vs {m.get('team2','')}")
+        st.caption("ℹ️ Sourced from CricketData.org (CricAPI) — separate from the Cricsheet-based career stats elsewhere in this app.")
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
