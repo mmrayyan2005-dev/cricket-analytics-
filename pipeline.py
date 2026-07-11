@@ -523,6 +523,36 @@ def main():
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
 
+    # ── Player watch-list diagnostic ─────────────────────────────────────
+    # This answers "why isn't player X showing up" for ANY player, every
+    # run, without needing a one-off manual investigation each time. Set
+    # the WATCH_PLAYERS environment variable to a comma-separated list of
+    # (partial) names to check — e.g. "Suryavanshi,Awais,Fazal" — and this
+    # logs, for each one:
+    #   1. How many RAW rows (before any cleaning) mention them at all —
+    #      if this is 0, Cricsheet's own archive doesn't have them yet or
+    #      they're spelled differently. Not a pipeline bug.
+    #   2. How many rows survive to the CLEANED dataset — if #1 is > 0 but
+    #      this is 0, our cleaning logic is incorrectly dropping their
+    #      matches, which IS a real, fixable pipeline bug.
+    watch_list = [w.strip() for w in os.environ.get("WATCH_PLAYERS", "").split(",") if w.strip()]
+    _pre_clean_watch_counts = {}
+    if watch_list and not df.empty:
+        log.info(f"=== PLAYER WATCH-LIST CHECK (pre-clean): {watch_list} ===")
+        for name in watch_list:
+            mask = (df["striker"].str.contains(name, case=False, na=False) |
+                    df["bowler"].str.contains(name, case=False, na=False))
+            count = mask.sum()
+            _pre_clean_watch_counts[name] = count
+            matched_names = pd.concat([df.loc[mask, "striker"], df.loc[mask, "bowler"]])
+            matched_names = matched_names[matched_names.str.contains(name, case=False, na=False)].unique()
+            log.info(f"  '{name}': {count:,} raw row(s) found. "
+                     f"Exact name(s) matched: {list(matched_names)[:5]}")
+            if count == 0:
+                log.info(f"    → NOT in Cricsheet's raw archive at all (this run). "
+                         f"Likely a genuine data-source gap or a very different spelling, "
+                         f"not a bug in this pipeline.")
+
     # If every download failed (e.g. Cricsheet rejected our requests, or
     # their site was temporarily down), df will be empty here. Previously
     # this would crash 15+ seconds later inside clean_and_validate() with a
@@ -546,6 +576,23 @@ def main():
             log.info(f"[RAW, pre-clean] {fmt}: most recent match date = {fmt_max}")
 
     df = clean_and_validate(df)
+
+    if watch_list and not df.empty:
+        log.info(f"=== PLAYER WATCH-LIST CHECK (post-clean) ===")
+        for name in watch_list:
+            mask = (df["striker"].str.contains(name, case=False, na=False) |
+                    df["bowler"].str.contains(name, case=False, na=False))
+            count = mask.sum()
+            pre_count = _pre_clean_watch_counts.get(name, 0)
+            log.info(f"  '{name}': {count:,} row(s) survived to cleaned data "
+                     f"(had {pre_count:,} before cleaning).")
+            if pre_count > 0 and count == 0:
+                log.error(f"    → BUG CONFIRMED: '{name}' had {pre_count:,} raw rows but ALL were "
+                          f"dropped during cleaning. This is a real pipeline bug, not a data gap — "
+                          f"investigate the 'Dropped ...' log lines above to see which filter caught them.")
+            elif pre_count > 0 and count > 0:
+                log.info(f"    → OK: data survived cleaning correctly. If this player is still "
+                         f"missing from the app, the issue is downstream (aggregation or search).")
 
     # Same check AFTER cleaning — if this max date is earlier than the raw
     # check above, our cleaning logic is dropping recent rows (a real bug
@@ -700,7 +747,15 @@ def main():
             # columns by default, which an object-only exclusion check
             # misses, and would otherwise convert player names/format
             # labels into NaN. Only ever widen known-numeric columns.
-            if pd.api.types.is_integer_dtype(df[col]) or pd.api.types.is_float_dtype(df[col]):
+            if col == "year":
+                # 'year' must stay a whole number — converting it to
+                # float64 like every other numeric column made charts
+                # render fractional x-axis ticks (2025.2, 2025.4...)
+                # instead of whole years. Use nullable Int64 instead,
+                # which handles any missing values safely while keeping
+                # the column genuinely integer.
+                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+            elif pd.api.types.is_integer_dtype(df[col]) or pd.api.types.is_float_dtype(df[col]):
                 df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
         return df
 
