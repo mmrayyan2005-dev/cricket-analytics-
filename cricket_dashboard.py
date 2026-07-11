@@ -1051,24 +1051,43 @@ elif section=="🔍 Player Search":
                 if len(bat)>0:
                     p=bat.sort_values("runs",ascending=False).iloc[0]; en=p["striker"]
                     by=bat_yr[(bat_yr["format"]==fmt)&(bat_yr["striker"]==en)].sort_values("year") if not bat_yr.empty else pd.DataFrame()
-                    if len(by)>1:
+                    # BUG FIX: this used to require >1 year of data before
+                    # showing ANYTHING here — for any player with just one
+                    # season recorded (very common for debutants, not just
+                    # override-added players), the entire Charts tab
+                    # silently showed nothing at all, with no explanation.
+                    # A single-season bar chart is still real, useful
+                    # information — only a multi-point LINE trend
+                    # genuinely needs 2+ points to mean anything.
+                    if len(by)>=1:
                         st.markdown("**🏏 Batting Trends**")
                         ch(bar_v(by,"year","runs","Runs per Year",clr))
-                        c1,c2=st.columns(2)
-                        with c1: ch(line(by,"year","average","Batting Average",clr),260)
-                        with c2: ch(line(by,"year","strike_rate","Strike Rate","#fbbf24"),260)
+                        if len(by)>1:
+                            c1,c2=st.columns(2)
+                            with c1: ch(line(by,"year","average","Batting Average",clr),260)
+                            with c2: ch(line(by,"year","strike_rate","Strike Rate","#fbbf24"),260)
+                        else:
+                            st.caption("ℹ️ Only one season of data recorded so far — trend lines (average/strike "
+                                       "rate over time) need at least two seasons to be meaningful.")
+                    else:
+                        st.caption("No yearly breakdown available for this player/format yet.")
                 if len(bowl)>0:
                     p2=bowl.sort_values("wickets",ascending=False).iloc[0]; en2=p2["bowler"]
                     by2=bowl_yr[(bowl_yr["format"]==fmt)&(bowl_yr["bowler"]==en2)].sort_values("year") if not bowl_yr.empty else pd.DataFrame()
-                    if len(by2)>1:
+                    if len(by2)>=1:
                         st.markdown("**🎳 Bowling Trends**")
                         ch(bar_v(by2,"year","wickets","Wickets per Year",clr))
-                        c1,c2=st.columns(2)
-                        with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
-                        with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
-                        # V12 extra: dot ball % chart
-                        if "dot_pct" in by2.columns:
-                            ch(line(by2,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
+                        if len(by2)>1:
+                            c1,c2=st.columns(2)
+                            with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
+                            with c2: ch(line(by2,"year","average","Bowling Average","#6c5ce7"),260)
+                            if "dot_pct" in by2.columns:
+                                ch(line(by2,"year","dot_pct","Dot Ball % by Year","#00cec9"),240)
+                        else:
+                            st.caption("ℹ️ Only one season of data recorded so far — trend lines need at least "
+                                       "two seasons to be meaningful.")
+                    else:
+                        st.caption("No yearly breakdown available for this player/format yet.")
 
 # ══ HEAD TO HEAD ══════════════════════════════════════════════════════════════
 elif section=="⚔️ Head to Head":
