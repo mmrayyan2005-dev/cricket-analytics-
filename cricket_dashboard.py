@@ -221,25 +221,51 @@ CSV_FILES = [
     "cricket_bat_innings.csv","cricket_bowl_innings.csv",
 ]
 
-def _read_one(name):
+import io
+
+def _fetch_one(name):
+    """Phase 1: network fetch only — safe to run concurrently."""
     try:
-        return (name, pd.read_csv(f"{RAW_BASE}/{name}"), None)
+        r = requests.get(f"{RAW_BASE}/{name}", timeout=20)
+        r.raise_for_status()
+        return (name, r.content, None)
     except Exception as e:
         # Previously a bare `except: return pd.DataFrame()` swallowed every
         # error silently, so a renamed/missing file just quietly became an
         # empty table with zero indication anything went wrong. Now we
         # collect the failure so it can be shown in the app (see load_errors).
-        return (name, pd.DataFrame(), str(e))
+        return (name, None, str(e))
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def load():
-    results = {}
+    fetched = {}
     errors = []
+    # Phase 1: fetch all 18 files concurrently — network I/O is thread-safe,
+    # so this is where the ThreadPoolExecutor speedup is safe to use.
     with ThreadPoolExecutor(max_workers=len(CSV_FILES)) as ex:
-        for name, df, err in ex.map(_read_one, CSV_FILES):
-            results[name] = df
+        for name, content, err in ex.map(_fetch_one, CSV_FILES):
+            fetched[name] = content
             if err:
                 errors.append((name, err))
+
+    # Phase 2: parse sequentially. pandas' CSV parser (backed by the C/pyarrow
+    # engine) is NOT reliably thread-safe — running pd.read_csv() concurrently
+    # across 18 threads was causing an intermittent segmentation fault that
+    # crashed the whole app with no Python traceback. Parsing one file at a
+    # time here, after all network calls are already done, avoids that while
+    # keeping the actual slow part (network fetch) fully concurrent.
+    results = {}
+    for name in CSV_FILES:
+        content = fetched.get(name)
+        if content is None:
+            results[name] = pd.DataFrame()
+            continue
+        try:
+            results[name] = pd.read_csv(io.BytesIO(content))
+        except Exception as e:
+            results[name] = pd.DataFrame()
+            errors.append((name, str(e)))
+
     ordered = [results[name] for name in CSV_FILES]
     return (*ordered, errors)
 
