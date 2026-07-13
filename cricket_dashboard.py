@@ -793,51 +793,24 @@ last_upd=get_last_updated()
 pkt=datetime.now(timezone(timedelta(hours=5)))
 status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 
-nav_html='<div class="ca-topnav"><div class="ca-topnav-brand">🏏 Cricket<span>Analytics</span></div><div class="ca-topnav-links">'
-for i,p in enumerate(PAGES):
-    active="active" if st.session_state.get("page","")==p else ""
-    emoji=p.split()[0]; label=" ".join(p.split()[1:])
-    nav_html+=f'<button class="ca-navbtn {active}" onclick="navigateTo({i})">{emoji} <span class="nav-label">{label}</span></button>'
-nav_html+=f'</div><div class="ca-topnav-status"><span class="ca-live"></span>{status_txt}</div></div>'
-st.markdown(nav_html, unsafe_allow_html=True)
+# NOTE: the previous top nav was a hand-built HTML/JS bar with onclick
+# handlers that reached into the sidebar's radio buttons via JS. On
+# Streamlit Community Cloud this silently failed to render at all for
+# this app — the whole bar was just missing, with no error, because
+# Streamlit's sandboxing can drop injected <script>/<button> markup in
+# ways that don't show up as a Python exception. Rather than keep
+# debugging an unreliable custom nav, this replaces it with a native
+# st.radio(horizontal=True) — guaranteed to render every time, since
+# it's a real Streamlit widget rather than raw HTML we're hoping survives.
+st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
+  <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+  <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
+    <span class="ca-live"></span>{status_txt}</span>
+</div>""", unsafe_allow_html=True)
 
-# JS: wire nav buttons to sidebar radio + block browser back
-pages_json = str([p for p in PAGES]).replace("'",'"')
-st.markdown(f"""<script>
-const PAGES = {pages_json};
-function navigateTo(idx) {{
-  // Find the sidebar radio buttons and click the matching one
-  const labels = window.parent.document.querySelectorAll('[data-testid="stSidebar"] [role="radiogroup"] label');
-  if (labels && labels[idx]) {{
-    labels[idx].click();
-  }}
-}}
-// Prevent browser back/forward from leaving the app
-(function() {{
-  // Push a dummy state so there's always something to "back" into
-  history.pushState(null, '', location.href);
-  window.addEventListener('popstate', function(e) {{
-    // Re-push state to trap the user in the SPA
-    history.pushState(null, '', location.href);
-    // Trigger in-app back via the hidden back button
-    const backBtn = window.parent.document.querySelector('[data-testid="stButton"] button[kind="secondary"]');
-    // Find back button by key
-    const btns = window.parent.document.querySelectorAll('button');
-    for (const b of btns) {{
-      if (b.innerText && b.innerText.trim() === '← Back') {{
-        b.click();
-        break;
-      }}
-    }}
-  }});
-}})();
-</script>""", unsafe_allow_html=True)
-
-with st.sidebar:
-    section=st.radio("",PAGES,key="page",label_visibility="collapsed")
+section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
-section=st.session_state.get("page","🏠 Home")
 
 # ── In-app Back button (shown on all pages except Home) ──────────────────────
 if section != "🏠 Home" and st.session_state.get("nav_history"):
