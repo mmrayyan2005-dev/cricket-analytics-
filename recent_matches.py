@@ -6,7 +6,6 @@ Cricsheet-based historical tables.
 
 Requires env var: CRICKETDATA_API_KEY
 """
-
 import os
 import sys
 import csv
