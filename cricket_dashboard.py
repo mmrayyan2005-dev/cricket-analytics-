@@ -277,6 +277,44 @@ def load_live_matches():
     except Exception:
         return pd.DataFrame()
 
+# ── New: Predictions Lab data loaders ─────────────────────────────────────────
+# These back the Match Results / Player Forecast / Bowler Workload / Win
+# Probability pages. Each returns an empty DataFrame on any failure (missing
+# file, bad push, wrong repo, etc.) rather than crashing the app — the pages
+# themselves check for empty and show a clear "not available yet" message
+# instead. This matters right now specifically because the notebook push for
+# these files has been unreliable (token/repo issues), so the dashboard needs
+# to keep working even when some of these are missing.
+def _try_load(filename):
+    try:
+        return pd.read_csv(f"{RAW_BASE}/{filename}")
+    except Exception:
+        return pd.DataFrame()
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_match_results():
+    return _try_load("cricket_matches_info.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_player_forecast():
+    return _try_load("cricket_run_forecast.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_bowler_workload():
+    return _try_load("cricket_bowler_workload.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_win_prob_test():
+    return _try_load("cricket_win_prob_test.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_model_metrics():
+    return _try_load("cricket_model_metrics.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_latest_team_form():
+    return _try_load("cricket_latest_team_form.csv")
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_last_updated():
     try:
@@ -764,7 +802,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
                 st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
-PAGES=["🏠 Home","🔴 Live Matches","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
+PAGES=["🏠 Home","🔴 Live Matches","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
        "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
 
@@ -906,6 +944,170 @@ elif section=="🔴 Live Matches":
                 with c2:
                     st.caption(f"{m.get('team1','')} vs {m.get('team2','')}")
         st.caption("ℹ️ Sourced from CricketData.org (CricAPI) — separate from the Cricsheet-based career stats elsewhere in this app.")
+
+# ══ MATCH RESULTS ═════════════════════════════════════════════════════════════
+elif section=="📋 Match Results":
+    page_banner("📋","Match Results","Every completed match with a result — winner, margin, venue, toss","#0a0f1a","#0d1e33","#3d8bff")
+    results = load_match_results()
+    if results.empty:
+        st.info("Match results data isn't available yet — this page reads `cricket_matches_info.csv`, "
+                "which your notebook's extended analytics push needs to have succeeded for. "
+                "Check the notebook's push output once the GitHub token issue is sorted.")
+    else:
+        fmt_opts = sorted(results["format"].dropna().unique().tolist()) if "format" in results.columns else []
+        fmt = st.radio("Format", fmt_opts, horizontal=True) if fmt_opts else None
+        rf = results[results["format"]==fmt] if fmt else results
+
+        teams = sorted(set(rf["team1"].dropna().unique().tolist() + rf["team2"].dropna().unique().tolist())) if "team1" in rf.columns else []
+        tab1, tab2 = st.tabs(["📜 Match List", "⚔️ Head to Head"])
+
+        with tab1:
+            team_filter = st.selectbox("Filter by team (optional)", ["All teams"]+teams)
+            rf_show = rf if team_filter=="All teams" else rf[(rf["team1"]==team_filter)|(rf["team2"]==team_filter)]
+            show_cols = [c for c in ["date","team1","team2","venue","city","toss_winner","toss_decision",
+                                      "winner","winner_by","winner_margin","player_of_match"] if c in rf_show.columns]
+            rf_show = rf_show.sort_values("date", ascending=False) if "date" in rf_show.columns else rf_show
+            st.dataframe(rf_show[show_cols].reset_index(drop=True), hide_index=True)
+            st.caption(f"{len(rf_show):,} matches shown")
+
+        with tab2:
+            if len(teams) >= 2:
+                c1, c2 = st.columns(2)
+                t1 = c1.selectbox("Team A", teams, index=0, key="h2h_t1")
+                t2 = c2.selectbox("Team B", teams, index=1 if len(teams)>1 else 0, key="h2h_t2")
+                if t1 and t2 and t1 != t2:
+                    h2h = rf[((rf["team1"]==t1)&(rf["team2"]==t2))|((rf["team1"]==t2)&(rf["team2"]==t1))]
+                    if h2h.empty:
+                        st.info(f"No recorded matches between {t1} and {t2}.")
+                    else:
+                        t1_wins = int((h2h["winner"]==t1).sum())
+                        t2_wins = int((h2h["winner"]==t2).sum())
+                        no_result = len(h2h) - t1_wins - t2_wins
+                        metrics({f"{t1} wins": t1_wins, f"{t2} wins": t2_wins, "Total matches": len(h2h)})
+                        ch(donut([t1, t2, "No result/other"], [t1_wins, t2_wins, max(no_result,0)],
+                                 [FC["ODI"], FC["Test"], "#636e72"], f"{t1} vs {t2} — Head to Head"), 300)
+                        show_cols2 = [c for c in ["date","venue","winner","winner_by","winner_margin"] if c in h2h.columns]
+                        st.dataframe(h2h.sort_values("date", ascending=False)[show_cols2].reset_index(drop=True), hide_index=True)
+                else:
+                    st.caption("Pick two different teams.")
+            else:
+                st.info("Not enough team data to build a head-to-head view.")
+
+# ══ PLAYER FORECAST ═══════════════════════════════════════════════════════════
+elif section=="🔮 Player Forecast":
+    page_banner("🔮","Player Forecast","ML-projected next-season runs, based on recent form and career trajectory","#0f0a1a","#1e0d33","#a29bfe")
+    forecast = load_player_forecast()
+    if forecast.empty:
+        st.info("Forecast data isn't available yet — this page reads `cricket_run_forecast.csv` from your "
+                "notebook's extended analytics push. Check that push succeeded once the GitHub token is fixed.")
+    else:
+        pred_col = "predicted_runs" if "predicted_runs" in forecast.columns else (
+            "projected_next_season_runs" if "projected_next_season_runs" in forecast.columns else None)
+        actual_col = "runs" if "runs" in forecast.columns else "last_season_runs"
+        name_col = "striker" if "striker" in forecast.columns else None
+
+        if not pred_col or not name_col:
+            st.warning("Forecast file is missing expected columns — showing raw data instead.")
+            st.dataframe(forecast.reset_index(drop=True), hide_index=True)
+        else:
+            tab1, tab2 = st.tabs(["🔍 Player Lookup", "📈 Biggest Projected Risers"])
+            with tab1:
+                pname = player_input("Player name", resolve("Kohli"), key="forecast_player")
+                if pname:
+                    sname = resolve(pname)
+                    prow = find_rows(forecast, name_col, sname)
+                    if prow.empty:
+                        st.warning(f"No forecast available for '{pname}' — likely too few recent seasons of data.")
+                    else:
+                        for _, r in prow.iterrows():
+                            fmt_label = r.get("format","")
+                            actual = r.get(actual_col, None)
+                            pred = r.get(pred_col, None)
+                            with st.container(border=True):
+                                st.markdown(f"**{r.get(name_col)}** — {fmt_label}")
+                                mcols = {}
+                                if actual is not None: mcols["Last season runs"] = int(actual) if pd.notna(actual) else "—"
+                                if pred is not None: mcols["Projected next season"] = int(pred) if pd.notna(pred) else "—"
+                                if mcols: metrics(mcols)
+            with tab2:
+                fmt_opts2 = sorted(forecast["format"].dropna().unique().tolist()) if "format" in forecast.columns else []
+                fmt2 = st.radio("Format", fmt_opts2, horizontal=True, key="forecast_fmt") if fmt_opts2 else None
+                ff = forecast[forecast["format"]==fmt2] if fmt2 else forecast
+                top_n = ff.sort_values(pred_col, ascending=False).head(20)
+                ch(bar_h(top_n, pred_col, name_col, pred_col, "Purples", f"Top 20 Projected Run-Scorers ({fmt2 or 'All'})"))
+                show_cols3 = [c for c in [name_col,"format",actual_col,pred_col] if c in top_n.columns]
+                st.dataframe(top_n[show_cols3].reset_index(drop=True), hide_index=True)
+
+# ══ BOWLER WORKLOAD ═══════════════════════════════════════════════════════════
+elif section=="💪 Bowler Workload":
+    page_banner("💪","Bowler Workload","Acute:chronic workload ratio (ACWR) — a sports-science injury-risk signal","#1a0800","#33150d","#e17055")
+    workload = load_bowler_workload()
+    if workload.empty:
+        st.info("Workload data isn't available yet — this page reads `cricket_bowler_workload.csv` from your "
+                "notebook's extended analytics push. Check that push succeeded once the GitHub token is fixed.")
+    else:
+        st.markdown('<div class="ca-insight">ACWR compares a bowler\'s workload in the last 7 days to their average '
+                     'over the last 28 days. <strong>Under 0.8</strong> = undertrained, <strong>0.8–1.3</strong> = safe zone, '
+                     '<strong>1.3–1.5</strong> = caution, <strong>over 1.5</strong> = high injury risk — this mirrors sports-science '
+                     'thresholds used in other high-workload sports, applied here to bowling overs.</div>', unsafe_allow_html=True)
+        tab1, tab2 = st.tabs(["🚨 Current Risk List", "🔍 Player Lookup"])
+
+        with tab1:
+            if "risk_flag" in workload.columns:
+                latest_per_bowler = (workload.sort_values("start_date")
+                                     .groupby("bowler").tail(1)) if "start_date" in workload.columns and "bowler" in workload.columns else workload
+                risk_order = ["High injury risk","Caution","Safe zone","Undertrained"]
+                counts = latest_per_bowler["risk_flag"].value_counts().reindex(risk_order).fillna(0)
+                ch(bar_v(pd.DataFrame({"risk_flag":counts.index,"count":counts.values}),
+                          "risk_flag","count","Current Risk Distribution (most recent reading per bowler)","#e17055"), 320)
+                high_risk = latest_per_bowler[latest_per_bowler["risk_flag"]=="High injury risk"]
+                if not high_risk.empty:
+                    st.markdown("#### 🚨 Bowlers Currently Flagged High Risk")
+                    show_cols4 = [c for c in ["bowler","start_date","overs_bowled","acwr","risk_flag"] if c in high_risk.columns]
+                    st.dataframe(high_risk.sort_values("acwr", ascending=False)[show_cols4].reset_index(drop=True), hide_index=True)
+                else:
+                    st.success("No bowlers currently flagged high risk.")
+            else:
+                st.dataframe(workload.reset_index(drop=True), hide_index=True)
+
+        with tab2:
+            bname = player_input("Bowler name", resolve("Bumrah"), key="workload_player")
+            if bname and "bowler" in workload.columns:
+                sname = resolve(bname)
+                brow = find_rows(workload, "bowler", sname).sort_values("start_date") if "start_date" in workload.columns else find_rows(workload,"bowler",sname)
+                if brow.empty:
+                    st.warning(f"No workload data for '{bname}'.")
+                else:
+                    if "acwr" in brow.columns and "start_date" in brow.columns:
+                        ch(line(brow, "start_date", "acwr", f"{sname} — ACWR Over Time", "#e17055"), 320)
+                    show_cols5 = [c for c in ["start_date","overs_bowled","acwr","risk_flag"] if c in brow.columns]
+                    st.dataframe(brow[show_cols5].reset_index(drop=True), hide_index=True)
+
+# ══ WIN PROBABILITY ═══════════════════════════════════════════════════════════
+elif section=="🎯 Win Probability":
+    page_banner("🎯","Win Probability","How the model reads team form, head-to-head record, and toss","#0a1400","#152600","#00e5a0")
+    metrics_df = load_model_metrics()
+    test_df = load_win_prob_test()
+    form_df = load_latest_team_form()
+
+    if metrics_df.empty and test_df.empty and form_df.empty:
+        st.info("Win probability model data isn't available yet — this page reads `cricket_model_metrics.csv`, "
+                "`cricket_win_prob_test.csv`, and `cricket_latest_team_form.csv` from your notebook's extended "
+                "analytics push. Check that push succeeded once the GitHub token is fixed.")
+    else:
+        if not metrics_df.empty:
+            st.markdown("#### 📊 Model Accuracy")
+            st.dataframe(metrics_df.reset_index(drop=True), hide_index=True)
+            st.caption("How well each model predicted match winners on held-out test matches — higher accuracy/AUC is better.")
+
+        if not form_df.empty:
+            st.markdown("#### 📈 Latest Team Form")
+            st.caption("Each team's current form snapshot — the same features the win-probability model uses.")
+            st.dataframe(form_df.reset_index(drop=True), hide_index=True)
+
+        if not test_df.empty:
+            st.markdown("#### 🎯 Recent Predictions vs Actual Results")
+            st.dataframe(test_df.reset_index(drop=True), hide_index=True)
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
