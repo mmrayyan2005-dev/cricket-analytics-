@@ -8,9 +8,23 @@ from datetime import datetime, timezone, timedelta
 st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="🏏",
                    initial_sidebar_state="collapsed")
 
+# ── Theme (light/dark) ─────────────────────────────────────────────────────────
+# Read the saved choice before the toggle widget itself is drawn further down
+# the page — this is safe in Streamlit because session_state persists across
+# reruns, so on the run right after someone flips the switch, this already
+# reflects their new choice even though the widget itself renders later.
+IS_LIGHT = st.session_state.get("is_light_mode", False)
+
 RAW_BASE = "https://raw.githubusercontent.com/mmrayyan2005-dev/cricket-analytics_-/main"
 
-BG="#080c14"; CARD="#131929"; TEXT="#e8edf5"; GRID="#1e2840"
+if IS_LIGHT:
+    BG="#f7f9fc"; CARD="#ffffff"; TEXT="#0f172a"; GRID="#e2e8f0"
+    SURFACE="#ffffff"; BORDER="#e2e8f0"; MUTED="#8a94a6"; SUBTLE="#475569"
+    SHADOW="0 4px 20px rgba(15,23,42,.08)"
+else:
+    BG="#080c14"; CARD="#131929"; TEXT="#e8edf5"; GRID="#1e2840"
+    SURFACE="#0e1420"; BORDER="#1e2840"; MUTED="#5a6580"; SUBTLE="#8899bb"
+    SHADOW="0 4px 24px rgba(0,0,0,.4)"
 FC={"ODI":"#00e5a0","Test":"#3d8bff","T20I":"#ff4d6d",
     "IPL":"#fb923c","PSL":"#a78bfa","WPL":"#f472b6","BBL":"#fb7185","CPL":"#34d399"}
 FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL"]
@@ -199,6 +213,26 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 }
 </style>""", unsafe_allow_html=True)
 
+if IS_LIGHT:
+    # Light mode override: re-declares the same CSS custom properties with
+    # light values. This works via normal CSS cascade — a later :root block
+    # overrides the earlier one's variable values — so every rule in the
+    # static stylesheet above (which all reference var(--bg), var(--card)
+    # etc.) picks up the light palette automatically, with zero duplication
+    # of the ~250 lines of rules above.
+    st.markdown(f"""<style>
+:root{{
+  --bg:{BG};--surface:{SURFACE};--card:{CARD};--border:{BORDER};
+  --text:{TEXT};--muted:{MUTED};--subtle:{SUBTLE};
+  --shadow:{SHADOW};
+}}
+.ca-topnav{{background:rgba(247,249,252,.92)!important}}
+.ca-topnav-brand{{color:#0f172a!important}}
+[data-testid="stMetricValue"]{{color:{TEXT}!important}}
+.stDataFrame tbody tr:hover td{{background:rgba(0,150,110,.06)!important}}
+[data-testid="stRadio"] label{{color:{SUBTLE}!important}}
+</style>""", unsafe_allow_html=True)
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 # NOTE: previously this fetched 18 CSVs one-by-one over the network in sequence.
 # Each fetch has its own round-trip latency, so 18 sequential calls meant the
@@ -314,6 +348,20 @@ def load_model_metrics():
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_latest_team_form():
     return _try_load("cricket_latest_team_form.csv")
+
+RECOGNIZED_TEAMS = {
+    "Afghanistan","Australia","Bangladesh","England","India","Ireland","New Zealand",
+    "Pakistan","South Africa","Sri Lanka","West Indies","Zimbabwe",
+    "Scotland","Netherlands","Nepal","UAE","United Arab Emirates","Namibia","Oman",
+    "USA","United States of America","Canada","Papua New Guinea","Kenya","Uganda",
+    "Hong Kong","Singapore","Malaysia","Bermuda","Jersey","Guernsey",
+}
+def is_real_country(name):
+    """Filters out domestic franchise/club teams (e.g. 'Adelaide Strikers',
+    'Africa XI') from pickers meant for a general audience — a layman
+    shouldn't see a franchise team name and wonder why it's 'playing' a
+    country. This isn't exhaustive but covers every ODI/Test/T20I side."""
+    return name in RECOGNIZED_TEAMS
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_last_updated():
@@ -840,11 +888,16 @@ status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 # debugging an unreliable custom nav, this replaces it with a native
 # st.radio(horizontal=True) — guaranteed to render every time, since
 # it's a real Streamlit widget rather than raw HTML we're hoping survives.
-st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-  <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
-  <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
-    <span class="ca-live"></span>{status_txt}</span>
-</div>""", unsafe_allow_html=True)
+navcol1, navcol2 = st.columns([6,1])
+with navcol1:
+    st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
+      <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+      <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
+        <span class="ca-live"></span>{status_txt}</span>
+    </div>""", unsafe_allow_html=True)
+with navcol2:
+    st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
+              help="Switch between dark and light mode")
 
 section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
 
@@ -959,9 +1012,19 @@ elif section=="📋 Match Results":
         rf = results[results["format"]==fmt] if fmt else results
 
         teams = sorted(set(rf["team1"].dropna().unique().tolist() + rf["team2"].dropna().unique().tolist())) if "team1" in rf.columns else []
+        # Only show real national teams by default — franchise/club sides
+        # (BBL, IPL, PSL teams etc.) get mixed into the same underlying data
+        # and would otherwise show up looking like they're "playing" a
+        # country, which is confusing if you don't already know cricket's
+        # domestic league structure.
+        real_teams = [t for t in teams if is_real_country(t)]
+        show_all_teams = st.checkbox("Show domestic/franchise teams too (advanced)", value=False)
+        teams = teams if show_all_teams else real_teams
         tab1, tab2 = st.tabs(["📜 Match List", "⚔️ Head to Head"])
 
         with tab1:
+            if not show_all_teams and "team1" in rf.columns:
+                rf = rf[rf["team1"].isin(real_teams) & rf["team2"].isin(real_teams)]
             team_filter = st.selectbox("Filter by team (optional)", ["All teams"]+teams)
             rf_show = rf if team_filter=="All teams" else rf[(rf["team1"]==team_filter)|(rf["team2"]==team_filter)]
             show_cols = [c for c in ["date","team1","team2","venue","city","toss_winner","toss_decision",
@@ -995,7 +1058,7 @@ elif section=="📋 Match Results":
 
 # ══ PLAYER FORECAST ═══════════════════════════════════════════════════════════
 elif section=="🔮 Player Forecast":
-    page_banner("🔮","Player Forecast","ML-projected next-season runs, based on recent form and career trajectory","#0f0a1a","#1e0d33","#a29bfe")
+    page_banner("🔮","Player Forecast","Pick a player and see their projected runs for next season","#0f0a1a","#1e0d33","#a29bfe")
     forecast = load_player_forecast()
     if forecast.empty:
         st.info("Forecast data isn't available yet — this page reads `cricket_run_forecast.csv` from your "
@@ -1010,7 +1073,16 @@ elif section=="🔮 Player Forecast":
             st.warning("Forecast file is missing expected columns — showing raw data instead.")
             st.dataframe(forecast.reset_index(drop=True), hide_index=True)
         else:
-            tab1, tab2 = st.tabs(["🔍 Player Lookup", "📈 Biggest Projected Risers"])
+            for c in [actual_col, pred_col]:
+                if c in forecast.columns:
+                    forecast.loc[forecast[c] > 1200, c] = pd.NA
+
+            st.markdown('<div class="ca-insight">This is a simple statistical estimate based on a player\'s recent '
+                         'seasons — <strong>not a guarantee</strong>. Think of it as "if their recent trend continues," '
+                         'not a prediction of exactly what will happen.</div>', unsafe_allow_html=True)
+
+            tab1, tab2 = st.tabs(["🔍 Look Up a Player", "📈 Who's Trending Up"])
+
             with tab1:
                 pname = player_input("Player name", resolve("Kohli"), key="forecast_player")
                 if pname:
@@ -1019,47 +1091,59 @@ elif section=="🔮 Player Forecast":
                     if prow.empty:
                         st.warning(f"No forecast available for '{pname}' — likely too few recent seasons of data.")
                     else:
-                        for _, r in prow.iterrows():
-                            fmt_label = r.get("format","")
-                            actual = r.get(actual_col, None)
-                            pred = r.get(pred_col, None)
-                            with st.container(border=True):
-                                st.markdown(f"**{r.get(name_col)}** — {fmt_label}")
-                                mcols = {}
-                                if actual is not None: mcols["Last season runs"] = int(actual) if pd.notna(actual) else "—"
-                                if pred is not None: mcols["Projected next season"] = int(pred) if pd.notna(pred) else "—"
-                                if mcols: metrics(mcols)
+                        fmts_avail = prow["format"].dropna().unique().tolist() if "format" in prow.columns else []
+                        pick_fmt = st.radio("Format", fmts_avail, horizontal=True, key="pf_fmt") if len(fmts_avail)>1 else (fmts_avail[0] if fmts_avail else None)
+                        r = prow[prow["format"]==pick_fmt].iloc[0] if pick_fmt else prow.iloc[0]
+                        actual = r.get(actual_col, None)
+                        pred = r.get(pred_col, None)
+                        if pd.isna(actual) or pd.isna(pred):
+                            st.warning("This player's numbers didn't pass our sanity check (likely a data glitch) — hidden rather than shown wrong.")
+                        else:
+                            actual, pred = float(actual), float(pred)
+                            diff = pred - actual
+                            direction = "📈 projected to score more" if diff > 0 else ("📉 projected to score fewer" if diff < 0 else "➡️ projected to stay about the same")
+                            st.markdown(f"### {r.get(name_col)} — {pick_fmt or ''}")
+                            st.caption(f"{direction} next season, based on recent trend.")
+                            fig = go.Figure()
+                            fig.add_trace(go.Bar(x=["Last Season", "Next Season (Projected)"], y=[actual, pred],
+                                marker_color=[FC.get(pick_fmt,"#00e5a0"), "#a29bfe"],
+                                text=[f"{actual:.0f}", f"{pred:.0f}"], textposition="outside",
+                                textfont=dict(size=16, color=TEXT)))
+                            fig.update_layout(**BASE, height=340, showlegend=False, margin=dict(l=20,r=20,t=20,b=20),
+                                              yaxis_title="Runs")
+                            st.plotly_chart(fig, **CFG)
+
             with tab2:
                 fmt_opts2 = sorted(forecast["format"].dropna().unique().tolist()) if "format" in forecast.columns else []
                 fmt2 = st.radio("Format", fmt_opts2, horizontal=True, key="forecast_fmt") if fmt_opts2 else None
                 ff = forecast[forecast["format"]==fmt2] if fmt2 else forecast
-                top_n = ff.sort_values(pred_col, ascending=False).head(20)
-                ch(bar_h(top_n, pred_col, name_col, pred_col, "Purples", f"Top 20 Projected Run-Scorers ({fmt2 or 'All'})"))
-                show_cols3 = [c for c in [name_col,"format",actual_col,pred_col] if c in top_n.columns]
-                st.dataframe(top_n[show_cols3].reset_index(drop=True), hide_index=True)
+                ff = ff.dropna(subset=[pred_col])
+                top_n = ff.sort_values(pred_col, ascending=False).head(15)
+                st.caption("Players projected to score the most next season, based on recent form.")
+                ch(bar_h(top_n, pred_col, name_col, pred_col, "Purples", f"Top 15 Projected Run-Scorers ({fmt2 or 'All'})"))
 
 # ══ BOWLER WORKLOAD ═══════════════════════════════════════════════════════════
 elif section=="💪 Bowler Workload":
-    page_banner("💪","Bowler Workload","Acute:chronic workload ratio (ACWR) — a sports-science injury-risk signal","#1a0800","#33150d","#e17055")
+    page_banner("💪","Bowler Workload","Simple injury-risk check based on recent bowling load","#1a0800","#33150d","#e17055")
     workload = load_bowler_workload()
     if workload.empty:
         st.info("Workload data isn't available yet — this page reads `cricket_bowler_workload.csv` from your "
                 "notebook's extended analytics push. Check that push succeeded once the GitHub token is fixed.")
     else:
-        st.markdown('<div class="ca-insight">ACWR compares a bowler\'s workload in the last 7 days to their average '
-                     'over the last 28 days. <strong>Under 0.8</strong> = undertrained, <strong>0.8–1.3</strong> = safe zone, '
-                     '<strong>1.3–1.5</strong> = caution, <strong>over 1.5</strong> = high injury risk — this mirrors sports-science '
-                     'thresholds used in other high-workload sports, applied here to bowling overs.</div>', unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["🚨 Current Risk List", "🔍 Player Lookup"])
+        st.markdown('<div class="ca-insight">This compares how much a bowler has bowled <strong>this week</strong> vs. '
+                     'their <strong>normal monthly workload</strong>. A sudden spike can be a warning sign for injury. '
+                     '<strong>Bowlers without enough recent match history are left unrated</strong> instead of guessed at.</div>', unsafe_allow_html=True)
+        workload_reliable = workload[workload["risk_flag"].notna()] if "risk_flag" in workload.columns else workload
+        tab1, tab2 = st.tabs(["🚨 Current Risk List", "🔍 Look Up a Bowler"])
 
         with tab1:
-            if "risk_flag" in workload.columns:
-                latest_per_bowler = (workload.sort_values("start_date")
-                                     .groupby("bowler").tail(1)) if "start_date" in workload.columns and "bowler" in workload.columns else workload
+            if "risk_flag" in workload_reliable.columns and not workload_reliable.empty:
+                latest_per_bowler = (workload_reliable.sort_values("start_date")
+                                     .groupby("bowler").tail(1)) if "start_date" in workload_reliable.columns and "bowler" in workload_reliable.columns else workload_reliable
                 risk_order = ["High injury risk","Caution","Safe zone","Undertrained"]
                 counts = latest_per_bowler["risk_flag"].value_counts().reindex(risk_order).fillna(0)
                 ch(bar_v(pd.DataFrame({"risk_flag":counts.index,"count":counts.values}),
-                          "risk_flag","count","Current Risk Distribution (most recent reading per bowler)","#e17055"), 320)
+                          "risk_flag","count","Current Risk Distribution (bowlers with enough history to rate)","#e17055"), 320)
                 high_risk = latest_per_bowler[latest_per_bowler["risk_flag"]=="High injury risk"]
                 if not high_risk.empty:
                     st.markdown("#### 🚨 Bowlers Currently Flagged High Risk")
@@ -1068,7 +1152,7 @@ elif section=="💪 Bowler Workload":
                 else:
                     st.success("No bowlers currently flagged high risk.")
             else:
-                st.dataframe(workload.reset_index(drop=True), hide_index=True)
+                st.info("Not enough bowlers have sufficient match history yet for a reliable risk reading.")
 
         with tab2:
             bname = player_input("Bowler name", resolve("Bumrah"), key="workload_player")
@@ -1079,35 +1163,87 @@ elif section=="💪 Bowler Workload":
                     st.warning(f"No workload data for '{bname}'.")
                 else:
                     if "acwr" in brow.columns and "start_date" in brow.columns:
-                        ch(line(brow, "start_date", "acwr", f"{sname} — ACWR Over Time", "#e17055"), 320)
+                        ch(line(brow, "start_date", "acwr", f"{sname} — Workload Ratio Over Time", "#e17055"), 320)
                     show_cols5 = [c for c in ["start_date","overs_bowled","acwr","risk_flag"] if c in brow.columns]
                     st.dataframe(brow[show_cols5].reset_index(drop=True), hide_index=True)
 
 # ══ WIN PROBABILITY ═══════════════════════════════════════════════════════════
 elif section=="🎯 Win Probability":
-    page_banner("🎯","Win Probability","How the model reads team form, head-to-head record, and toss","#0a1400","#152600","#00e5a0")
+    page_banner("🎯","Win Probability","Pick two teams and see who's favored to win","#0a1400","#152600","#00e5a0")
     metrics_df = load_model_metrics()
-    test_df = load_win_prob_test()
     form_df = load_latest_team_form()
+    results_wp = load_match_results()
 
-    if metrics_df.empty and test_df.empty and form_df.empty:
-        st.info("Win probability model data isn't available yet — this page reads `cricket_model_metrics.csv`, "
-                "`cricket_win_prob_test.csv`, and `cricket_latest_team_form.csv` from your notebook's extended "
-                "analytics push. Check that push succeeded once the GitHub token is fixed.")
+    if form_df.empty or results_wp.empty:
+        st.info("Win probability data isn't available yet — this page reads `cricket_latest_team_form.csv` and "
+                "`cricket_matches_info.csv` from your notebook's extended analytics push. Check that push succeeded "
+                "once the GitHub token is fixed.")
     else:
-        if not metrics_df.empty:
-            st.markdown("#### 📊 Model Accuracy")
-            st.dataframe(metrics_df.reset_index(drop=True), hide_index=True)
-            st.caption("How well each model predicted match winners on held-out test matches — higher accuracy/AUC is better.")
+        # Figure out which columns actually hold the team name and a
+        # 0-1-ish "form"/win-rate number, since this file's exact column
+        # names come from the notebook and can vary.
+        team_col = next((c for c in form_df.columns if "team" in c.lower()), None)
+        form_col = next((c for c in form_df.columns if "form" in c.lower() or "rate" in c.lower()), None)
 
-        if not form_df.empty:
-            st.markdown("#### 📈 Latest Team Form")
-            st.caption("Each team's current form snapshot — the same features the win-probability model uses.")
+        if not team_col or not form_col:
+            st.warning("Team form file is missing expected columns — showing raw data instead.")
             st.dataframe(form_df.reset_index(drop=True), hide_index=True)
+        else:
+            avail_teams = sorted([t for t in form_df[team_col].dropna().unique().tolist() if is_real_country(t)])
+            if len(avail_teams) < 2:
+                st.info("Not enough recognized teams in the form data to build a matchup.")
+            else:
+                c1, c2 = st.columns(2)
+                team_a = c1.selectbox("Team A", avail_teams, index=0, key="wp_team_a")
+                team_b = c2.selectbox("Team B", avail_teams, index=1, key="wp_team_b")
+                toss_pick = st.radio("Who won the toss?", [team_a, team_b, "Unknown / doesn't matter"], horizontal=True, key="wp_toss")
 
-        if not test_df.empty:
-            st.markdown("#### 🎯 Recent Predictions vs Actual Results")
-            st.dataframe(test_df.reset_index(drop=True), hide_index=True)
+                if team_a == team_b:
+                    st.warning("Pick two different teams.")
+                else:
+                    form_a_row = form_df[form_df[team_col]==team_a]
+                    form_b_row = form_df[form_df[team_col]==team_b]
+                    form_a = float(form_a_row[form_col].iloc[0]) if not form_a_row.empty else 0.5
+                    form_b = float(form_b_row[form_col].iloc[0]) if not form_b_row.empty else 0.5
+                    # Normalize in case form is stored as a percentage (0-100)
+                    if form_a > 1: form_a /= 100
+                    if form_b > 1: form_b /= 100
+
+                    h2h = results_wp[((results_wp["team1"]==team_a)&(results_wp["team2"]==team_b))|
+                                      ((results_wp["team1"]==team_b)&(results_wp["team2"]==team_a))] if "team1" in results_wp.columns else pd.DataFrame()
+                    if not h2h.empty and "winner" in h2h.columns:
+                        a_wins = int((h2h["winner"]==team_a).sum())
+                        decided = int(h2h["winner"].isin([team_a,team_b]).sum())
+                        h2h_component = (a_wins/decided) if decided>0 else 0.5
+                    else:
+                        h2h_component = 0.5
+                        decided = 0
+
+                    form_component = form_a/(form_a+form_b) if (form_a+form_b)>0 else 0.5
+                    toss_component = 0.55 if toss_pick==team_a else (0.45 if toss_pick==team_b else 0.5)
+
+                    prob_a = round((0.45*form_component + 0.35*h2h_component + 0.20*toss_component)*100, 1)
+                    prob_a = max(5.0, min(95.0, prob_a))  # keep it sane — nothing is ever a "certainty"
+                    prob_b = round(100-prob_a, 1)
+
+                    st.markdown("### 🎯 Estimated Win Probability")
+                    fig = go.Figure(go.Bar(
+                        x=[prob_a, prob_b], y=[team_a, team_b], orientation="h",
+                        marker_color=[FC["ODI"], FC["Test"]],
+                        text=[f"{prob_a}%", f"{prob_b}%"], textposition="outside",
+                        textfont=dict(size=16, color=TEXT)))
+                    fig.update_layout(**BASE, height=220, showlegend=False,
+                                      margin=dict(l=20,r=60,t=20,b=20), xaxis=dict(range=[0,105]))
+                    st.plotly_chart(fig, **CFG)
+
+                    st.caption(f"Based on: recent form, head-to-head record ({decided} past matches between these two), "
+                               f"and toss. This is a transparent estimate, not a black-box prediction — "
+                               f"weighted 45% recent form, 35% head-to-head history, 20% toss.")
+
+        if not metrics_df.empty:
+            with st.expander("📊 How accurate is this, historically?"):
+                st.dataframe(metrics_df.reset_index(drop=True), hide_index=True)
+                st.caption("How well the underlying model predicted match winners on past matches it hadn't seen before.")
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
