@@ -1473,12 +1473,19 @@ elif section=="🔍 Player Search":
                         grow=gaps[(gaps["player"]==p.get("striker",display_name)) & (gaps["format"]==fmt) & (gaps["flagged"]==True)]
                         if not grow.empty:
                             g=grow.iloc[0]
+                            documented = int(g["documented_missing_candidates"]) if pd.notna(g.get("documented_missing_candidates")) else 0
+                            documented_note = (
+                                f" Cricsheet's own published missing-matches list includes {documented} {fmt} fixture(s) "
+                                f"involving this team during their playing career — likely explains some or all of this gap."
+                                if documented > 0 else
+                                " This is a known Cricsheet coverage gap, not a stale cache."
+                            )
                             st.markdown(f"""<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);
                               border-radius:8px;padding:8px 14px;margin:0 0 10px;font-size:12px;color:#fbbf24">
                               ⚠️ <strong>Official record (Wikipedia): {int(g['wiki_matches'])} {fmt} matches
                               {(', ' + format(int(g['wiki_runs']), ',') + ' runs') if pd.notna(g.get('wiki_runs')) else ''}</strong>
                               — this app currently tracks {int(g['cricsheet_matches'])} from Cricsheet's ball-by-ball archive
-                              ({abs(g['gap_pct']):.1f}% short). This is a known Cricsheet coverage gap, not a stale cache.</div>""",
+                              ({abs(g['gap_pct']):.1f}% short).{documented_note}</div>""",
                               unsafe_allow_html=True)
                     metrics({"Matches":int(p["matches"]),"Runs":f"{int(p['runs']):,}","Average":p["average"]})
                     metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
