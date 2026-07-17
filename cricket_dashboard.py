@@ -366,6 +366,13 @@ def load_model_metrics():
 def load_latest_team_form():
     return _try_load("cricket_latest_team_form.csv")
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_coverage_gaps():
+    # Cricsheet vs Wikipedia official career totals, built by pipeline.py's
+    # build_coverage_gap_report(). Missing/old repo without this file yet
+    # just returns empty — show_player_card's gap notice below no-ops on that.
+    return _try_load("cricket_coverage_gaps.csv")
+
 RECOGNIZED_TEAMS = {
     "Afghanistan","Australia","Bangladesh","England","India","Ireland","New Zealand",
     "Pakistan","South Africa","Sri Lanka","West Indies","Zimbabwe",
@@ -1464,6 +1471,18 @@ elif section=="🔍 Player Search":
             if len(bat)>0:
                 with tabs[ti]:
                     p=bat.sort_values("runs",ascending=False).iloc[0]
+                    gaps=load_coverage_gaps()
+                    if not gaps.empty and "flagged" in gaps.columns:
+                        grow=gaps[(gaps["player"]==p.get("striker",display_name)) & (gaps["format"]==fmt) & (gaps["flagged"]==True)]
+                        if not grow.empty:
+                            g=grow.iloc[0]
+                            st.markdown(f"""<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);
+                              border-radius:8px;padding:8px 14px;margin:0 0 10px;font-size:12px;color:#fbbf24">
+                              ⚠️ <strong>Official record (Wikipedia): {int(g['wiki_matches'])} {fmt} matches
+                              {(', ' + format(int(g['wiki_runs']), ',') + ' runs') if pd.notna(g.get('wiki_runs')) else ''}</strong>
+                              — this app currently tracks {int(g['cricsheet_matches'])} from Cricsheet's ball-by-ball archive
+                              ({abs(g['gap_pct']):.1f}% short). This is a known Cricsheet coverage gap, not a stale cache.</div>""",
+                              unsafe_allow_html=True)
                     metrics({"Matches":int(p["matches"]),"Runs":f"{int(p['runs']):,}","Average":p["average"]})
                     metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
                     metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
