@@ -28,7 +28,6 @@ import io
 import zipfile
 import base64
 import logging
-import time
 from datetime import datetime, timezone
 
 import requests
@@ -66,20 +65,11 @@ log = logging.getLogger("cricket_pipeline")
 
 def download_and_extract(name, url, workdir):
     """Download one Cricsheet zip and extract it. Logs failures instead of
-    letting a bad download silently produce zero data for a format.
-
-    Includes a browser-like User-Agent header — Cricsheet's server can
-    reject plain script requests with a 415 error otherwise, which is what
-    caused a full pipeline failure (every format returned 0 rows)."""
+    letting a bad download silently produce zero data for a format."""
     folder = os.path.join(workdir, f"{name.lower()}_data")
     os.makedirs(folder, exist_ok=True)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; CricketAnalyticsPipeline/1.0; "
-                      "+https://github.com/mmrayyan2005-dev/cricket-analytics_-)",
-        "Accept": "*/*",
-    }
     try:
-        resp = requests.get(url, timeout=60, headers=headers)
+        resp = requests.get(url, timeout=60)
         resp.raise_for_status()
         with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
             z.extractall(folder)
@@ -92,18 +82,7 @@ def download_and_extract(name, url, workdir):
 
 def load_format(folder, label):
     """Load all per-match CSVs for one format. Logs which individual match
-    files failed to parse instead of the previous bare `except: pass`.
-
-    Also guards against a real bug that was causing doubled stats (e.g.
-    Kohli showing 1350 IPL runs in 2026 when the true figure was 675):
-    Cricsheet occasionally has the same match_id appear in more than one
-    file — e.g. a corrected/reissued scorecard saved alongside the
-    original under a different filename. Naively concatenating every file
-    can count that match twice. We now remove exact duplicate deliveries
-    (same match_id + innings + ball + players) at the row level — this
-    can never discard an entire legitimate match's data, only true
-    duplicate rows.
-    """
+    files failed to parse instead of the previous bare `except: pass`."""
     if not os.path.isdir(folder):
         log.warning(f"{label}: folder {folder} does not exist, skipping")
         return pd.DataFrame()
@@ -111,9 +90,7 @@ def load_format(folder, label):
     dfs, failed = [], []
     for f in sorted(files):
         try:
-            d = pd.read_csv(os.path.join(folder, f), low_memory=False)
-            d["_source_file"] = f
-            dfs.append(d)
+            dfs.append(pd.read_csv(os.path.join(folder, f)))
         except Exception as e:
             failed.append((f, str(e)))
     if failed:
@@ -123,38 +100,8 @@ def load_format(folder, label):
         log.warning(f"{label}: no valid match files found in {folder}")
         return pd.DataFrame()
     df = pd.concat(dfs, ignore_index=True)
-
-    if "match_id" in df.columns and "innings" in df.columns and "ball" in df.columns:
-        # REVISED APPROACH — the previous version compared whole FILES by
-        # total row count and discarded the entire "smaller" file for any
-        # match_id that appeared twice. That was too aggressive: if that
-        # comparison ever picked wrong for any reason (a rain-shortened
-        # innings recorded as a separate legitimate file, an unrelated
-        # row-count quirk, etc.), it would silently throw away real,
-        # legitimate deliveries for that match — which is almost certainly
-        # what caused players showing far fewer matches than they actually
-        # played (e.g. 90 shown instead of 180).
-        #
-        # This is a much safer, more conservative fix: instead of judging
-        # whole files against each other, we only remove a row if there is
-        # ANOTHER row that is an exact duplicate of the same specific
-        # delivery — same match, same innings, same ball number. That can
-        # only happen if a match was genuinely reissued/duplicated; a
-        # legitimate, unique delivery can never collide with another
-        # legitimate delivery on all three of those fields at once. This
-        # can never discard a real match's real data, only true duplicates.
-        before = len(df)
-        df = df.drop_duplicates(subset=["match_id", "innings", "ball", "striker", "bowler"], keep="first")
-        removed = before - len(df)
-        if removed > 0:
-            log.warning(f"{label}: removed {removed:,} duplicate delivery row(s) "
-                        f"(same match/innings/ball/players appearing more than once — "
-                        f"likely a reissued scorecard). This is a safe, row-level removal "
-                        f"that cannot discard an entire legitimate match.")
-
-    df = df.drop(columns=["_source_file"])
     df["format"] = label
-    log.info(f"{label}: loaded {df.shape[0]:,} rows from {df['match_id'].nunique() if 'match_id' in df.columns else len(dfs)} unique matches")
+    log.info(f"{label}: loaded {df.shape[0]:,} rows from {len(dfs)} matches")
     return df
 
 
@@ -435,56 +382,223 @@ def build_ml_tables(batting_by_format, bowling_by_format, batting_yearly, bowlin
     return bat_ml, bowl_ml, form, bowl_form
 
 
+# ── Coverage-gap detection (Wikipedia cross-check) ────────────────────────────
+# Cricsheet is a community-maintained ball-by-ball archive. It's excellent but
+# NOT guaranteed complete — a handful of officially recognized international
+# matches per player can be missing (rain-affected games, matches whose feed
+# was never digitized, etc). Silently living with that is what caused the
+# "Kohli shows fewer ODIs than Wikipedia" issue. Rather than trying to patch
+# missing ball-by-ball data (which we can't fabricate), we cross-check our
+# aggregate Cricsheet totals against Wikipedia's infobox career stats — the
+# same structured table ESPNCricinfo-style "official" figures come from — and
+# flag any player/format where our count is meaningfully short. This gets
+# surfaced in the dashboard as "official: X | tracked here: Y" instead of
+# pretending the two numbers are the same thing.
+INTL_FORMATS_FOR_WIKI_CHECK = ["ODI", "Test", "T20I"]
+# 100+ matches keeps this to established/veteran international players —
+# ~130-150 unique names across all three formats combined, based on a test
+# run. That's the group where a coverage gap actually dents credibility
+# (nobody is checking a 20-match fringe player's exact total), and it keeps
+# this to a couple hundred Wikipedia calls rather than several thousand, so
+# the Action run stays fast and doesn't hammer Wikipedia's API.
+WIKI_CHECK_MIN_MATCHES = 100
+WIKI_GAP_FLAG_THRESHOLD_PCT = 3.0    # flag if Cricsheet is short by more than this % of matches
+
+_FORMAT_ALIASES = {
+    "ODI":  ["odi", "one day international", "one-day international"],
+    "Test": ["test"],
+    "T20I": ["t20i", "twenty20 international", "t20 international"],
+}
+
+def _wiki_search_title(player_name):
+    """Find the best-matching Wikipedia page title for a player name.
+    Mirrors the scoring logic used in the dashboard's get_wiki() — name
+    similarity dominates, cricket-related snippet keywords break ties."""
+    import re, difflib
+    try:
+        sr = requests.get("https://en.wikipedia.org/w/api.php",
+            params={"action": "query", "list": "search", "srsearch": f"{player_name} cricketer",
+                    "format": "json", "utf8": 1, "srlimit": 5},
+            timeout=10, headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        sr.raise_for_status()
+        results = sr.json().get("query", {}).get("search", [])
+        if not results:
+            return None
+        target = player_name.lower()
+        def sim(title):
+            t = title.lower().replace("(cricketer)", "").strip()
+            return difflib.SequenceMatcher(None, target, t).ratio()
+        def score(r):
+            snippet = re.sub(r"<[^>]+>", "", r.get("snippet", "")).lower()
+            s = sim(r.get("title", "")) * 20
+            if "cricket" in snippet: s += 3
+            if sim(r.get("title", "")) < 0.4: s -= 15
+            return s
+        best = sorted(results, key=score, reverse=True)[0]
+        if score(best) <= 0:
+            return None
+        return best["title"]
+    except Exception as e:
+        log.warning(f"Wiki search failed for '{player_name}': {e}")
+        return None
+
+
+def _fetch_wiki_infobox_stats(page_title):
+    """Pull the Infobox cricketer wikitext and parse the per-format career
+    stats table (column1/matches1/runs1/bat avg1/100s-50s1, column2/..., etc).
+    Returns {format_label: {"matches":..,"runs":..,"average":..,"hundreds":..}}.
+    Wikipedia's infobox field naming isn't perfectly standardized across
+    pages, so this tries a couple of common key variants and skips anything
+    it can't confidently parse rather than guessing."""
+    import re
+    try:
+        safe = page_title.replace(" ", "_")
+        ir = requests.get("https://en.wikipedia.org/w/api.php",
+            params={"action": "query", "titles": page_title, "prop": "revisions",
+                    "rvprop": "content", "rvslots": "main", "format": "json", "rvsection": 0},
+            timeout=10, headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        ir.raise_for_status()
+        pages = ir.json().get("query", {}).get("pages", {})
+        wt = next(iter(pages.values())).get("revisions", [{}])[0].get("slots", {}).get("main", {}).get("*", "")
+        if not wt:
+            return {}
+
+        out = {}
+        # Column labels can be up to ~6 (Test/ODI/T20I/FC/LA/T20 domestic etc.)
+        for i in range(1, 8):
+            col_m = re.search(rf"\|\s*column{i}\s*=\s*([^\n\|]{{2,40}})", wt, re.IGNORECASE)
+            if not col_m:
+                continue
+            col_label = re.sub(r"\[\[([^\]|]+\|)?([^\]]+)\]\]", r"\2", col_m.group(1)).strip().lower()
+            fmt_match = None
+            for fmt, aliases in _FORMAT_ALIASES.items():
+                if any(a in col_label for a in aliases):
+                    fmt_match = fmt
+                    break
+            if not fmt_match or fmt_match in out:
+                continue
+
+            def field(names):
+                for n in names:
+                    m = re.search(rf"\|\s*{re.escape(n)}{i}\s*=\s*([^\n\|]{{1,20}})", wt, re.IGNORECASE)
+                    if m:
+                        v = m.group(1).strip()
+                        v = re.sub(r"<[^>]+>", "", v).replace(",", "").strip()
+                        return v
+                return None
+
+            matches_v = field(["matches"])
+            runs_v = field(["runs"])
+            avg_v = field(["bat avg", "batting average", "bat_avg"])
+            hs50_v = field(["100s/50s", "100s_50s"])
+
+            def to_num(v):
+                if v is None: return None
+                m = re.search(r"[\d.]+", v)
+                return float(m.group()) if m else None
+
+            hundreds = None
+            if hs50_v:
+                parts = hs50_v.split("/")
+                if parts and parts[0].strip().replace(".", "").isdigit():
+                    hundreds = int(float(parts[0].strip()))
+
+            m_num, r_num = to_num(matches_v), to_num(runs_v)
+            if m_num is None:
+                continue
+            out[fmt_match] = {
+                "matches": m_num, "runs": r_num,
+                "average": to_num(avg_v), "hundreds": hundreds,
+            }
+        return out
+    except Exception as e:
+        log.warning(f"Wiki infobox parse failed for '{page_title}': {e}")
+        return {}
+
+
+def build_coverage_gap_report(batting_by_format):
+    """Cross-check Cricsheet's ODI/Test/T20I match counts against Wikipedia's
+    official career totals for every player with enough matches to be worth
+    checking. Returns a DataFrame the dashboard can use to show 'official vs
+    tracked here' notices, instead of silently under-reporting a big name's
+    career (this is what happened with Kohli's ODI count)."""
+    rows = []
+    candidates = batting_by_format[
+        (batting_by_format["format"].isin(INTL_FORMATS_FOR_WIKI_CHECK)) &
+        (batting_by_format["matches"] >= WIKI_CHECK_MIN_MATCHES)
+    ]
+    log.info(f"Coverage-gap check: {len(candidates)} player/format rows to verify against Wikipedia")
+
+    # Cache one Wikipedia page fetch per player across their formats
+    page_cache = {}
+    stats_cache = {}
+
+    import time
+    for _, row in candidates.iterrows():
+        player = row["striker"]
+        fmt = row["format"]
+        cs_matches = row["matches"]
+        cs_runs = row["runs"]
+
+        if player not in page_cache:
+            time.sleep(0.3)  # be polite to Wikipedia's API across ~150 players
+            page_cache[player] = _wiki_search_title(player)
+        title = page_cache[player]
+        if not title:
+            continue
+
+        if player not in stats_cache:
+            stats_cache[player] = _fetch_wiki_infobox_stats(title)
+        wiki_stats = stats_cache[player].get(fmt)
+        if not wiki_stats or wiki_stats.get("matches") is None:
+            continue
+
+        wiki_matches = wiki_stats["matches"]
+        if wiki_matches <= 0:
+            continue
+        gap_matches = wiki_matches - cs_matches
+        gap_pct = (gap_matches / wiki_matches) * 100
+
+        rows.append({
+            "player": player, "format": fmt,
+            "cricsheet_matches": cs_matches, "wiki_matches": wiki_matches,
+            "gap_matches": gap_matches, "gap_pct": round(gap_pct, 2),
+            "cricsheet_runs": cs_runs, "wiki_runs": wiki_stats.get("runs"),
+            "wiki_page": title,
+            "flagged": gap_pct > WIKI_GAP_FLAG_THRESHOLD_PCT,
+        })
+
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        n_flagged = int(out["flagged"].sum())
+        log.info(f"Coverage-gap check complete: {n_flagged} player/format combos flagged "
+                  f"(Cricsheet short by >{WIKI_GAP_FLAG_THRESHOLD_PCT}% of matches)")
+    return out
+
+
 def push_csv_to_github(df, filename, token, user, repo, branch="main"):
     """Push a DataFrame as CSV to GitHub. Returns True/False so the caller
-    can track failures instead of just printing and moving on.
-
-    Includes retry logic for the sha lookup — pushing 18 files means 36+
-    rapid sequential GitHub API calls, and an occasional transient
-    hiccup (rate limiting, brief network blip) can make the sha lookup
-    silently return nothing even though the file exists. Previously that
-    meant the whole push failed with a 422 'sha wasn't supplied' error.
-    Now it retries the lookup a few times with backoff before giving up,
-    and if the PUT itself still fails due to a missing sha, it retries
-    the entire lookup+push cycle once more from scratch."""
+    can track failures instead of just printing and moving on."""
     url = f"https://api.github.com/repos/{user}/{repo}/contents/{filename}"
     headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+
+    r = requests.get(url, headers=headers)
+    sha = r.json().get("sha") if r.status_code == 200 else None
+
     csv_bytes = df.to_csv(index=False).encode("utf-8")
     content_b64 = base64.b64encode(csv_bytes).decode("utf-8")
 
-    def _get_sha():
-        for attempt in range(3):
-            r = requests.get(url, headers=headers, timeout=15)
-            if r.status_code == 200:
-                return r.json().get("sha")
-            elif r.status_code == 404:
-                return None  # file genuinely doesn't exist yet — not an error
-            else:
-                log.warning(f"{filename}: sha lookup attempt {attempt+1} got "
-                            f"unexpected status {r.status_code}, retrying...")
-                time.sleep(1.5 * (attempt + 1))
-        return None
+    payload = {"message": f"Update {filename}", "content": content_b64, "branch": branch}
+    if sha:
+        payload["sha"] = sha
 
-    for overall_attempt in range(3):
-        sha = _get_sha()
-        payload = {"message": f"Update {filename}", "content": content_b64, "branch": branch}
-        if sha:
-            payload["sha"] = sha
-
-        resp = requests.put(url, headers=headers, json=payload, timeout=30)
-        if resp.status_code in (200, 201):
-            log.info(f"Pushed {filename} ({len(df):,} rows)")
-            return True
-        elif "sha" in resp.text.lower() and overall_attempt < 2:
-            wait = 3 * (overall_attempt + 1)
-            log.warning(f"{filename}: push failed due to sha issue on attempt "
-                        f"{overall_attempt+1} ({resp.status_code}), waiting {wait}s and retrying...")
-            time.sleep(wait)
-            continue
-        else:
-            log.error(f"FAILED to push {filename}: {resp.status_code} {resp.json().get('message')}")
-            return False
-    return False
+    resp = requests.put(url, headers=headers, json=payload)
+    if resp.status_code in (200, 201):
+        log.info(f"Pushed {filename} ({len(df):,} rows)")
+        return True
+    else:
+        log.error(f"FAILED to push {filename}: {resp.status_code} {resp.json().get('message')}")
+        return False
 
 
 def push_text_to_github(text, filename, token, user, repo, branch="main"):
@@ -523,87 +637,7 @@ def main():
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
 
-    # ── Player watch-list diagnostic ─────────────────────────────────────
-    # This answers "why isn't player X showing up" for ANY player, every
-    # run, without needing a one-off manual investigation each time. Set
-    # the WATCH_PLAYERS environment variable to a comma-separated list of
-    # (partial) names to check — e.g. "Suryavanshi,Awais,Fazal" — and this
-    # logs, for each one:
-    #   1. How many RAW rows (before any cleaning) mention them at all —
-    #      if this is 0, Cricsheet's own archive doesn't have them yet or
-    #      they're spelled differently. Not a pipeline bug.
-    #   2. How many rows survive to the CLEANED dataset — if #1 is > 0 but
-    #      this is 0, our cleaning logic is incorrectly dropping their
-    #      matches, which IS a real, fixable pipeline bug.
-    watch_list = [w.strip() for w in os.environ.get("WATCH_PLAYERS", "").split(",") if w.strip()]
-    _pre_clean_watch_counts = {}
-    if watch_list and not df.empty:
-        log.info(f"=== PLAYER WATCH-LIST CHECK (pre-clean): {watch_list} ===")
-        for name in watch_list:
-            mask = (df["striker"].str.contains(name, case=False, na=False) |
-                    df["bowler"].str.contains(name, case=False, na=False))
-            count = mask.sum()
-            _pre_clean_watch_counts[name] = count
-            matched_names = pd.concat([df.loc[mask, "striker"], df.loc[mask, "bowler"]])
-            matched_names = matched_names[matched_names.str.contains(name, case=False, na=False)].unique()
-            log.info(f"  '{name}': {count:,} raw row(s) found. "
-                     f"Exact name(s) matched: {list(matched_names)[:5]}")
-            if count == 0:
-                log.info(f"    → NOT in Cricsheet's raw archive at all (this run). "
-                         f"Likely a genuine data-source gap or a very different spelling, "
-                         f"not a bug in this pipeline.")
-
-    # If every download failed (e.g. Cricsheet rejected our requests, or
-    # their site was temporarily down), df will be empty here. Previously
-    # this would crash 15+ seconds later inside clean_and_validate() with a
-    # confusing KeyError that gave no hint the real problem was upstream.
-    # Stopping here with a clear message points straight at the real cause.
-    if df.empty:
-        log.error("No data was loaded from ANY format — every Cricsheet download likely "
-                   "failed. Check the download errors logged above (e.g. HTTP errors) "
-                   "before re-running. Stopping here instead of crashing later with a "
-                   "confusing error.")
-        sys.exit(1)
-
-    # ── Diagnostic: what's the most recent date Cricsheet actually gave us,
-    # per format, BEFORE any cleaning? This directly answers "is 2025/2026
-    # data missing because Cricsheet doesn't have it yet, or because our
-    # own cleaning step is dropping it?" — instead of guessing.
-    if "start_date" in df.columns:
-        raw_dates = pd.to_datetime(df["start_date"], errors="coerce")
-        for fmt in df["format"].unique():
-            fmt_max = raw_dates[df["format"] == fmt].max()
-            log.info(f"[RAW, pre-clean] {fmt}: most recent match date = {fmt_max}")
-
     df = clean_and_validate(df)
-
-    if watch_list and not df.empty:
-        log.info(f"=== PLAYER WATCH-LIST CHECK (post-clean) ===")
-        for name in watch_list:
-            mask = (df["striker"].str.contains(name, case=False, na=False) |
-                    df["bowler"].str.contains(name, case=False, na=False))
-            count = mask.sum()
-            pre_count = _pre_clean_watch_counts.get(name, 0)
-            log.info(f"  '{name}': {count:,} row(s) survived to cleaned data "
-                     f"(had {pre_count:,} before cleaning).")
-            if pre_count > 0 and count == 0:
-                log.error(f"    → BUG CONFIRMED: '{name}' had {pre_count:,} raw rows but ALL were "
-                          f"dropped during cleaning. This is a real pipeline bug, not a data gap — "
-                          f"investigate the 'Dropped ...' log lines above to see which filter caught them.")
-            elif pre_count > 0 and count > 0:
-                log.info(f"    → OK: data survived cleaning correctly. If this player is still "
-                         f"missing from the app, the issue is downstream (aggregation or search).")
-
-    # Same check AFTER cleaning — if this max date is earlier than the raw
-    # check above, our cleaning logic is dropping recent rows (a real bug
-    # to fix). If it matches the raw check, Cricsheet's own archive simply
-    # doesn't have newer data yet (nothing to fix on our end, just a
-    # known lag to document for users).
-    for fmt in df["format"].unique():
-        fmt_max = df.loc[df["format"] == fmt, "start_date"].max()
-        log.info(f"[CLEANED, post-clean] {fmt}: most recent match date = {fmt_max}")
-
-
     bat_innings, bowl_innings = build_innings_tables(df)
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
     (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
@@ -611,161 +645,8 @@ def main():
     bat_ml, bowl_ml, form, bowl_form = build_ml_tables(batting_by_format, bowling_by_format,
                                                         batting_yearly, bowling_yearly)
 
-    # ── Manual overrides ───────────────────────────────────────────────────
-    # Cricsheet can lag behind real matches by days to weeks, especially for
-    # brand-new debutants whose data isn't in the standard archive yet. This
-    # reads two OPTIONAL files sitting in the repo root — manual_batting.csv
-    # and manual_bowling.csv — and merges them in, so specific missing
-    # players/years can be added by hand immediately instead of waiting on
-    # Cricsheet or debugging name-matching. If a (striker, year, format) row
-    # already exists from the real pipeline data, the manual entry is
-    # ignored for that combination — manual entries only fill real gaps,
-    # they never silently overwrite automated data.
-    #
-    # Expected columns for manual_batting.csv:
-    #   striker,year,format,matches,runs,balls_faced,dismissals,fours,sixes,average,strike_rate
-    # Expected columns for manual_bowling.csv:
-    #   bowler,year,format,matches,balls,runs_given,wickets,economy,average
-    if os.path.exists("manual_batting.csv"):
-        try:
-            manual_bat = pd.read_csv("manual_batting.csv")
-            existing_keys = set(zip(batting_yearly["striker"], batting_yearly["year"], batting_yearly["format"]))
-            new_rows = manual_bat[~manual_bat.apply(
-                lambda r: (r["striker"], r["year"], r["format"]) in existing_keys, axis=1)]
-            if len(new_rows) > 0:
-                batting_yearly = pd.concat([batting_yearly, new_rows], ignore_index=True)
-                log.info(f"Added {len(new_rows)} manual batting row(s) from manual_batting.csv "
-                         f"(players/years not yet in Cricsheet's data)")
-        except Exception as e:
-            log.error(f"Failed to apply manual_batting.csv: {e}")
-
-    if os.path.exists("manual_bowling.csv"):
-        try:
-            manual_bowl = pd.read_csv("manual_bowling.csv")
-            existing_keys = set(zip(bowling_yearly["bowler"], bowling_yearly["year"], bowling_yearly["format"]))
-            new_rows = manual_bowl[~manual_bowl.apply(
-                lambda r: (r["bowler"], r["year"], r["format"]) in existing_keys, axis=1)]
-            if len(new_rows) > 0:
-                bowling_yearly = pd.concat([bowling_yearly, new_rows], ignore_index=True)
-                log.info(f"Added {len(new_rows)} manual bowling row(s) from manual_bowling.csv "
-                         f"(players/years not yet in Cricsheet's data)")
-        except Exception as e:
-            log.error(f"Failed to apply manual_bowling.csv: {e}")
-
-    # ── Career-total overrides (targets the file that actually feeds the
-    # summary cards: batting_by_format / bowling_by_format) ────────────────
-    # The manual_batting.csv / manual_bowling.csv overrides above only add
-    # missing YEARLY rows (for the trend chart). They do NOT touch the
-    # career summary cards (Matches/Runs/Average/etc.) shown on a player's
-    # main page — those come from batting_by_format.csv, a completely
-    # different file. This section is the correct, tested mechanism for
-    # that: an optional career_overrides_batting.csv (and _bowling.csv) in
-    # the repo root can supply verified official totals for specific
-    # players/formats, to correct Cricsheet's known partial coverage for
-    # veteran players. Unlike the yearly override (which only fills gaps),
-    # this DELIBERATELY overwrites matching (player, format) rows, since
-    # the entire point is correcting known-incomplete automated numbers
-    # with verified real totals — every overwrite is logged so it's never
-    # silent or hidden.
-    #
-    # Expected columns for career_overrides_batting.csv (any subset of the
-    # non-key columns is fine — only the columns you provide get updated):
-    #   striker,format,matches,runs,balls_faced,dismissals,fours,sixes,
-    #   average,strike_rate,dot_pct,boundary_pct,hundreds,fifties,
-    #   thirties,highest,ducks
-    if os.path.exists("career_overrides_batting.csv"):
-        try:
-            overrides = pd.read_csv("career_overrides_batting.csv")
-            override_cols = [c for c in overrides.columns if c not in ("striker", "format")]
-            applied, added = 0, 0
-            for _, row in overrides.iterrows():
-                mask = (batting_by_format["striker"] == row["striker"]) & (batting_by_format["format"] == row["format"])
-                if mask.any():
-                    for col in override_cols:
-                        if pd.notna(row[col]):
-                            batting_by_format.loc[mask, col] = row[col]
-                    applied += 1
-                else:
-                    new_row = {c: np.nan for c in batting_by_format.columns}
-                    new_row["striker"] = row["striker"]
-                    new_row["format"] = row["format"]
-                    for col in override_cols:
-                        if pd.notna(row[col]):
-                            new_row[col] = row[col]
-                    batting_by_format = pd.concat([batting_by_format, pd.DataFrame([new_row])], ignore_index=True)
-                    added += 1
-            log.info(f"Career overrides (batting): corrected {applied} existing player/format row(s), "
-                     f"added {added} new row(s), from career_overrides_batting.csv")
-        except Exception as e:
-            log.error(f"Failed to apply career_overrides_batting.csv: {e}")
-
-    if os.path.exists("career_overrides_bowling.csv"):
-        try:
-            overrides = pd.read_csv("career_overrides_bowling.csv")
-            override_cols = [c for c in overrides.columns if c not in ("bowler", "format")]
-            applied, added = 0, 0
-            for _, row in overrides.iterrows():
-                mask = (bowling_by_format["bowler"] == row["bowler"]) & (bowling_by_format["format"] == row["format"])
-                if mask.any():
-                    for col in override_cols:
-                        if pd.notna(row[col]):
-                            bowling_by_format.loc[mask, col] = row[col]
-                    applied += 1
-                else:
-                    new_row = {c: np.nan for c in bowling_by_format.columns}
-                    new_row["bowler"] = row["bowler"]
-                    new_row["format"] = row["format"]
-                    for col in override_cols:
-                        if pd.notna(row[col]):
-                            new_row[col] = row[col]
-                    bowling_by_format = pd.concat([bowling_by_format, pd.DataFrame([new_row])], ignore_index=True)
-                    added += 1
-            log.info(f"Career overrides (bowling): corrected {applied} existing player/format row(s), "
-                     f"added {added} new row(s), from career_overrides_bowling.csv")
-        except Exception as e:
-            log.error(f"Failed to apply career_overrides_bowling.csv: {e}")
-
-    # ── Dtype safety pass ────────────────────────────────────────────────
-    # Manual override rows (career_overrides_*.csv, manual_*.csv) can
-    # legitimately leave some numeric columns blank/NaN for a given row
-    # (e.g. we didn't have verified fours/sixes for an override). When
-    # that gets concatenated into a column that was previously clean
-    # all-integer data, pandas silently converts the WHOLE column to a
-    # mixed/ambiguous dtype. Streamlit then has to serialize these tables
-    # to Arrow format for its charts and widgets — and Arrow can crash
-    # natively (a segfault, not a normal Python exception) on certain
-    # mixed-dtype columns. This explicitly normalizes every numeric
-    # column to a safe, consistent float dtype (which handles NaN
-    # cleanly) right before saving, so this can't happen regardless of
-    # which fields a manual override does or doesn't provide.
-    def _safe_numeric_dtypes(df):
-        for col in df.columns:
-            # Only touch columns that are ALREADY numeric (int64/float64).
-            # Explicitly checking for numeric dtypes (rather than trying to
-            # exclude text columns by name, e.g. "object") is the safe
-            # direction — pandas 3.x uses a native string dtype for text
-            # columns by default, which an object-only exclusion check
-            # misses, and would otherwise convert player names/format
-            # labels into NaN. Only ever widen known-numeric columns.
-            if col == "year":
-                # 'year' must stay a whole number — converting it to
-                # float64 like every other numeric column made charts
-                # render fractional x-axis ticks (2025.2, 2025.4...)
-                # instead of whole years. Use nullable Int64 instead,
-                # which handles any missing values safely while keeping
-                # the column genuinely integer.
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
-            elif pd.api.types.is_integer_dtype(df[col]) or pd.api.types.is_float_dtype(df[col]):
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
-        return df
-
-    batting = _safe_numeric_dtypes(batting)
-    bowling = _safe_numeric_dtypes(bowling)
-    batting_by_format = _safe_numeric_dtypes(batting_by_format)
-    bowling_by_format = _safe_numeric_dtypes(bowling_by_format)
-    batting_yearly = _safe_numeric_dtypes(batting_yearly)
-    bowling_yearly = _safe_numeric_dtypes(bowling_yearly)
-    log.info("Applied dtype-safety pass to prevent mixed-type columns from override merges")
+    log.info("Running Wikipedia coverage-gap check for international players...")
+    coverage_gaps = build_coverage_gap_report(batting_by_format)
 
     files_to_save = {
         "cricket_batting_stats.csv": batting,
@@ -788,6 +669,7 @@ def main():
                                                "boundary_pct", "dot_pct", "runs", "player_score"]],
         "cricket_bowl_similarity.csv": bowl_ml[["bowler", "format", "cluster", "wickets", "economy",
                                                  "average", "dot_pct"]],
+        "cricket_coverage_gaps.csv": coverage_gaps,
     }
 
     log.info(f"Pushing {len(files_to_save)} files to github.com/{GITHUB_USER}/{GITHUB_REPO}...")
@@ -796,33 +678,10 @@ def main():
         ok = push_csv_to_github(df_out, fn, GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
         if not ok:
             failures.append(fn)
-        time.sleep(0.5)  # small gap between pushes — reduces the chance of tripping
-                          # GitHub's secondary rate limit from 18 rapid-fire requests
 
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     push_text_to_github(timestamp, "last_updated.txt", GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
     log.info(f"Wrote last_updated.txt = {timestamp}")
-
-    # ── Coverage report ──────────────────────────────────────────────────
-    # This is honest, verifiable visibility into exactly what this run
-    # actually covers — not a claim that "every player" is included, since
-    # that depends entirely on what Cricsheet itself has published. Check
-    # this log every run to track coverage growing (or spot a regression)
-    # over time, instead of guessing.
-    log.info("=== COVERAGE REPORT ===")
-    total_batters = batting["striker"].nunique() if not batting.empty else 0
-    total_bowlers = bowling["bowler"].nunique() if not bowling.empty else 0
-    log.info(f"Unique batters captured: {total_batters:,}")
-    log.info(f"Unique bowlers captured: {total_bowlers:,}")
-    for fmt in df["format"].unique():
-        fmt_df = df[df["format"] == fmt]
-        n_matches = fmt_df["match_id"].nunique()
-        n_players = pd.concat([fmt_df["striker"], fmt_df["bowler"]]).nunique()
-        date_min = pd.to_datetime(fmt_df["start_date"]).min()
-        date_max = pd.to_datetime(fmt_df["start_date"]).max()
-        log.info(f"  {fmt}: {n_matches:,} matches | {n_players:,} unique players | "
-                 f"date range {date_min.date()} to {date_max.date()}")
-    log.info("=== END COVERAGE REPORT ===")
 
     if failures:
         log.error(f"Pipeline finished WITH {len(failures)} failed file push(es): {failures}")
