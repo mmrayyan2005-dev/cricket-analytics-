@@ -144,7 +144,7 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 
 /* ── TOP NAV ── */
 .ca-topnav{position:sticky;top:0;z-index:999;background:rgba(8,12,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
-.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:#fff;white-space:nowrap;margin-right:24px;flex-shrink:0}
+.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0}
 .ca-topnav-brand span{color:var(--accent)}
 .ca-topnav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .ca-topnav-links::-webkit-scrollbar{display:none}
@@ -158,7 +158,7 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 .ca-section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
 .ca-section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .ca-section-emoji{font-size:24px;line-height:1}
-.ca-section-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:#fff}
+.ca-section-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--text)}
 .ca-section-sub{font-size:12px;color:var(--muted);margin-top:2px}
 
 /* ── Home grid ── */
@@ -166,14 +166,14 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 .ca-feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:all .22s;text-decoration:none;display:block;box-shadow:var(--shadow)}
 .ca-feature-card:hover{border-color:#2e4060;transform:translateY(-3px);background:#161d2e;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .ca-feature-icon{font-size:28px;margin-bottom:10px}
-.ca-feature-title{font-family:var(--font-head);font-size:15px;font-weight:800;color:#fff;margin-bottom:4px}
+.ca-feature-title{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
 .ca-feature-desc{font-size:12px;color:var(--muted);line-height:1.5}
 
 /* ── Player card ── */
 .ca-player-card{display:flex;gap:14px;align-items:flex-start;overflow:hidden;box-sizing:border-box}
 .ca-player-img{flex-shrink:0}
 .ca-player-info{flex:1;min-width:0}
-.ca-player-name{font-family:'Syne',sans-serif;color:#fff;font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
+.ca-player-name{font-family:'Syne',sans-serif;color:var(--text);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
 .ca-player-pills{display:flex;flex-wrap:wrap;margin-bottom:7px}
 .ca-player-bio{color:var(--muted);font-size:11px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical}
 .ca-pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 2px 2px 0;transition:border-color .15s}
@@ -850,7 +850,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
                 st.caption(short_bio)
 
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
-PAGES=["🏠 Home","🔴 Live Matches","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
+PAGES=["🏠 Home","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
        "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
 
@@ -1008,23 +1008,23 @@ elif section=="📋 Match Results":
                 "Check the notebook's push output once the GitHub token issue is sorted.")
     else:
         fmt_opts = sorted(results["format"].dropna().unique().tolist()) if "format" in results.columns else []
-        fmt = st.radio("Format", fmt_opts, horizontal=True) if fmt_opts else None
+        fmt = st.radio("Competition", fmt_opts, horizontal=True) if fmt_opts else None
         rf = results[results["format"]==fmt] if fmt else results
 
+        # International formats (country vs country) get filtered to real
+        # national teams automatically. Franchise leagues (IPL/PSL/BBL/etc)
+        # are, by definition, domestic club competitions — filtering THOSE
+        # down to "real countries" would wipe out every team in the league,
+        # which makes no sense. So this happens silently based on which
+        # competition is picked, with no extra checkbox or decision needed.
+        INTERNATIONAL_FORMATS = {"ODI","Test","T20I"}
+        if fmt in INTERNATIONAL_FORMATS and "team1" in rf.columns:
+            rf = rf[rf["team1"].apply(is_real_country) & rf["team2"].apply(is_real_country)]
+
         teams = sorted(set(rf["team1"].dropna().unique().tolist() + rf["team2"].dropna().unique().tolist())) if "team1" in rf.columns else []
-        # Only show real national teams by default — franchise/club sides
-        # (BBL, IPL, PSL teams etc.) get mixed into the same underlying data
-        # and would otherwise show up looking like they're "playing" a
-        # country, which is confusing if you don't already know cricket's
-        # domestic league structure.
-        real_teams = [t for t in teams if is_real_country(t)]
-        show_all_teams = st.checkbox("Show domestic/franchise teams too (advanced)", value=False)
-        teams = teams if show_all_teams else real_teams
         tab1, tab2 = st.tabs(["📜 Match List", "⚔️ Head to Head"])
 
         with tab1:
-            if not show_all_teams and "team1" in rf.columns:
-                rf = rf[rf["team1"].isin(real_teams) & rf["team2"].isin(real_teams)]
             team_filter = st.selectbox("Filter by team (optional)", ["All teams"]+teams)
             rf_show = rf if team_filter=="All teams" else rf[(rf["team1"]==team_filter)|(rf["team2"]==team_filter)]
             show_cols = [c for c in ["date","team1","team2","venue","city","toss_winner","toss_decision",
@@ -1233,7 +1233,8 @@ elif section=="🎯 Win Probability":
                         text=[f"{prob_a}%", f"{prob_b}%"], textposition="outside",
                         textfont=dict(size=16, color=TEXT)))
                     fig.update_layout(**BASE, height=220, showlegend=False,
-                                      margin=dict(l=20,r=60,t=20,b=20), xaxis=dict(range=[0,105]))
+                                      margin=dict(l=20,r=60,t=20,b=20))
+                    fig.update_xaxes(range=[0,105])
                     st.plotly_chart(fig, **CFG)
 
                     st.caption(f"Based on: recent form, head-to-head record ({decided} past matches between these two), "
