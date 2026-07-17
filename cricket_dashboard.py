@@ -24,10 +24,12 @@ if IS_LIGHT:
     SHADOW="0 4px 20px rgba(42,38,32,.08)"
     ACCENT="#a83626"; ACCENT2="#8a6a14"
 else:
-    # "Night Session" — turf under floodlights, leather ball, brass trophy
-    BG="#0f1210"; CARD="#1a201b"; TEXT="#ece7da"; GRID="#2a332b"
-    SURFACE="#161b17"; BORDER="#2a332b"; MUTED="#7c8577"; SUBTLE="#a8b0a0"
-    SHADOW="0 4px 24px rgba(0,0,0,.45)"
+    # "Night Session" — turf under floodlights, leather ball, brass trophy.
+    # Widened the gap between bg and card (was too close in value before,
+    # making everything read as one flat dark blob with no depth).
+    BG="#0a0d0a"; CARD="#1f251e"; TEXT="#ece7da"; GRID="#333d32"
+    SURFACE="#151a14"; BORDER="#333d32"; MUTED="#7c8577"; SUBTLE="#a8b0a0"
+    SHADOW="0 6px 28px rgba(0,0,0,.55)"
     ACCENT="#c1442d"; ACCENT2="#c9a227"
 FC={"ODI":"#3a7a54","Test":"#8a95a8","T20I":"#c1442d",
     "IPL":"#d98e2b","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
@@ -55,14 +57,23 @@ CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{
-  --bg:#0f1210;--surface:#161b17;--card:#1a201b;--border:#2a332b;
+  --bg:#0a0d0a;--surface:#151a14;--card:#1f251e;--border:#333d32;
   --accent:#c1442d;--accent2:#c9a227;--warn:#c1442d;--gold:#c9a227;
   --text:#ece7da;--muted:#7c8577;--subtle:#a8b0a0;
   --radius:14px;--radius-sm:8px;
   --font-head:'Syne',sans-serif;--font-body:'Inter',sans-serif;--font-data:'JetBrains Mono',monospace;
-  --shadow:0 4px 24px rgba(0,0,0,.45);
+  --shadow:0 6px 28px rgba(0,0,0,.55);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
+.stApp{
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(193,68,45,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 90% 15%, rgba(201,162,39,.04) 0%, transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px),
+    repeating-linear-gradient(90deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px);
+  background-attachment:fixed;
+}
 .block-container{padding:0 !important;max-width:100% !important}
 [data-testid="stSidebar"]{display:none !important}
 
@@ -673,16 +684,33 @@ WIKI_NAMES={
     "AMC Kerr":"Amelia Kerr","SFM Devine":"Sophie Devine","KL Rahul":"KL Rahul cricketer",
 }
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)  # shorter cache for failures — was 3600s (1hr), meaning a single
+                                              # transient Wikipedia hiccup for someone as unambiguous as
+                                              # "V Kohli" would get stuck showing "unavailable" for a full
+                                              # hour. 10 minutes lets a real, working lookup recover fast.
 def get_wiki(cricsheet_name, search_name):
     try:
-        import re
+        import re, time
         wiki_title=WIKI_NAMES.get(cricsheet_name, search_name+" cricketer")
-        sr=requests.get("https://en.wikipedia.org/w/api.php",
-            params={"action":"query","list":"search","srsearch":wiki_title,
-                    "format":"json","utf8":1,"srlimit":5},
-            timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
-        sr.raise_for_status()
+
+        # Retry once on transient network failures (timeout, rate limit,
+        # momentary Wikipedia hiccup) before giving up — this is the most
+        # likely reason an unambiguous, famous name like "V Kohli" would
+        # ever show "profile unavailable".
+        sr = None
+        for attempt in range(2):
+            try:
+                sr=requests.get("https://en.wikipedia.org/w/api.php",
+                    params={"action":"query","list":"search","srsearch":wiki_title,
+                            "format":"json","utf8":1,"srlimit":5},
+                    timeout=8,headers={"User-Agent":"CricketAnalyticsApp/2.0"})
+                sr.raise_for_status()
+                break
+            except Exception:
+                if attempt == 0:
+                    time.sleep(1)
+                    continue
+                raise
         results=sr.json().get("query",{}).get("search",[])
         if not results:
             st.session_state.setdefault("wiki_missing_full", []).append(
