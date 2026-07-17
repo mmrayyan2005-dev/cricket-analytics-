@@ -80,6 +80,42 @@ def download_and_extract(name, url, workdir):
         return folder  # return the (possibly empty) folder so pipeline continues
 
 
+def load_registered_players(folder, label):
+    """Parse the `*_info.csv` companion file Cricsheet ships alongside every
+    match's ball-by-ball CSV. It lists every player registered in each
+    team's XI for that match — including anyone who never faced a ball or
+    bowled a delivery (e.g. a top-order batter whose team won the chase
+    before he needed to bat). The ball-by-ball data alone has no way to
+    know he was even in that match; this file is the only source for that.
+    Row format: info,player,<Team Name>,<Player Name>
+    Without this, "matches played" silently undercounts anyone who has
+    innings where they didn't get to bat — which is exactly what caused
+    Cricsheet's Kohli ODI count to sit under his real career total."""
+    if not os.path.isdir(folder):
+        return pd.DataFrame(columns=["match_id", "team", "player", "format"])
+    files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
+    rows = []
+    failed = 0
+    for f in files:
+        match_id = f.replace("_info.csv", "")
+        try:
+            with open(os.path.join(folder, f), encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) >= 4 and parts[0] == "info" and parts[1] == "player":
+                        team = parts[2]
+                        player = ",".join(parts[3:])  # player names rarely contain commas, but be safe
+                        rows.append((match_id, team, player))
+        except Exception:
+            failed += 1
+    if failed:
+        log.warning(f"{label}: {failed} _info.csv file(s) failed to parse for player registration")
+    out = pd.DataFrame(rows, columns=["match_id", "team", "player"])
+    out["format"] = label
+    log.info(f"{label}: {len(out):,} player-registration rows from {out['match_id'].nunique():,} matches")
+    return out
+
+
 def load_format(folder, label):
     """Load all per-match CSVs for one format. Logs which individual match
     files failed to parse instead of the previous bare `except: pass`."""
@@ -576,6 +612,52 @@ def build_coverage_gap_report(batting_by_format):
     return out
 
 
+def apply_true_match_counts(batting_by_format, bowling_by_format, registered_players):
+    """Replace the ball-derived 'matches' count (which only counts matches
+    where the player actually faced a ball / bowled a delivery) with the
+    true squad-appearance count from the _info.csv registration data. This
+    is the fix for players showing fewer 'matches' than their real career
+    total — the gap was never missing Cricsheet data, it was matches where
+    they were part of the XI but simply didn't need to bat/bowl.
+    The old ball-derived count is kept as 'innings_batted'/'innings_bowled'
+    since that's still a genuinely useful, different number (e.g. for
+    strike-rate-style analysis), just not what should be labeled 'Matches'."""
+    if registered_players.empty:
+        log.warning("No player-registration data available — 'matches' still reflects "
+                    "ball-derived innings counts only, not true squad appearances.")
+        return batting_by_format, bowling_by_format
+
+    true_counts = (registered_players.groupby(["player", "format"])["match_id"]
+                   .nunique().reset_index().rename(columns={"match_id": "true_matches"}))
+
+    batting_by_format = batting_by_format.rename(columns={"matches": "innings_batted"})
+    batting_by_format = batting_by_format.merge(
+        true_counts.rename(columns={"player": "striker"}), on=["striker", "format"], how="left")
+    # Fall back to the ball-derived count if a player has no registration
+    # match (e.g. name-spelling mismatch between the two Cricsheet files)
+    # rather than silently zeroing out their matches.
+    missing_reg = batting_by_format["true_matches"].isna()
+    if missing_reg.any():
+        log.warning(f"{missing_reg.sum():,} batting rows had no player-registration match "
+                    f"(likely name-format mismatch) — falling back to innings-batted count for those")
+    batting_by_format["matches"] = batting_by_format["true_matches"].fillna(batting_by_format["innings_batted"])
+    batting_by_format["matches"] = batting_by_format["matches"].astype(int)
+    batting_by_format = batting_by_format.drop(columns=["true_matches"])
+
+    bowling_by_format = bowling_by_format.rename(columns={"matches": "innings_bowled"})
+    bowling_by_format = bowling_by_format.merge(
+        true_counts.rename(columns={"player": "bowler"}), on=["bowler", "format"], how="left")
+    missing_reg2 = bowling_by_format["true_matches"].isna()
+    if missing_reg2.any():
+        log.warning(f"{missing_reg2.sum():,} bowling rows had no player-registration match — "
+                    f"falling back to innings-bowled count for those")
+    bowling_by_format["matches"] = bowling_by_format["true_matches"].fillna(bowling_by_format["innings_bowled"])
+    bowling_by_format["matches"] = bowling_by_format["matches"].astype(int)
+    bowling_by_format = bowling_by_format.drop(columns=["true_matches"])
+
+    return batting_by_format, bowling_by_format
+
+
 def push_csv_to_github(df, filename, token, user, repo, branch="main"):
     """Push a DataFrame as CSV to GitHub. Returns True/False so the caller
     can track failures instead of just printing and moving on."""
@@ -637,9 +719,20 @@ def main():
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
 
+    registered_players = pd.concat([
+        load_registered_players(os.path.join(WORKDIR, "odi_data"), "ODI"),
+        load_registered_players(os.path.join(WORKDIR, "test_data"), "Test"),
+        load_registered_players(os.path.join(WORKDIR, "t20i_data"), "T20I"),
+        load_registered_players(os.path.join(WORKDIR, "ipl_data"), "IPL"),
+        load_registered_players(os.path.join(WORKDIR, "psl_data"), "PSL"),
+    ], ignore_index=True)
+    log.info(f"TOTAL player-registration rows loaded: {registered_players.shape[0]:,}")
+
     df = clean_and_validate(df)
     bat_innings, bowl_innings = build_innings_tables(df)
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
+    batting_by_format, bowling_by_format = apply_true_match_counts(
+        batting_by_format, bowling_by_format, registered_players)
     (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
      bowling_venue, bowling_opponent, batter_vs_bowler, bowler_vs_batter) = build_yearly_venue_opponent_matchup(df)
     bat_ml, bowl_ml, form, bowl_form = build_ml_tables(batting_by_format, bowling_by_format,
