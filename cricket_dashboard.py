@@ -18,36 +18,35 @@ IS_LIGHT = st.session_state.get("is_light_mode", False)
 RAW_BASE = "https://raw.githubusercontent.com/mmrayyan2005-dev/cricket-analytics_-/main"
 
 if IS_LIGHT:
-    # "Scorecard Paper" — aged cream paper + ink, like an old scorebook
-    BG="#f6f1e4"; CARD="#fffcf5"; TEXT="#2a2620"; GRID="#e2d9c0"
-    SURFACE="#fffcf5"; BORDER="#e2d9c0"; MUTED="#93876f"; SUBTLE="#574e3d"
-    SHADOW="0 4px 20px rgba(42,38,32,.08)"
-    ACCENT="#a83626"; ACCENT2="#8a6a14"
+    # "Scorecard Paper" — Wisden almanac page: cream leaf, oxblood ink stamp
+    BG="#f3ecd8"; CARD="#fffdf6"; TEXT="#26211a"; GRID="#ded2ab"
+    SURFACE="#fbf6e9"; BORDER="#ded2ab"; MUTED="#8a7f60"; SUBTLE="#55493a"
+    SHADOW="0 4px 20px rgba(38,33,26,.10)"
+    ACCENT="#8a3226"; ACCENT2="#b3891f"
 else:
-    # "Night Session" — turf under floodlights, leather ball, brass trophy.
-    # Widened the gap between bg and card (was too close in value before,
-    # making everything read as one flat dark blob with no depth).
-    BG="#0a0d0a"; CARD="#1f251e"; TEXT="#ece7da"; GRID="#333d32"
-    SURFACE="#151a14"; BORDER="#333d32"; MUTED="#7c8577"; SUBTLE="#a8b0a0"
+    # "Floodlit Pavilion" — deep turf-night green, Wisden-yellow scoreboard
+    # numerals, oxblood ledger-ink for secondary accents.
+    BG="#0b150f"; CARD="#16241a"; TEXT="#f3ecd8"; GRID="#2c4030"
+    SURFACE="#101c14"; BORDER="#2c4030"; MUTED="#74836f"; SUBTLE="#c3bb9e"
     SHADOW="0 6px 28px rgba(0,0,0,.55)"
-    ACCENT="#c1442d"; ACCENT2="#c9a227"
-FC={"ODI":"#3a7a54","Test":"#8a95a8","T20I":"#c1442d",
-    "IPL":"#d98e2b","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
+    ACCENT="#e3b431"; ACCENT2="#8a3226"
+FC={"ODI":"#3f7a52","Test":"#8a95a8","T20I":"#e3b431",
+    "IPL":"#8a3226","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
 FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL"]
 FORMAT_META={
-    "ODI":("🌐","#3a7a54","#4f9a6e"),"Test":("🏛️","#8a95a8","#a8b2c2"),
-    "T20I":("⚡","#c1442d","#d9634a"),"IPL":("🏏","#d98e2b","#e8a94f"),
+    "ODI":("🌐","#3f7a52","#529a68"),"Test":("🏛️","#8a95a8","#a8b2c2"),
+    "T20I":("⚡","#e3b431","#edc862"),"IPL":("🏏","#8a3226","#aa4a3c"),
     "PSL":("🟢","#2f8f5b","#3fae72"),"WPL":("🌹","#b2557a","#c97694"),
     "BBL":("🔥","#d9772b","#e8974f"),"CPL":("🌊","#2f9aa0","#45bcc2"),
 }
 BASE=dict(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-          font=dict(color=TEXT,family="Inter,sans-serif",size=12),
+          font=dict(color=TEXT,family="PT Serif,serif",size=12),
           legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
                       bgcolor="rgba(0,0,0,0)",font=dict(size=11)),
           xaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           yaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           dragmode=False,
-          hoverlabel=dict(bgcolor="#1e2840",bordercolor="#2e4060",font=dict(color=TEXT,size=12,family="Inter,sans-serif")),
+          hoverlabel=dict(bgcolor=CARD,bordercolor=ACCENT,font=dict(color=TEXT,size=12,family="PT Serif,serif")),
           hovermode="closest")
 M_DEFAULT=dict(l=8,r=8,t=48,b=8)
 M_BARV=dict(l=8,r=8,t=48,b=60)
@@ -55,56 +54,55 @@ CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"
 
 # ── V17 UI + comprehensive CSS ────────────────────────────────────────────────
 st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap');
 :root{
-  --bg:#0a0d0a;--surface:#151a14;--card:#1f251e;--border:#333d32;
-  --accent:#c1442d;--accent2:#c9a227;--warn:#c1442d;--gold:#c9a227;
-  --text:#ece7da;--muted:#7c8577;--subtle:#a8b0a0;
-  --radius:14px;--radius-sm:8px;
-  --font-head:'Syne',sans-serif;--font-body:'Inter',sans-serif;--font-data:'JetBrains Mono',monospace;
+  --bg:#0b150f;--surface:#101c14;--card:#16241a;--border:#2c4030;
+  --accent:#e3b431;--accent2:#8a3226;--warn:#e3b431;--gold:#e3b431;
+  --text:#f3ecd8;--muted:#74836f;--subtle:#c3bb9e;
+  --radius:10px;--radius-sm:6px;
+  --font-head:'Big Shoulders Display',sans-serif;--font-body:'PT Serif',serif;--font-data:'Space Mono',monospace;
   --shadow:0 6px 28px rgba(0,0,0,.55);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
 .stApp{
   background-color:var(--bg);
   background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(193,68,45,.05) 0%, transparent 60%),
-    radial-gradient(ellipse 700px 500px at 90% 15%, rgba(201,162,39,.04) 0%, transparent 60%),
-    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px),
-    repeating-linear-gradient(90deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px);
+    radial-gradient(ellipse 900px 460px at 50% -8%, rgba(227,180,49,.07) 0%, transparent 62%),
+    repeating-linear-gradient(100deg, rgba(243,236,216,.014) 0 120px, rgba(243,236,216,.026) 120px 124px, transparent 124px 240px);
   background-attachment:fixed;
 }
 .block-container{padding:0 !important;max-width:100% !important}
 [data-testid="stSidebar"]{display:none !important}
+h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(--font-head)!important;letter-spacing:.2px}
 
-/* ── Metrics ── */
-[data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;padding:14px 16px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
-[data-testid="stMetric"]:hover{border-color:#2e4060!important;transform:translateY(-2px)}
-[data-testid="stMetric"]::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.6}
-[data-testid="stMetricLabel"]{font-size:10px!important;font-weight:600!important;color:var(--muted)!important;text-transform:uppercase;letter-spacing:1.2px!important}
-[data-testid="stMetricValue"]{font-family:var(--font-data)!important;font-size:22px!important;font-weight:700!important;color:var(--text)!important;line-height:1.2!important;letter-spacing:-0.5px!important}
+/* ── Metrics: scoreboard flip-panel ── */
+[data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:4px!important;padding:14px 16px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
+[data-testid="stMetric"]:hover{border-color:var(--accent)!important;transform:translateY(-2px)}
+[data-testid="stMetric"]::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.85}
+[data-testid="stMetricLabel"]{font-family:var(--font-body)!important;font-size:10px!important;font-weight:700!important;color:var(--muted)!important;text-transform:uppercase;letter-spacing:1.4px!important}
+[data-testid="stMetricValue"]{font-family:var(--font-data)!important;font-size:22px!important;font-weight:700!important;color:var(--text)!important;line-height:1.2!important;letter-spacing:-0.3px!important}
 [data-testid="stMetricDelta"]{font-size:11px!important}
 
 /* ── Tabs ── */
 div[data-baseweb="tab-list"]{gap:4px!important;flex-wrap:wrap!important;background:transparent!important;border-bottom:1px solid var(--border)!important;padding-bottom:6px!important}
-div[data-baseweb="tab"]{border-radius:var(--radius-sm)!important;padding:7px 16px!important;background:var(--card)!important;font-weight:600!important;font-size:12px!important;color:var(--subtle)!important;border:1px solid var(--border)!important;transition:all .2s!important}
-div[data-baseweb="tab"]:hover{border-color:#2e4060!important;color:var(--text)!important;background:#161d2e!important}
-div[data-baseweb="tab"][aria-selected="true"]{background:linear-gradient(135deg,#3d1a12,#2e2410)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:0 0 12px rgba(193,68,45,.15)!important}
+div[data-baseweb="tab"]{border-radius:var(--radius-sm)!important;padding:7px 16px!important;background:var(--card)!important;font-weight:700!important;font-size:12px!important;color:var(--subtle)!important;border:1px solid var(--border)!important;transition:all .2s!important;font-family:var(--font-body)!important}
+div[data-baseweb="tab"]:hover{border-color:var(--accent)!important;color:var(--text)!important}
+div[data-baseweb="tab"][aria-selected="true"]{background:rgba(227,180,49,.1)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:none!important}
 div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!important}
 
 /* ── Inputs ── */
 [data-testid="stTextInput"] input{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;font-family:var(--font-body)!important;font-size:14px!important;padding:11px 14px!important;transition:border-color .2s,box-shadow .2s!important}
-[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(193,68,45,.12)!important;outline:none!important}
+[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(227,180,49,.15)!important;outline:none!important}
 [data-testid="stTextInput"] input::placeholder{color:var(--muted)!important}
 [data-testid="stSelectbox"]>div>div{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;transition:border-color .2s!important}
-[data-testid="stSelectbox"]>div>div:hover{border-color:#2e4060!important}
+[data-testid="stSelectbox"]>div>div:hover{border-color:var(--accent)!important}
 [data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:5px!important}
-[data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:5px 13px!important;font-size:12px!important;font-weight:600!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important}
-[data-testid="stRadio"] label:hover{border-color:#2e4060!important;color:var(--text)!important}
-[data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(193,68,45,.08)!important;box-shadow:0 0 8px rgba(193,68,45,.1)!important}
+[data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:5px 13px!important;font-size:12px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
+[data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important}
+[data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(227,180,49,.09)!important}
 
 /* ── Sliders ── */
-[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(193,68,45,.15)!important}
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(227,180,49,.18)!important}
 [data-testid="stSlider"] [data-baseweb="slider"] div[class*="Track"]{background:var(--border)!important}
 
 /* ── DataFrames ── */
@@ -152,52 +150,51 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 8px rgba(193,68,45,.2)}50%{box-shadow:0 0 20px rgba(193,68,45,.4)}}
 .ca-fade{animation:fadeUp .4s ease both}
 .ca-shimmer{background:linear-gradient(90deg,var(--accent) 0%,var(--accent2) 40%,var(--accent) 80%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
 .ca-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.8s ease infinite;vertical-align:middle;margin-right:4px}
 
-/* ── TOP NAV ── */
-.ca-topnav{position:sticky;top:0;z-index:999;background:rgba(8,12,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
-.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0}
+/* ── TOP NAV: scoreboard header bar ── */
+.ca-topnav{position:sticky;top:0;z-index:999;background:var(--surface);border-bottom:2px solid var(--accent);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
+.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:.4px;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0;text-transform:uppercase}
 .ca-topnav-brand span{color:var(--accent)}
 .ca-topnav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .ca-topnav-links::-webkit-scrollbar{display:none}
-.ca-navbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--subtle);white-space:nowrap;cursor:pointer;border:none;background:transparent;transition:all .15s;font-family:var(--font-body);text-decoration:none}
-.ca-navbtn:hover{background:rgba(255,255,255,.06);color:var(--text)}
-.ca-navbtn.active{background:rgba(193,68,45,.1);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(193,68,45,.2)}
-.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.18);font-size:10px;font-weight:600;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px}
+.ca-navbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;font-size:12px;font-weight:700;color:var(--subtle);white-space:nowrap;cursor:pointer;border:none;background:transparent;transition:all .15s;font-family:var(--font-body);text-decoration:none}
+.ca-navbtn:hover{background:rgba(227,180,49,.08);color:var(--text)}
+.ca-navbtn.active{background:rgba(227,180,49,.12);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;background:rgba(227,180,49,.08);border:1px solid rgba(227,180,49,.25);font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px;font-family:var(--font-data)}
 .ca-content{padding:20px 24px 60px}
 
-/* ── Section cards ── */
+/* ── Section cards: seam-stitch divider (cricket-ball seam motif) ── */
 .ca-section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);position:relative}
-.ca-section-card::before{content:'';position:absolute;top:0;left:16px;right:16px;height:1px;
-  background-image:repeating-linear-gradient(90deg,var(--accent) 0 6px,transparent 6px 12px);opacity:.45}
+.ca-section-card::before{content:'';position:absolute;top:0;left:16px;right:16px;height:2px;
+  background-image:repeating-linear-gradient(90deg,var(--accent) 0 4px,transparent 4px 8px,var(--accent2) 8px 12px,transparent 12px 16px);opacity:.55}
 .ca-section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .ca-section-emoji{font-size:24px;line-height:1}
-.ca-section-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--text)}
-.ca-section-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.ca-section-title{font-family:var(--font-head);font-size:19px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.3px}
+.ca-section-sub{font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--font-body)}
 
 /* ── Home grid ── */
 .ca-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:24px}
 .ca-feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:all .22s;text-decoration:none;display:block;box-shadow:var(--shadow)}
-.ca-feature-card:hover{border-color:#2e4060;transform:translateY(-3px);background:#161d2e;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.ca-feature-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .ca-feature-icon{font-size:28px;margin-bottom:10px}
-.ca-feature-title{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
-.ca-feature-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.ca-feature-title{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;text-transform:uppercase}
+.ca-feature-desc{font-size:12px;color:var(--muted);line-height:1.5;font-family:var(--font-body)}
 
 /* ── Player card ── */
 .ca-player-card{display:flex;gap:14px;align-items:flex-start;overflow:hidden;box-sizing:border-box}
 .ca-player-img{flex-shrink:0}
 .ca-player-info{flex:1;min-width:0}
-.ca-player-name{font-family:'Syne',sans-serif;color:var(--text);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.2px}
+.ca-player-name{font-family:var(--font-head);color:var(--text);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px;text-transform:uppercase}
 .ca-player-pills{display:flex;flex-wrap:wrap;margin-bottom:7px}
-.ca-player-bio{color:var(--muted);font-size:11px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical}
-.ca-pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;margin:2px 2px 2px 0;transition:border-color .15s}
-.ca-pill:hover{border-color:rgba(255,255,255,.18)}
+.ca-player-bio{color:var(--muted);font-size:11px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;font-family:var(--font-body)}
+.ca-pill{background:rgba(227,180,49,.06);border:1px solid rgba(227,180,49,.18);padding:3px 9px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;margin:2px 2px 2px 0;transition:border-color .15s;font-family:var(--font-data)}
+.ca-pill:hover{border-color:var(--accent)}
 
 /* ── Insight box ── */
-.ca-insight{background:rgba(193,68,45,.04);border:1px solid rgba(193,68,45,.15);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6}
+.ca-insight{background:rgba(227,180,49,.05);border:1px solid rgba(227,180,49,.18);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6;font-family:var(--font-body)}
 .ca-insight strong{color:var(--accent)}
 
 /* ── Mobile ── */
@@ -243,10 +240,10 @@ if IS_LIGHT:
   --text:{TEXT};--muted:{MUTED};--subtle:{SUBTLE};
   --shadow:{SHADOW};--accent:{ACCENT};--accent2:{ACCENT2};--warn:{ACCENT};--gold:{ACCENT2};
 }}
-.ca-topnav{{background:rgba(246,241,228,.92)!important}}
+.ca-topnav{{background:{SURFACE}!important;border-bottom:2px solid {ACCENT}!important}}
 .ca-topnav-brand{{color:{TEXT}!important}}
 [data-testid="stMetricValue"]{{color:{TEXT}!important}}
-.stDataFrame tbody tr:hover td{{background:rgba(168,54,38,.06)!important}}
+.stDataFrame tbody tr:hover td{{background:rgba(138,50,38,.06)!important}}
 [data-testid="stRadio"] label{{color:{SUBTLE}!important}}
 </style>""", unsafe_allow_html=True)
 
@@ -365,6 +362,13 @@ def load_model_metrics():
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_latest_team_form():
     return _try_load("cricket_latest_team_form.csv")
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_coverage_gaps():
+    # Cricsheet vs Wikipedia official career totals, built by pipeline.py's
+    # build_coverage_gap_report(). Missing/old repo without this file yet
+    # just returns empty — show_player_card's gap notice below no-ops on that.
+    return _try_load("cricket_coverage_gaps.csv")
 
 RECOGNIZED_TEAMS = {
     "Afghanistan","Australia","Bangladesh","England","India","Ireland","New Zealand",
@@ -590,7 +594,7 @@ def form_delta_html(recent_val, career_val, label, higher_is_better=True):
     diff = recent_val - career_val
     pct = (diff / career_val * 100) if career_val else 0
     good = (diff > 0) == higher_is_better
-    color = "#3a7a54" if good else "#c1442d"
+    color = "#3a7a54" if good else "#8a3226"
     arrow = "▲" if diff > 0 else "▼"
     return (f'<span style="background:{color}18;border:1px solid {color}44;'
             f'color:{color};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">'
@@ -607,7 +611,7 @@ def page_banner(emoji, title, subtitle, ga, gb, glow):
         -45deg,transparent,transparent 18px,rgba(255,255,255,.015) 18px,rgba(255,255,255,.015) 19px);pointer-events:none"></div>
       <div style="font-size:36px;line-height:1;flex-shrink:0">{emoji}</div>
       <div>
-        <div style="font-family:'Syne',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
+        <div style="font-family:'Big Shoulders Display',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
         <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:3px">{subtitle}</div>
       </div>
     </div>""", unsafe_allow_html=True)
@@ -960,7 +964,7 @@ status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 navcol1, navcol2, navcol3 = st.columns([5,1,1])
 with navcol1:
     st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-      <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+      <span style="font-family:'Big Shoulders Display',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
       <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
         <span class="ca-live"></span>{status_txt}</span>
     </div>""", unsafe_allow_html=True)
@@ -1006,7 +1010,7 @@ if section=="🏠 Home":
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <span style="font-size:40px">🏏</span>
         <div>
-          <h1 style="font-family:'Syne',sans-serif;color:#fff;margin:0;font-size:30px;font-weight:800;letter-spacing:-0.5px">Cricket <span class="ca-shimmer">Analytics</span></h1>
+          <h1 style="font-family:'Big Shoulders Display',sans-serif;color:#fff;margin:0;font-size:30px;font-weight:800;letter-spacing:-0.5px">Cricket <span class="ca-shimmer">Analytics</span></h1>
           <p style="color:var(--muted);font-size:13px;margin:4px 0 0">Ball-by-ball data · All-time records · 8 formats</p>
         </div>
       </div>
@@ -1134,7 +1138,7 @@ elif section=="📋 Match Results":
 
 # ══ PLAYER FORECAST ═══════════════════════════════════════════════════════════
 elif section=="🔮 Player Forecast":
-    page_banner("🔮","Player Forecast","Pick a player and see their projected runs for next season","#1a1408","#2e2410","#c9a227")
+    page_banner("🔮","Player Forecast","Pick a player and see their projected runs for next season","#1a1408","#2e2410","#e3b431")
     forecast = load_player_forecast()
     if forecast.empty:
         st.info("Forecast data isn't available yet — this page reads `cricket_run_forecast.csv` from your "
@@ -1197,7 +1201,7 @@ elif section=="🔮 Player Forecast":
                             st.caption(f"{direction} next season, based on recent trend.")
                             fig = go.Figure()
                             fig.add_trace(go.Bar(x=["Last Season", "Next Season (Projected)"], y=[actual, pred],
-                                marker_color=[FC.get(pick_fmt,"#c1442d"), "#a29bfe"],
+                                marker_color=[FC.get(pick_fmt,"#8a3226"), "#a29bfe"],
                                 text=[f"{actual:.0f}", f"{pred:.0f}"], textposition="outside",
                                 textfont=dict(size=16, color=TEXT)))
                             fig.update_layout(**BASE, height=340, showlegend=False, margin=dict(l=20,r=20,t=20,b=20),
@@ -1215,7 +1219,7 @@ elif section=="🔮 Player Forecast":
 
 # ══ BOWLER WORKLOAD ═══════════════════════════════════════════════════════════
 elif section=="💪 Bowler Workload":
-    page_banner("💪","Bowler Workload","Simple injury-risk check based on recent bowling load","#1a0d08","#2e1a10","#c1442d")
+    page_banner("💪","Bowler Workload","Simple injury-risk check based on recent bowling load","#1a0d08","#2e1a10","#8a3226")
     workload = load_bowler_workload()
     if workload.empty:
         st.info("Workload data isn't available yet — this page reads `cricket_bowler_workload.csv` from your "
@@ -1359,7 +1363,7 @@ elif section=="🔍 Player Search":
     fmt_pills="".join([
         f'<span style="background:{FORMAT_META.get(f,("","#00e5a0",""))[1]}18;color:{FORMAT_META.get(f,("","#00e5a0",""))[1]};border:1px solid {FORMAT_META.get(f,("","#00e5a0",""))[1]}44;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">'
         f'{FORMAT_META.get(f,("🏏","",""))[0]} {f}</span>' for f in ALL_FMT])
-    chips=[("Babar","#d98e2b"),("Kohli","#3a7a54"),("Bumrah","#8a95a8"),("Smriti","#b2557a"),("Shaheen","#c9a227"),("Maxwell","#c1442d")]
+    chips=[("Babar","#d98e2b"),("Kohli","#3a7a54"),("Bumrah","#8a95a8"),("Smriti","#b2557a"),("Shaheen","#e3b431"),("Maxwell","#8a3226")]
     chip_html="".join([f'<span style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:{c};padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap">{n}</span>' for n,c in chips])
     st.markdown(f"""<div class="ca-fade" style="background:linear-gradient(160deg,#080c14,#0c1628,#080c14);
       border-radius:14px;padding:24px 28px 20px;margin-bottom:20px;border:1px solid var(--border);
@@ -1429,7 +1433,7 @@ elif section=="🔍 Player Search":
                          f"in the repo until Cricsheet catches up.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
-        clr=FC.get(fmt,"#c1442d")
+        clr=FC.get(fmt,"#8a3226")
         bat=find_rows(bat_fmt[bat_fmt["format"]==fmt],"striker",sname)
         bowl=find_rows(bowl_fmt[bowl_fmt["format"]==fmt],"bowler",sname)
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
@@ -1464,6 +1468,18 @@ elif section=="🔍 Player Search":
             if len(bat)>0:
                 with tabs[ti]:
                     p=bat.sort_values("runs",ascending=False).iloc[0]
+                    gaps=load_coverage_gaps()
+                    if not gaps.empty and "flagged" in gaps.columns:
+                        grow=gaps[(gaps["player"]==p.get("striker",display_name)) & (gaps["format"]==fmt) & (gaps["flagged"]==True)]
+                        if not grow.empty:
+                            g=grow.iloc[0]
+                            st.markdown(f"""<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);
+                              border-radius:8px;padding:8px 14px;margin:0 0 10px;font-size:12px;color:#fbbf24">
+                              ⚠️ <strong>Official record (Wikipedia): {int(g['wiki_matches'])} {fmt} matches
+                              {(', ' + format(int(g['wiki_runs']), ',') + ' runs') if pd.notna(g.get('wiki_runs')) else ''}</strong>
+                              — this app currently tracks {int(g['cricsheet_matches'])} from Cricsheet's ball-by-ball archive
+                              ({abs(g['gap_pct']):.1f}% short). This is a known Cricsheet coverage gap, not a stale cache.</div>""",
+                              unsafe_allow_html=True)
                     metrics({"Matches":int(p["matches"]),"Runs":f"{int(p['runs']):,}","Average":p["average"]})
                     metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
                     metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
@@ -1561,7 +1577,7 @@ elif section=="🔍 Player Search":
 
 # ══ HEAD TO HEAD ══════════════════════════════════════════════════════════════
 elif section=="⚔️ Head to Head":
-    page_banner("⚔️","Head to Head","Pick two players and see who dominates across formats","#1a0808","#2e1210","#c1442d")
+    page_banner("⚔️","Head to Head","Pick two players and see who dominates across formats","#1a0808","#2e1210","#8a3226")
     c1,c2=st.columns(2)
     n1=c1.text_input("Player 1","Kohli"); n2=c2.text_input("Player 2","Babar Azam")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
@@ -1753,7 +1769,7 @@ elif section=="🌍 vs Opponent":
 
 # ══ BATTER VS BOWLER ══════════════════════════════════════════════════════════
 elif section=="🤜 Batter vs Bowler":
-    page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a08","#2e1410","#c1442d")
+    page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a08","#2e1410","#8a3226")
     mt=st.radio("Look up a...",["Batter","Bowler"],horizontal=True)
     if mt=="Batter":
         name=player_input("Batter name",resolve("Babar Azam"),key="bvb_batter")
@@ -1784,7 +1800,7 @@ elif section=="🤜 Batter vs Bowler":
 
 # ══ PERFORMANCE OVER YEARS ════════════════════════════════════════════════════
 elif section=="📈 Over Years":
-    page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#141008","#241c10","#c9a227")
+    page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#141008","#241c10","#e3b431")
     name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
@@ -1811,7 +1827,7 @@ elif section=="📈 Over Years":
 
 # ══ LEADERBOARD ═══════════════════════════════════════════════════════════════
 elif section=="🏆 Leaderboard":
-    page_banner("🏆","Leaderboard","The greatest — ranked by format and stat","#1a1608","#2e2610","#c9a227")
+    page_banner("🏆","Leaderboard","The greatest — ranked by format and stat","#1a1608","#2e2610","#e3b431")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2=st.tabs(["🏏 Batting","🎳 Bowling"])
     with tab1:
@@ -1932,7 +1948,7 @@ elif section=="🤖 Similar Players":
 
 # ══ FORM & RATINGS ════════════════════════════════════════════════════════════
 elif section=="🔥 Form & Ratings":
-    page_banner("🔥","Form & Ratings","Player form by year, career trend, and who's peaking right now","#1a0d08","#2e1810","#c1442d")
+    page_banner("🔥","Form & Ratings","Player form by year, career trend, and who's peaking right now","#1a0d08","#2e1810","#8a3226")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2,tab3,tab4=st.tabs(["🔍 Player Form","🔥 Hot List","📉 Cold List","⭐ Player Scores"])
 
