@@ -25,11 +25,11 @@ if IS_LIGHT:
     ACCENT="#a83626"; ACCENT2="#8a6a14"
 else:
     # "Night Session" — turf under floodlights, leather ball, brass trophy.
-    # Slightly lifted off pure black and softened the border/card contrast
-    # for a warmer, easier-on-the-eyes feel — same identity, less stark.
-    BG="#0d120e"; CARD="#20261f"; TEXT="#ece7da"; GRID="#333d32"
-    SURFACE="#171c15"; BORDER="#343e33"; MUTED="#8a9285"; SUBTLE="#b3bbac"
-    SHADOW="0 6px 28px rgba(0,0,0,.45)"
+    # Widened the gap between bg and card (was too close in value before,
+    # making everything read as one flat dark blob with no depth).
+    BG="#0a0d0a"; CARD="#1f251e"; TEXT="#ece7da"; GRID="#333d32"
+    SURFACE="#151a14"; BORDER="#333d32"; MUTED="#7c8577"; SUBTLE="#a8b0a0"
+    SHADOW="0 6px 28px rgba(0,0,0,.55)"
     ACCENT="#c1442d"; ACCENT2="#c9a227"
 FC={"ODI":"#3a7a54","Test":"#8a95a8","T20I":"#c1442d",
     "IPL":"#d98e2b","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
@@ -68,9 +68,10 @@ html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color
 .stApp{
   background-color:var(--bg);
   background-image:
-    radial-gradient(ellipse 1100px 650px at 12% -8%, rgba(193,68,45,.07) 0%, transparent 65%),
-    radial-gradient(ellipse 900px 650px at 92% 10%, rgba(201,162,39,.055) 0%, transparent 65%),
-    radial-gradient(ellipse 1000px 800px at 50% 115%, rgba(58,122,84,.05) 0%, transparent 70%);
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(193,68,45,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 90% 15%, rgba(201,162,39,.04) 0%, transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px),
+    repeating-linear-gradient(90deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px);
   background-attachment:fixed;
 }
 .block-container{padding:0 !important;max-width:100% !important}
@@ -1289,26 +1290,10 @@ elif section=="🎯 Win Probability":
             form_fmt_col = next((c for c in form_df.columns if c.lower()=="format"), None)
             form_pool = form_df[form_df[form_fmt_col]==wp_fmt] if (form_fmt_col and wp_fmt) else form_df
 
-            # Same rule as the Match Results page: only international formats
-            # (country vs country) get restricted to recognized national
-            # teams. Franchise leagues are domestic club competitions, so
-            # filtering them through the country whitelist would remove every
-            # legitimate team — that's what was producing "Bangladesh vs
-            # Zimbabwe" under the PSL tab instead of actual PSL franchises.
-            INTERNATIONAL_FORMATS = {"ODI", "Test", "T20I"}
-            def _team_pool(pool):
-                names = pool[team_col].dropna().unique().tolist()
-                return sorted([t for t in names if is_real_country(t)]) if wp_fmt in INTERNATIONAL_FORMATS else sorted(names)
-
-            avail_teams = _team_pool(form_pool)
+            avail_teams = sorted([t for t in form_pool[team_col].dropna().unique().tolist() if is_real_country(t)])
             if len(avail_teams) < 2:
-                # Widen the search, but stay within the SAME format — falling
-                # back to form_df unfiltered mixed in teams from every other
-                # format/competition, which is the other half of why PSL was
-                # showing country names instead of PSL teams.
-                same_fmt_pool = form_df[form_df[form_fmt_col]==wp_fmt] if (form_fmt_col and wp_fmt) else form_df
-                avail_teams = _team_pool(same_fmt_pool)
-                form_pool = same_fmt_pool
+                avail_teams = sorted([t for t in form_df[team_col].dropna().unique().tolist() if is_real_country(t)])
+                form_pool = form_df
             if len(avail_teams) < 2:
                 st.info("Not enough recognized teams in the form data to build a matchup.")
             else:
@@ -1910,8 +1895,6 @@ elif section=="🤖 Similar Players":
             else:
                 p=src.iloc[0]; cluster=int(p["cluster"])
                 same=bat_sim[(bat_sim["cluster"]==cluster)&(bat_sim["format"]==fmt)]
-                if "gender" in bat_sim.columns and pd.notna(p.get("gender")):
-                    same=same[same["gender"]==p["gender"]]
                 same=same[~same["striker"].str.contains(sname,case=False,na=False)]
                 same=same.sort_values("average",ascending=False).head(12)
                 st.subheader(f"Players most similar to {p['striker']} in {fmt}")
@@ -1934,8 +1917,6 @@ elif section=="🤖 Similar Players":
             else:
                 p=src.iloc[0]; cluster=int(p["cluster"])
                 same=bowl_sim[(bowl_sim["cluster"]==cluster)&(bowl_sim["format"]==fmt)]
-                if "gender" in bowl_sim.columns and pd.notna(p.get("gender")):
-                    same=same[same["gender"]==p["gender"]]
                 same=same[~same["bowler"].str.contains(sname,case=False,na=False)]
                 same=same.sort_values("wickets",ascending=False).head(12)
                 st.subheader(f"Bowlers most similar to {p['bowler']} in {fmt}")
