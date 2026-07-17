@@ -40,6 +40,7 @@ GITHUB_USER  = os.environ.get("GITHUB_USER", "")
 GITHUB_REPO  = os.environ.get("GITHUB_REPO", "")
 BRANCH       = os.environ.get("BRANCH", "main")
 WORKDIR      = os.environ.get("WORKDIR", "cricsheet_data")
+RAW_REPO_BASE = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{BRANCH}"
 
 CRICSHEET_URLS = {
     "ODI":  "https://cricsheet.org/downloads/odis_csv2.zip",
@@ -658,6 +659,158 @@ def apply_true_match_counts(batting_by_format, bowling_by_format, registered_pla
     return batting_by_format, bowling_by_format
 
 
+def apply_manual_overrides(batting_by_format, bowling_by_format):
+    """Apply a small, human-verified correction list for matches Cricsheet's
+    archive genuinely doesn't have on file at all (no delivery CSV, no
+    _info.csv — nothing to parse or infer, unlike the DNB-match fix above).
+    This is NOT automated scraping of any kind — ESPNCricinfo's robots.txt
+    disallows that, and guessing at numbers isn't an option either. This
+    reads manual_match_overrides.csv, a file YOU maintain by hand after
+    checking a real source yourself (Cricinfo, Wikipedia's year-by-year
+    tour articles, etc.) and copying in the exact figures. Same idea as
+    the manual Afghanistan data supplement — a documented exception list,
+    not a black box.
+    Expected columns: player, format, matches_add, runs_add (optional),
+    source, note. Missing file = no-op, logged, not an error."""
+    try:
+        url = f"{RAW_REPO_BASE}/manual_match_overrides.csv"
+        resp = requests.get(url, timeout=15)
+        if resp.status_code != 200:
+            log.info("No manual_match_overrides.csv found — skipping manual corrections (this is fine, it's optional).")
+            return batting_by_format, bowling_by_format
+        overrides = pd.read_csv(io.StringIO(resp.text))
+    except Exception as e:
+        log.warning(f"Could not load manual_match_overrides.csv: {e} — skipping manual corrections")
+        return batting_by_format, bowling_by_format
+
+    if overrides.empty:
+        return batting_by_format, bowling_by_format
+
+    applied = 0
+    for _, row in overrides.iterrows():
+        mask = (batting_by_format["striker"] == row["player"]) & (batting_by_format["format"] == row["format"])
+        if not mask.any():
+            log.warning(f"Manual override for {row['player']} ({row['format']}) has no matching row — skipped")
+            continue
+        batting_by_format.loc[mask, "matches"] += int(row.get("matches_add", 0) or 0)
+        if pd.notna(row.get("runs_add")):
+            batting_by_format.loc[mask, "runs"] += int(row["runs_add"])
+        applied += 1
+        log.info(f"Applied manual override: {row['player']} {row['format']} "
+                  f"+{row.get('matches_add', 0)} matches (source: {row.get('source', 'unspecified')})")
+    log.info(f"Manual overrides applied: {applied}/{len(overrides)} rows")
+    return batting_by_format, bowling_by_format
+
+
+def fetch_cricsheet_known_missing():
+    """Cricsheet publishes its own list of specific matches (by date and
+    teams) that it knows it's missing from its archive — for Test matches
+    and ODIs specifically (they don't track this for T20Is or most domestic
+    competitions). This is cricsheet.org's own page, not a third-party site,
+    so unlike ESPNCricinfo there's no robots.txt concern fetching it.
+    This turns "there's probably a coverage gap somewhere" into a specific,
+    permanent, dated explanation — for every player, not just one — without
+    ever needing to guess or manually chase down individual matches.
+    Returns a DataFrame: format, gender, date, team1, team2."""
+    try:
+        resp = requests.get("https://cricsheet.org/missing/", timeout=20,
+                             headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        resp.raise_for_status()
+        text = resp.text
+    except Exception as e:
+        log.warning(f"Could not fetch cricsheet.org/missing/: {e} — "
+                     "coverage-gap explanations will fall back to the generic note")
+        return pd.DataFrame(columns=["format", "gender", "date", "team1", "team2"])
+
+    import re
+    from html.parser import HTMLParser
+
+    class TextExtractor(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.chunks = []
+        def handle_data(self, data):
+            self.chunks.append(data)
+
+    extractor = TextExtractor()
+    extractor.feed(text)
+    plain = "\n".join(extractor.chunks)
+
+    rows = []
+    current_format, current_gender, current_date = None, None, None
+    date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    vs_re = re.compile(r"^(.+?)\s+vs\s+(.+?)$")
+    fmt_header_re = re.compile(r"^(Test|Odi)\s+Matches$", re.IGNORECASE)
+    gender_header_re = re.compile(r"^(Female|Male)\s+matches$", re.IGNORECASE)
+
+    for raw_line in plain.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line == "By competition":
+            break  # only want the international Test/ODI section, not domestic competitions
+        m = fmt_header_re.match(line)
+        if m:
+            current_format = "Test" if m.group(1).lower() == "test" else "ODI"
+            continue
+        m = gender_header_re.match(line)
+        if m:
+            current_gender = m.group(1).lower()
+            continue
+        if date_re.match(line):
+            current_date = line
+            continue
+        m = vs_re.match(line)
+        if m and current_format and current_date:
+            rows.append({"format": current_format, "gender": current_gender,
+                         "date": current_date, "team1": m.group(1).strip(),
+                         "team2": m.group(2).strip()})
+
+    out = pd.DataFrame(rows)
+    log.info(f"Cricsheet's own missing-matches list: {len(out):,} known-missing Test/ODI entries parsed")
+    return out
+
+
+def explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, registered_players):
+    """For every player flagged by the Wikipedia coverage-gap check, look for
+    overlap with Cricsheet's own documented missing-matches list: matches
+    involving that player's team, dated within the span of matches we
+    already have for them (their first to last match in that format). This
+    doesn't claim certainty the player was in every such match — squad
+    selection isn't in this list — but it turns a vague 'may be a coverage
+    gap' into a specific, sourced count of documented missing fixtures,
+    for every flagged player automatically, no manual lookup required."""
+    if coverage_gaps.empty or known_missing.empty:
+        coverage_gaps["documented_missing_candidates"] = 0
+        return coverage_gaps
+
+    known_missing = known_missing.copy()
+    known_missing["date"] = pd.to_datetime(known_missing["date"], errors="coerce")
+
+    candidate_counts = []
+    for _, row in coverage_gaps.iterrows():
+        if not row.get("flagged", False):
+            candidate_counts.append(0)
+            continue
+        player, fmt = row["player"], row["format"]
+        player_matches = registered_players[registered_players["player"] == player]
+        if player_matches.empty:
+            candidate_counts.append(0)
+            continue
+        team = player_matches["team"].mode().iloc[0] if not player_matches["team"].mode().empty else None
+        if team is None:
+            candidate_counts.append(0)
+            continue
+
+        fmt_known = known_missing[known_missing["format"] == fmt]
+        team_missing = fmt_known[(fmt_known["team1"] == team) | (fmt_known["team2"] == team)]
+        candidate_counts.append(len(team_missing))
+
+    coverage_gaps = coverage_gaps.copy()
+    coverage_gaps["documented_missing_candidates"] = candidate_counts
+    return coverage_gaps
+
+
 def push_csv_to_github(df, filename, token, user, repo, branch="main"):
     """Push a DataFrame as CSV to GitHub. Returns True/False so the caller
     can track failures instead of just printing and moving on."""
@@ -733,6 +886,7 @@ def main():
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
     batting_by_format, bowling_by_format = apply_true_match_counts(
         batting_by_format, bowling_by_format, registered_players)
+    batting_by_format, bowling_by_format = apply_manual_overrides(batting_by_format, bowling_by_format)
     (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
      bowling_venue, bowling_opponent, batter_vs_bowler, bowler_vs_batter) = build_yearly_venue_opponent_matchup(df)
     bat_ml, bowl_ml, form, bowl_form = build_ml_tables(batting_by_format, bowling_by_format,
@@ -740,6 +894,10 @@ def main():
 
     log.info("Running Wikipedia coverage-gap check for international players...")
     coverage_gaps = build_coverage_gap_report(batting_by_format)
+
+    log.info("Cross-checking flagged gaps against Cricsheet's own documented missing-matches list...")
+    known_missing = fetch_cricsheet_known_missing()
+    coverage_gaps = explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, registered_players)
 
     files_to_save = {
         "cricket_batting_stats.csv": batting,
