@@ -18,19 +18,19 @@ IS_LIGHT = st.session_state.get("is_light_mode", False)
 RAW_BASE = "https://raw.githubusercontent.com/mmrayyan2005-dev/cricket-analytics_-/main"
 
 if IS_LIGHT:
-    # "Matchday" — bright broadcast-graphics white, stadium-lit and punchy
-    BG="#f2f4f9"; CARD="#ffffff"; TEXT="#0b0f1a"; GRID="#e3e7f0"
-    SURFACE="#ffffff"; BORDER="#dbe0ec"; MUTED="#69728c"; SUBTLE="#2c3350"
-    SHADOW="0 4px 22px rgba(11,15,26,.10)"
-    ACCENT="#e8380d"; ACCENT2="#0090c7"
+    # "Scorecard Paper" — aged cream paper + ink, like an old scorebook
+    BG="#f6f1e4"; CARD="#fffcf5"; TEXT="#2a2620"; GRID="#e2d9c0"
+    SURFACE="#fffcf5"; BORDER="#e2d9c0"; MUTED="#93876f"; SUBTLE="#574e3d"
+    SHADOW="0 4px 20px rgba(42,38,32,.08)"
+    ACCENT="#a83626"; ACCENT2="#8a6a14"
 else:
-    # "Prime Time" — floodlit broadcast navy with blazing scoreboard colors.
-    # Widened the gap between bg and card so cards pop off the background
-    # instead of reading as one flat dark blob.
-    BG="#04060c"; CARD="#131a2b"; TEXT="#f5f7fb"; GRID="#1d2740"
-    SURFACE="#0a0f1c"; BORDER="#243252"; MUTED="#8791ab"; SUBTLE="#c6cee0"
-    SHADOW="0 6px 30px rgba(0,0,0,.6)"
-    ACCENT="#ff4433"; ACCENT2="#00c2ff"
+    # "Night Session" — turf under floodlights, leather ball, brass trophy.
+    # Widened the gap between bg and card (was too close in value before,
+    # making everything read as one flat dark blob with no depth).
+    BG="#0a0d0a"; CARD="#1f251e"; TEXT="#ece7da"; GRID="#333d32"
+    SURFACE="#151a14"; BORDER="#333d32"; MUTED="#7c8577"; SUBTLE="#a8b0a0"
+    SHADOW="0 6px 28px rgba(0,0,0,.55)"
+    ACCENT="#c1442d"; ACCENT2="#c9a227"
 FC={"ODI":"#3a7a54","Test":"#8a95a8","T20I":"#c1442d",
     "IPL":"#d98e2b","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
 FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL"]
@@ -47,7 +47,7 @@ BASE=dict(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
           xaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           yaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           dragmode=False,
-          hoverlabel=dict(bgcolor="#0e1c30",bordercolor="#00c2ff",font=dict(color=TEXT,size=12,family="Inter,sans-serif")),
+          hoverlabel=dict(bgcolor="#1e2840",bordercolor="#2e4060",font=dict(color=TEXT,size=12,family="Inter,sans-serif")),
           hovermode="closest")
 M_DEFAULT=dict(l=8,r=8,t=48,b=8)
 M_BARV=dict(l=8,r=8,t=48,b=60)
@@ -57,22 +57,21 @@ CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{
-  --bg:#04060c;--surface:#0a0f1c;--card:#131a2b;--border:#243252;
-  --accent:#ff4433;--accent2:#00c2ff;--warn:#ff4433;--gold:#00c2ff;
-  --text:#f5f7fb;--muted:#8791ab;--subtle:#c6cee0;
+  --bg:#0a0d0a;--surface:#151a14;--card:#1f251e;--border:#333d32;
+  --accent:#c1442d;--accent2:#c9a227;--warn:#c1442d;--gold:#c9a227;
+  --text:#ece7da;--muted:#7c8577;--subtle:#a8b0a0;
   --radius:14px;--radius-sm:8px;
   --font-head:'Syne',sans-serif;--font-body:'Inter',sans-serif;--font-data:'JetBrains Mono',monospace;
-  --shadow:0 6px 30px rgba(0,0,0,.6);
+  --shadow:0 6px 28px rgba(0,0,0,.55);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
 .stApp{
   background-color:var(--bg);
   background-image:
-    radial-gradient(ellipse 1000px 560px at 12% -10%, rgba(255,68,51,.14) 0%, transparent 62%),
-    radial-gradient(ellipse 800px 560px at 92% 10%, rgba(0,194,255,.11) 0%, transparent 62%),
-    repeating-linear-gradient(-45deg,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px),
-    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(245,247,251,.012) 38px,rgba(245,247,251,.012) 39px),
-    repeating-linear-gradient(90deg,transparent,transparent 38px,rgba(245,247,251,.012) 38px,rgba(245,247,251,.012) 39px);
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(193,68,45,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 90% 15%, rgba(201,162,39,.04) 0%, transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px),
+    repeating-linear-gradient(90deg,transparent,transparent 38px,rgba(236,231,218,.012) 38px,rgba(236,231,218,.012) 39px);
   background-attachment:fixed;
 }
 .block-container{padding:0 !important;max-width:100% !important}
@@ -80,7 +79,7 @@ html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color
 
 /* ── Metrics ── */
 [data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;padding:14px 16px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
-[data-testid="stMetric"]:hover{border-color:var(--accent2)!important;transform:translateY(-2px)}
+[data-testid="stMetric"]:hover{border-color:#2e4060!important;transform:translateY(-2px)}
 [data-testid="stMetric"]::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0.6}
 [data-testid="stMetricLabel"]{font-size:10px!important;font-weight:600!important;color:var(--muted)!important;text-transform:uppercase;letter-spacing:1.2px!important}
 [data-testid="stMetricValue"]{font-family:var(--font-data)!important;font-size:22px!important;font-weight:700!important;color:var(--text)!important;line-height:1.2!important;letter-spacing:-0.5px!important}
@@ -89,30 +88,30 @@ html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color
 /* ── Tabs ── */
 div[data-baseweb="tab-list"]{gap:4px!important;flex-wrap:wrap!important;background:transparent!important;border-bottom:1px solid var(--border)!important;padding-bottom:6px!important}
 div[data-baseweb="tab"]{border-radius:var(--radius-sm)!important;padding:7px 16px!important;background:var(--card)!important;font-weight:600!important;font-size:12px!important;color:var(--subtle)!important;border:1px solid var(--border)!important;transition:all .2s!important}
-div[data-baseweb="tab"]:hover{border-color:var(--accent2)!important;color:var(--text)!important;background:#0e1c30!important}
-div[data-baseweb="tab"][aria-selected="true"]{background:linear-gradient(135deg,#3a120c,#0a2a3a)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:0 0 14px rgba(255,68,51,.25)!important}
+div[data-baseweb="tab"]:hover{border-color:#2e4060!important;color:var(--text)!important;background:#161d2e!important}
+div[data-baseweb="tab"][aria-selected="true"]{background:linear-gradient(135deg,#3d1a12,#2e2410)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:0 0 12px rgba(193,68,45,.15)!important}
 div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!important}
 
 /* ── Inputs ── */
 [data-testid="stTextInput"] input{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;font-family:var(--font-body)!important;font-size:14px!important;padding:11px 14px!important;transition:border-color .2s,box-shadow .2s!important}
-[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(255,68,51,.12)!important;outline:none!important}
+[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(193,68,45,.12)!important;outline:none!important}
 [data-testid="stTextInput"] input::placeholder{color:var(--muted)!important}
 [data-testid="stSelectbox"]>div>div{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;transition:border-color .2s!important}
-[data-testid="stSelectbox"]>div>div:hover{border-color:var(--accent2)!important}
+[data-testid="stSelectbox"]>div>div:hover{border-color:#2e4060!important}
 [data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:5px!important}
 [data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:5px 13px!important;font-size:12px!important;font-weight:600!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important}
-[data-testid="stRadio"] label:hover{border-color:var(--accent2)!important;color:var(--text)!important}
-[data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(255,68,51,.08)!important;box-shadow:0 0 8px rgba(255,68,51,.1)!important}
+[data-testid="stRadio"] label:hover{border-color:#2e4060!important;color:var(--text)!important}
+[data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(193,68,45,.08)!important;box-shadow:0 0 8px rgba(193,68,45,.1)!important}
 
 /* ── Sliders ── */
-[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(255,68,51,.15)!important}
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(193,68,45,.15)!important}
 [data-testid="stSlider"] [data-baseweb="slider"] div[class*="Track"]{background:var(--border)!important}
 
 /* ── DataFrames ── */
 .stDataFrame{border-radius:var(--radius)!important;overflow:hidden!important;border:1px solid var(--border)!important;box-shadow:var(--shadow)}
 .stDataFrame thead th{font-size:10px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.8px;background:var(--surface)!important;color:var(--muted)!important;padding:10px 14px!important;border-bottom:1px solid var(--border)!important}
 .stDataFrame tbody td{font-family:var(--font-data)!important;font-size:12px!important;padding:9px 14px!important;border-bottom:1px solid var(--border)!important}
-.stDataFrame tbody tr:hover td{background:rgba(255,68,51,.03)!important}
+.stDataFrame tbody tr:hover td{background:rgba(193,68,45,.03)!important}
 .stDataFrame tbody tr:first-child td{color:var(--gold)!important;font-weight:600!important}
 
 /* ── Spinner / Loading ── */
@@ -133,14 +132,14 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:20p
 
 /* ── Back button ── */
 [data-testid="stButton"] button[kind="secondary"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--subtle)!important;font-size:12px!important;font-weight:600!important;padding:6px 16px!important;transition:all .15s!important;margin-bottom:14px!important}
-[data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(255,68,51,.06)!important}
+[data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(193,68,45,.06)!important}
 
 /* ── Alerts / Error / Info ── */
 [data-testid="stAlert"]{border-radius:var(--radius-sm)!important;border-left:3px solid!important;font-size:13px!important;padding:10px 14px!important}
-[data-testid="stAlert"][data-type="error"]{background:rgba(255,68,51,.06)!important;border-color:var(--warn)!important}
-[data-testid="stAlert"][data-type="info"]{background:rgba(0,194,255,.06)!important;border-color:var(--accent2)!important}
-[data-testid="stAlert"][data-type="warning"]{background:rgba(0,194,255,.06)!important;border-color:var(--gold)!important}
-[data-testid="stAlert"][data-type="success"]{background:rgba(255,68,51,.06)!important;border-color:var(--accent)!important}
+[data-testid="stAlert"][data-type="error"]{background:rgba(255,77,109,.06)!important;border-color:var(--warn)!important}
+[data-testid="stAlert"][data-type="info"]{background:rgba(201,162,39,.06)!important;border-color:var(--accent2)!important}
+[data-testid="stAlert"][data-type="warning"]{background:rgba(251,191,36,.06)!important;border-color:var(--gold)!important}
+[data-testid="stAlert"][data-type="success"]{background:rgba(193,68,45,.06)!important;border-color:var(--accent)!important}
 
 /* ── Plotly chart wrappers ── */
 .js-plotly-plot{touch-action:pan-y!important}
@@ -153,21 +152,21 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
-@keyframes glow-pulse{0%,100%{box-shadow:0 0 8px rgba(255,68,51,.2)}50%{box-shadow:0 0 20px rgba(255,68,51,.4)}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 8px rgba(193,68,45,.2)}50%{box-shadow:0 0 20px rgba(193,68,45,.4)}}
 .ca-fade{animation:fadeUp .4s ease both}
 .ca-shimmer{background:linear-gradient(90deg,var(--accent) 0%,var(--accent2) 40%,var(--accent) 80%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
 .ca-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.8s ease infinite;vertical-align:middle;margin-right:4px}
 
 /* ── TOP NAV ── */
-.ca-topnav{position:sticky;top:0;z-index:999;background:rgba(4,6,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
+.ca-topnav{position:sticky;top:0;z-index:999;background:rgba(8,12,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
 .ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0}
 .ca-topnav-brand span{color:var(--accent)}
 .ca-topnav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .ca-topnav-links::-webkit-scrollbar{display:none}
 .ca-navbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--subtle);white-space:nowrap;cursor:pointer;border:none;background:transparent;transition:all .15s;font-family:var(--font-body);text-decoration:none}
 .ca-navbtn:hover{background:rgba(255,255,255,.06);color:var(--text)}
-.ca-navbtn.active{background:rgba(255,68,51,.1);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(255,68,51,.2)}
-.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:rgba(255,68,51,.06);border:1px solid rgba(255,68,51,.18);font-size:10px;font-weight:600;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px}
+.ca-navbtn.active{background:rgba(193,68,45,.1);color:var(--accent);box-shadow:inset 0 0 0 1px rgba(193,68,45,.2)}
+.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.18);font-size:10px;font-weight:600;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px}
 .ca-content{padding:20px 24px 60px}
 
 /* ── Section cards ── */
@@ -182,7 +181,7 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 /* ── Home grid ── */
 .ca-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:24px}
 .ca-feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:all .22s;text-decoration:none;display:block;box-shadow:var(--shadow)}
-.ca-feature-card:hover{border-color:var(--accent2);transform:translateY(-3px);background:#0e1c30;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.ca-feature-card:hover{border-color:#2e4060;transform:translateY(-3px);background:#161d2e;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .ca-feature-icon{font-size:28px;margin-bottom:10px}
 .ca-feature-title{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
 .ca-feature-desc{font-size:12px;color:var(--muted);line-height:1.5}
@@ -198,7 +197,7 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 .ca-pill:hover{border-color:rgba(255,255,255,.18)}
 
 /* ── Insight box ── */
-.ca-insight{background:rgba(255,68,51,.04);border:1px solid rgba(255,68,51,.15);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6}
+.ca-insight{background:rgba(193,68,45,.04);border:1px solid rgba(193,68,45,.15);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6}
 .ca-insight strong{color:var(--accent)}
 
 /* ── Mobile ── */
@@ -244,14 +243,11 @@ if IS_LIGHT:
   --text:{TEXT};--muted:{MUTED};--subtle:{SUBTLE};
   --shadow:{SHADOW};--accent:{ACCENT};--accent2:{ACCENT2};--warn:{ACCENT};--gold:{ACCENT2};
 }}
-.ca-topnav{{background:rgba(242,244,249,.92)!important}}
+.ca-topnav{{background:rgba(246,241,228,.92)!important}}
 .ca-topnav-brand{{color:{TEXT}!important}}
 [data-testid="stMetricValue"]{{color:{TEXT}!important}}
-.stDataFrame tbody tr:hover td{{background:rgba(232,56,13,.06)!important}}
+.stDataFrame tbody tr:hover td{{background:rgba(168,54,38,.06)!important}}
 [data-testid="stRadio"] label{{color:{SUBTLE}!important}}
-div[data-baseweb="tab"][aria-selected="true"]{{background:linear-gradient(135deg,#ffe3da,#d6f1fc)!important}}
-.ca-feature-card:hover{{background:#f5f9fd!important}}
-div[data-baseweb="tab"]:hover{{background:#eef4fb!important}}
 </style>""", unsafe_allow_html=True)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -541,7 +537,7 @@ def metrics(d):
         for c,(k,v) in zip(cols,items[i:i+chunk]): c.metric(k,v)
 
 def _hex_to_rgba(hex_color, alpha=0.18):
-    """Convert hex color like #00e5a0 to rgba(255,68,51,0.18)."""
+    """Convert hex color like #00e5a0 to rgba(193,68,45,0.18)."""
     h = hex_color.lstrip("#")
     if len(h) == 3: h = "".join(c*2 for c in h)
     try:
@@ -1004,9 +1000,9 @@ if section=="🏠 Home":
     st.markdown(f"""<div class="ca-fade" style="background:linear-gradient(150deg,#080c14,#0c1628,#080c14);
       border-radius:16px;padding:36px 32px 28px;margin-bottom:24px;
       border:1px solid var(--border);position:relative;overflow:hidden">
-      <div style="position:absolute;top:-80px;left:20%;width:400px;height:300px;background:radial-gradient(ellipse,rgba(255,68,51,.06) 0%,transparent 70%);pointer-events:none"></div>
-      <div style="position:absolute;bottom:-60px;right:5%;width:300px;height:220px;background:radial-gradient(ellipse,rgba(0,194,255,.05) 0%,transparent 70%);pointer-events:none"></div>
-      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,194,255,.03) 39px,rgba(0,194,255,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,194,255,.03) 39px,rgba(0,194,255,.03) 40px);pointer-events:none"></div>
+      <div style="position:absolute;top:-80px;left:20%;width:400px;height:300px;background:radial-gradient(ellipse,rgba(193,68,45,.06) 0%,transparent 70%);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-60px;right:5%;width:300px;height:220px;background:radial-gradient(ellipse,rgba(201,162,39,.05) 0%,transparent 70%);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,162,39,.03) 39px,rgba(201,162,39,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,162,39,.03) 39px,rgba(201,162,39,.03) 40px);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <span style="font-size:40px">🏏</span>
         <div>
@@ -1015,7 +1011,7 @@ if section=="🏠 Home":
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px">{fmt_pills}</div>
-      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,68,51,.06);border:1px solid rgba(255,68,51,.15);border-radius:20px;padding:6px 14px;width:fit-content">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.15);border-radius:20px;padding:6px 14px;width:fit-content">
         <span class="ca-live"></span>
         <span style="font-size:11px;font-weight:600;color:var(--accent)">Auto-updated daily · Cricsheet (2-3 day lag)</span>
       </div>
@@ -1368,7 +1364,7 @@ elif section=="🔍 Player Search":
     st.markdown(f"""<div class="ca-fade" style="background:linear-gradient(160deg,#080c14,#0c1628,#080c14);
       border-radius:14px;padding:24px 28px 20px;margin-bottom:20px;border:1px solid var(--border);
       position:relative;overflow:hidden">
-      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,194,255,.04) 39px,rgba(0,194,255,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,194,255,.04) 39px,rgba(0,194,255,.04) 40px);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,162,39,.04) 39px,rgba(201,162,39,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,162,39,.04) 39px,rgba(201,162,39,.04) 40px);pointer-events:none"></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">{fmt_pills}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
         <span style="font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap">Quick search →</span>
@@ -1442,12 +1438,12 @@ elif section=="🔍 Player Search":
         # Data freshness banner
         lu=get_last_updated()
         if lu:
-            st.markdown(f"""<div style="background:rgba(255,68,51,.06);border:1px solid rgba(255,68,51,.2);
+            st.markdown(f"""<div style="background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.2);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>✅</span>
               <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span></div>""", unsafe_allow_html=True)
         else:
-            st.markdown("""<div style="background:rgba(0,194,255,.07);border:1px solid rgba(0,194,255,.25);
+            st.markdown("""<div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
               <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
