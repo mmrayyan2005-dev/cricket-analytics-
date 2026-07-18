@@ -314,7 +314,19 @@ def load():
             results[name] = pd.DataFrame()
             continue
         try:
-            results[name] = pd.read_csv(io.BytesIO(content))
+            df = pd.read_csv(io.BytesIO(content))
+            # Safety net: if the upstream pipeline ever re-appends a match it
+            # already processed (e.g. a cron run overlapping with a manual
+            # backfill), the row shows up twice with every column identical,
+            # silently doubling that player's totals. A legitimate distinct
+            # match is never byte-for-byte identical across every column
+            # (different date, opponent, runs, etc.), so dropping exact
+            # duplicate rows here is a safe guard rather than a data change.
+            before = len(df)
+            df = df.drop_duplicates()
+            if len(df) < before:
+                errors.append((name, f"dropped {before - len(df)} exact-duplicate row(s)"))
+            results[name] = df
         except Exception as e:
             results[name] = pd.DataFrame()
             errors.append((name, str(e)))
@@ -754,6 +766,7 @@ WIKI_NAMES={
     "EA Perry":"Ellyse Perry","A Gardner":"Ashleigh Gardner",
     "NR Sciver":"Nat Sciver-Brunt","TM McGrath":"Tahlia McGrath",
     "AMC Kerr":"Amelia Kerr","SFM Devine":"Sophie Devine","KL Rahul":"KL Rahul cricketer",
+    "V Suryavanshi":"Vaibhav Suryavanshi",
 }
 
 @st.cache_data(ttl=600, show_spinner=False)  # shorter cache for failures — was 3600s (1hr), meaning a single
