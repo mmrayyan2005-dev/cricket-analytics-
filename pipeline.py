@@ -784,19 +784,51 @@ def apply_name_aliases(df, registered_players):
     return df, registered_players
 
 
+# ── FIXED: apply_manual_overrides ─────────────────────────────────────────────
+# BUG (found via dashboard report): this function used to add matches_add /
+# runs_add on top of whatever was already computed from Cricsheet's raw data,
+# with NO check for whether Cricsheet had since started covering those same
+# matches natively. manual_match_overrides.csv is documented (see below) as
+# being for matches Cricsheet's archive has "no delivery CSV, no _info.csv —
+# nothing to parse or infer" for. If Cricsheet catches up and starts shipping
+# that data, a stale row in this CSV silently double-counts it forever, every
+# single run, because this pipeline rebuilds everything from scratch from the
+# raw Cricsheet zips each time rather than incrementally updating saved totals
+# — so nothing about a stale row degrades or gets "used up" over time; it just
+# keeps adding the same phantom runs/matches on every run until someone
+# manually removes the row.
+#
+# This is exactly what happened to a brand-new IPL debutant (Vaibhav
+# "V" Suryavanshi): his early-season matches were most likely backfilled here
+# by hand before Cricsheet had them, and once Cricsheet added the real data,
+# this function kept adding the override on top — producing a runs total that
+# was almost exactly 2x his real IPL runs (2,056 shown vs. 1,028 actual).
+# Because the Wikipedia coverage-gap check only verifies players with
+# WIKI_CHECK_MIN_MATCHES (100) or more, a low-match debutant like this was
+# never cross-checked automatically, so the doubling went unnoticed.
+#
+# Fix: before applying an override, check whether Cricsheet's own data
+# already shows ANY matches for that player/format. If it does, the premise
+# of the override ("Cricsheet has zero record of this") no longer holds —
+# skip it and log a loud warning instead of silently double-counting. An
+# optional `force_apply` column lets you explicitly confirm a row should
+# still apply even though Cricsheet now has partial data (e.g. you've
+# manually verified there are STILL additional documented-missing matches on
+# top of what Cricsheet now covers). Also now recomputes average/strike_rate
+# after any accepted override, since those were previously left stale from
+# before the runs were added.
 def apply_manual_overrides(batting_by_format, bowling_by_format):
     """Apply a small, human-verified correction list for matches Cricsheet's
     archive genuinely doesn't have on file at all (no delivery CSV, no
-    _info.csv — nothing to parse or infer, unlike the DNB-match fix above).
-    This is NOT automated scraping of any kind — ESPNCricinfo's robots.txt
-    disallows that, and guessing at numbers isn't an option either. This
-    reads manual_match_overrides.csv, a file YOU maintain by hand after
-    checking a real source yourself (Cricinfo, Wikipedia's year-by-year
-    tour articles, etc.) and copying in the exact figures. Same idea as
-    the manual Afghanistan data supplement — a documented exception list,
-    not a black box.
+    _info.csv — nothing to parse or infer), guarded against being silently
+    re-applied once Cricsheet's own data catches up and already covers the
+    same matches.
     Expected columns: player, format, matches_add, runs_add (optional),
-    source, note. Missing file = no-op, logged, not an error."""
+    source, note, force_apply (optional: true/1/yes to apply even if
+    Cricsheet already shows matches for this player/format — use only after
+    manually confirming these are genuinely ADDITIONAL missing matches, not
+    ones Cricsheet has since picked up).
+    Missing file = no-op, logged, not an error."""
     try:
         url = f"{RAW_REPO_BASE}/manual_match_overrides.csv"
         resp = requests.get(url, timeout=15)
@@ -811,19 +843,66 @@ def apply_manual_overrides(batting_by_format, bowling_by_format):
     if overrides.empty:
         return batting_by_format, bowling_by_format
 
-    applied = 0
+    applied, skipped_stale, skipped_missing = 0, 0, 0
     for _, row in overrides.iterrows():
         mask = (batting_by_format["striker"] == row["player"]) & (batting_by_format["format"] == row["format"])
         if not mask.any():
             log.warning(f"Manual override for {row['player']} ({row['format']}) has no matching row — skipped")
+            skipped_missing += 1
             continue
-        batting_by_format.loc[mask, "matches"] += int(row.get("matches_add", 0) or 0)
-        if pd.notna(row.get("runs_add")):
-            batting_by_format.loc[mask, "runs"] += int(row["runs_add"])
+
+        pre_matches = int(batting_by_format.loc[mask, "matches"].iloc[0])
+        pre_runs = int(batting_by_format.loc[mask, "runs"].iloc[0])
+        matches_add = int(row.get("matches_add", 0) or 0)
+        runs_add = int(row["runs_add"]) if pd.notna(row.get("runs_add")) else 0
+        force = str(row.get("force_apply", "")).strip().lower() in ("1", "true", "yes")
+        source = row.get("source", "unspecified")
+
+        # ── Stale-override guard ──────────────────────────────────────────
+        # This CSV exists specifically for matches Cricsheet has ZERO record
+        # of. If Cricsheet already shows matches for this player/format, the
+        # archive has very likely caught up since this row was written —
+        # applying it now would double-count real data that's already
+        # present. Skip by default; only apply if force_apply is explicitly
+        # set (meaning a human has verified these are genuinely additional
+        # missing matches, on top of what Cricsheet now covers).
+        if pre_matches > 0 and not force:
+            log.warning(
+                f"SKIPPED stale-looking manual override for {row['player']} ({row['format']}): "
+                f"Cricsheet already shows {pre_matches} matches / {pre_runs} runs for them, so "
+                f"this override (+{matches_add} matches, +{runs_add} runs, source: {source}) "
+                f"looks like it's covering matches Cricsheet has since added natively. "
+                f"Remove this row from manual_match_overrides.csv if that's confirmed, or set "
+                f"force_apply=true in that row if you've verified these ARE still-missing matches "
+                f"on top of what Cricsheet now has."
+            )
+            skipped_stale += 1
+            continue
+
+        new_matches = pre_matches + matches_add
+        new_runs = pre_runs + runs_add
+        batting_by_format.loc[mask, "matches"] = new_matches
+        batting_by_format.loc[mask, "runs"] = new_runs
+
+        # Keep average/strike_rate consistent with the corrected runs total
+        # instead of leaving them stale from before the override (dismissals
+        # and balls_faced aren't part of this override file, so they're held
+        # fixed — this at least keeps the displayed average/SR arithmetically
+        # right relative to the new runs total).
+        if "dismissals" in batting_by_format.columns:
+            dismissals = batting_by_format.loc[mask, "dismissals"].iloc[0]
+            batting_by_format.loc[mask, "average"] = round(new_runs / max(dismissals, 1), 2)
+        if "balls_faced" in batting_by_format.columns:
+            balls_faced = batting_by_format.loc[mask, "balls_faced"].iloc[0]
+            batting_by_format.loc[mask, "strike_rate"] = round((new_runs / max(balls_faced, 1)) * 100, 2)
+
         applied += 1
         log.info(f"Applied manual override: {row['player']} {row['format']} "
-                  f"+{row.get('matches_add', 0)} matches (source: {row.get('source', 'unspecified')})")
-    log.info(f"Manual overrides applied: {applied}/{len(overrides)} rows")
+                  f"{pre_matches}->{new_matches} matches, {pre_runs}->{new_runs} runs "
+                  f"(source: {source}{', FORCED despite existing Cricsheet data' if force and pre_matches > 0 else ''})")
+
+    log.info(f"Manual overrides: {applied} applied, {skipped_stale} skipped as likely-stale, "
+             f"{skipped_missing} skipped (no matching player row), out of {len(overrides)} total rows")
     return batting_by_format, bowling_by_format
 
 
