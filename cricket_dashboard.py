@@ -1009,7 +1009,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
     with st.container(border=True):
         if not card:
-            st.caption(f"📖 Profile unavailable for {cricsheet_name}")
+            st.caption(f"🖼️ No Wikipedia bio/photo found for {cricsheet_name} — this only affects the bio card, not the stats below.")
             return
         img_col, info_col = st.columns([1,9], gap="small") if not compact else st.columns([1,12], gap="small")
         with img_col:
