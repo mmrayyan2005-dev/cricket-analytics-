@@ -97,10 +97,12 @@ div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!im
 [data-testid="stTextInput"] input::placeholder{color:var(--muted)!important}
 [data-testid="stSelectbox"]>div>div{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;transition:border-color .2s!important}
 [data-testid="stSelectbox"]>div>div:hover{border-color:var(--accent)!important}
-[data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:6px!important}
-[data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;padding:6px 15px!important;font-size:12px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
-[data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important}
-[data-testid="stRadio"] label:has(input:checked){border-color:transparent!important;color:#fff!important;background:linear-gradient(120deg,var(--accent2),var(--accent))!important}
+[data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:8px!important}
+[data-testid="stRadio"] label{display:flex!important;align-items:center!important;background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;padding:8px 16px!important;font-size:12.5px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
+[data-testid="stRadio"] label>div:first-child{display:none!important}
+[data-testid="stRadio"] label>div{margin:0!important}
+[data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important;transform:translateY(-1px)}
+[data-testid="stRadio"] label:has(input:checked){border-color:transparent!important;color:#fff!important;background:linear-gradient(120deg,var(--accent2),var(--accent))!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important}
 
 /* ── Sliders ── */
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.2)!important}
