@@ -856,12 +856,55 @@ def get_wiki(cricsheet_name, search_name):
         if not role_raw or "[[" in role_raw or len(role_raw)<3:
             role_raw=desc[:60] if desc else ""
         nation=ef(wt,["country","nationality","national_side","national side"])
+
+        # ── Official per-format career totals (matches/runs/average/hundreds) ──
+        # Pulled from the same infobox's "column1/matches1/runs1/bat avg1/
+        # 100s-50s1, column2/matches2/..." career-stats mini-table. This is
+        # the fallback used when Cricsheet's ball-by-ball archive barely
+        # covers a player at all (mainly pre-2000s careers) — rather than
+        # showing a near-empty, misleading "Matches: 4" from Cricsheet for
+        # someone with a 15-year career, the player card can show these
+        # official totals instead, clearly labeled as sourced from Wikipedia
+        # rather than computed from deliveries.
+        career_stats = {}
+        _fmt_aliases = {"ODI": ["odi", "one day international", "one-day international"],
+                        "Test": ["test"], "T20I": ["t20i", "twenty20 international", "t20 international"]}
+        for i in range(1, 8):
+            col_m = re.search(rf"\|\s*column{i}\s*=\s*([^\n\|]{{2,40}})", wt, re.IGNORECASE)
+            if not col_m:
+                continue
+            col_label = clean(col_m.group(1)).lower()
+            fmt_match = next((fmt for fmt, aliases in _fmt_aliases.items()
+                              if any(a in col_label for a in aliases)), None)
+            if not fmt_match or fmt_match in career_stats:
+                continue
+            def _field(names):
+                for n in names:
+                    m = re.search(rf"\|\s*{re.escape(n)}{i}\s*=\s*([^\n\|]{{1,20}})", wt, re.IGNORECASE)
+                    if m:
+                        v = re.sub(r"<[^>]+>", "", m.group(1)).replace(",", "").strip()
+                        if v: return v
+                return None
+            def _num(v):
+                if not v: return None
+                m = re.search(r"[\d.]+", v)
+                return float(m.group()) if m else None
+            matches_v, runs_v = _num(_field(["matches"])), _num(_field(["runs"]))
+            avg_v = _num(_field(["bat avg", "batting average", "bat_avg"]))
+            hs50 = _field(["100s/50s", "100s_50s"])
+            hundreds = int(float(hs50.split("/")[0])) if hs50 and hs50.split("/")[0].replace(".", "").isdigit() else None
+            if matches_v is not None:
+                career_stats[fmt_match] = {"matches": int(matches_v),
+                    "runs": int(runs_v) if runs_v is not None else None,
+                    "average": avg_v, "hundreds": hundreds}
+
         result = {"title":data.get("title",page_title),"bio":bio,"img":img,
                 "born":born[:60] if born else "",
                 "odi_debut":odi_d or any_d,"test_debut":test_d or any_d,"t20_debut":t20_d or any_d,
                 "ipl_debut":"","psl_debut":"","wpl_debut":"",
                 "role":role_raw[:60] if role_raw else "",
-                "nation":nation[:40] if nation else ""}
+                "nation":nation[:40] if nation else "",
+                "career_stats":career_stats}
         # Previously a missing birth date was silently invisible — you'd only
         # notice by scrolling every player card and eyeballing which ones lack
         # a 🎂 pill. Now we log it once per session so you can see exactly
@@ -1487,6 +1530,32 @@ elif section=="🔍 Player Search":
                               — this app currently tracks {int(g['cricsheet_matches'])} from Cricsheet's ball-by-ball archive
                               ({abs(g['gap_pct']):.1f}% short).{documented_note}</div>""",
                               unsafe_allow_html=True)
+
+                    # ── Legacy-player fallback ──
+                    # For careers Cricsheet barely covers at all (mostly players
+                    # whose careers predate ball-by-ball digitization, roughly
+                    # pre-2000s), the Cricsheet-derived "Matches: 4" number isn't
+                    # just short, it's actively misleading. Cross-check against
+                    # Wikipedia's official career totals (same infobox source as
+                    # the gap-check above) and show those instead when Cricsheet's
+                    # coverage is under 40% of the real career — clearly labeled,
+                    # so it's obvious this is an official total, not a Cricsheet
+                    # ball-by-ball figure. Requires wiki_matches>=20 so this only
+                    # fires for genuine full careers, not noise on fringe players.
+                    wiki_card = get_wiki(display_name, name)
+                    cs = (wiki_card or {}).get("career_stats", {}).get(fmt)
+                    if cs and cs.get("matches") and cs["matches"] >= 20 and int(p["matches"]) < cs["matches"] * 0.4:
+                        st.markdown(f"""<div style="background:rgba(138,50,38,.08);border:1px solid rgba(138,50,38,.35);
+                          border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:12px;color:#e8967f">
+                          📖 <strong>Cricsheet has ball-by-ball data for only {int(p['matches'])} of this player's
+                          {cs['matches']} {fmt} matches</strong> — likely because most of the career predates
+                          digitized ball-by-ball archives. Official career total (Wikipedia): <strong>{cs['matches']} matches
+                          {(', ' + format(cs['runs'], ',') + ' runs') if cs.get('runs') else ''}
+                          {(', avg ' + str(cs['average'])) if cs.get('average') else ''}
+                          {(', ' + str(cs['hundreds']) + ' hundreds') if cs.get('hundreds') is not None else ''}</strong>.
+                          Strike rate, boundary breakdown, and charts below only reflect the portion Cricsheet has.</div>""",
+                          unsafe_allow_html=True)
+
                     metrics({"Matches":int(p["matches"]),"Runs":f"{int(p['runs']):,}","Average":p["average"]})
                     metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
                     metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
