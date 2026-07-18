@@ -18,35 +18,34 @@ IS_LIGHT = st.session_state.get("is_light_mode", False)
 RAW_BASE = "https://raw.githubusercontent.com/mmrayyan2005-dev/cricket-analytics_-/main"
 
 if IS_LIGHT:
-    # "Scorecard Paper" — Wisden almanac page: cream leaf, oxblood ink stamp
-    BG="#f3ecd8"; CARD="#fffdf6"; TEXT="#26211a"; GRID="#ded2ab"
-    SURFACE="#fbf6e9"; BORDER="#ded2ab"; MUTED="#8a7f60"; SUBTLE="#55493a"
-    SHADOW="0 4px 20px rgba(38,33,26,.10)"
-    ACCENT="#8a3226"; ACCENT2="#b3891f"
+    # "Match Day" light — crisp broadcast-white with bold blue + punchy orange
+    BG="#f2f5fc"; CARD="#ffffff"; TEXT="#0e1730"; GRID="#e3e8f5"
+    SURFACE="#ffffff"; BORDER="#e3e8f5"; MUTED="#71799c"; SUBTLE="#3d4870"
+    SHADOW="0 6px 22px rgba(15,30,80,.08)"
+    ACCENT="#ff5a1f"; ACCENT2="#2557e8"
 else:
-    # "Floodlit Pavilion" — deep turf-night green, Wisden-yellow scoreboard
-    # numerals, oxblood ledger-ink for secondary accents.
-    BG="#0b150f"; CARD="#16241a"; TEXT="#f3ecd8"; GRID="#2c4030"
-    SURFACE="#101c14"; BORDER="#2c4030"; MUTED="#74836f"; SUBTLE="#c3bb9e"
-    SHADOW="0 6px 28px rgba(0,0,0,.55)"
-    ACCENT="#e3b431"; ACCENT2="#8a3226"
-FC={"ODI":"#3f7a52","Test":"#8a95a8","T20I":"#e3b431",
-    "IPL":"#8a3226","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
+    # "Match Day" dark — deep broadcast-navy with bold blue + punchy orange
+    BG="#0a1024"; CARD="#131b3a"; TEXT="#f3f6ff"; GRID="#28345f"
+    SURFACE="#0d1430"; BORDER="#28345f"; MUTED="#8189b3"; SUBTLE="#c7cdea"
+    SHADOW="0 10px 32px rgba(0,6,30,.5)"
+    ACCENT="#ff6a2e"; ACCENT2="#3d7bff"
+FC={"ODI":"#3f7a52","Test":"#8a95a8","T20I":"#ff6a2e",
+    "IPL":"#3d7bff","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
 FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL"]
 FORMAT_META={
     "ODI":("🌐","#3f7a52","#529a68"),"Test":("🏛️","#8a95a8","#a8b2c2"),
-    "T20I":("⚡","#e3b431","#edc862"),"IPL":("🏏","#8a3226","#aa4a3c"),
+    "T20I":("⚡","#ff6a2e","#ff8c5c"),"IPL":("🏏","#3d7bff","#6d9bff"),
     "PSL":("🟢","#2f8f5b","#3fae72"),"WPL":("🌹","#b2557a","#c97694"),
     "BBL":("🔥","#d9772b","#e8974f"),"CPL":("🌊","#2f9aa0","#45bcc2"),
 }
 BASE=dict(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",
-          font=dict(color=TEXT,family="PT Serif,serif",size=12),
+          font=dict(color=TEXT,family="Inter,sans-serif",size=12),
           legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,
                       bgcolor="rgba(0,0,0,0)",font=dict(size=11)),
           xaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           yaxis=dict(showgrid=True,gridcolor=GRID,zeroline=False,color=TEXT,fixedrange=True),
           dragmode=False,
-          hoverlabel=dict(bgcolor=CARD,bordercolor=ACCENT,font=dict(color=TEXT,size=12,family="PT Serif,serif")),
+          hoverlabel=dict(bgcolor=CARD,bordercolor=ACCENT,font=dict(color=TEXT,size=12,family="Inter,sans-serif")),
           hovermode="closest")
 M_DEFAULT=dict(l=8,r=8,t=48,b=8)
 M_BARV=dict(l=8,r=8,t=48,b=60)
@@ -54,62 +53,64 @@ CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"
 
 # ── V17 UI + comprehensive CSS ────────────────────────────────────────────────
 st.markdown("""<style>
-@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{
-  --bg:#0b150f;--surface:#101c14;--card:#16241a;--border:#2c4030;
-  --accent:#e3b431;--accent2:#8a3226;--warn:#e3b431;--gold:#e3b431;
-  --text:#f3ecd8;--muted:#74836f;--subtle:#c3bb9e;
-  --radius:10px;--radius-sm:6px;
-  --font-head:'Big Shoulders Display',sans-serif;--font-body:'PT Serif',serif;--font-data:'Space Mono',monospace;
-  --shadow:0 6px 28px rgba(0,0,0,.55);
+  --bg:#0a1024;--surface:#0d1430;--card:#131b3a;--border:#28345f;
+  --accent:#ff6a2e;--accent2:#3d7bff;--warn:#ff6a2e;--gold:#ff6a2e;
+  --accent-rgb:255,106,46;--accent2-rgb:61,123,255;
+  --text:#f3f6ff;--muted:#8189b3;--subtle:#c7cdea;
+  --radius:18px;--radius-sm:12px;--radius-pill:999px;
+  --font-head:'Poppins',sans-serif;--font-body:'Inter',sans-serif;--font-data:'JetBrains Mono',monospace;
+  --shadow:0 10px 32px rgba(0,6,30,.5);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
 .stApp{
   background-color:var(--bg);
   background-image:
-    radial-gradient(ellipse 900px 460px at 50% -8%, rgba(227,180,49,.07) 0%, transparent 62%),
-    repeating-linear-gradient(100deg, rgba(243,236,216,.014) 0 120px, rgba(243,236,216,.026) 120px 124px, transparent 124px 240px);
+    radial-gradient(ellipse 900px 460px at 50% -8%, rgba(var(--accent2-rgb),.14) 0%, transparent 62%),
+    radial-gradient(ellipse 700px 400px at 100% 0%, rgba(var(--accent-rgb),.08) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.02) 0%, transparent 8%);
   background-attachment:fixed;
 }
 .block-container{padding:0 !important;max-width:100% !important}
 [data-testid="stSidebar"]{display:none !important}
 h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(--font-head)!important;letter-spacing:.2px}
 
-/* ── Metrics: scoreboard flip-panel ── */
-[data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:4px!important;padding:14px 16px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
-[data-testid="stMetric"]:hover{border-color:var(--accent)!important;transform:translateY(-2px)}
-[data-testid="stMetric"]::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);opacity:.85}
-[data-testid="stMetricLabel"]{font-family:var(--font-body)!important;font-size:10px!important;font-weight:700!important;color:var(--muted)!important;text-transform:uppercase;letter-spacing:1.4px!important}
-[data-testid="stMetricValue"]{font-family:var(--font-data)!important;font-size:22px!important;font-weight:700!important;color:var(--text)!important;line-height:1.2!important;letter-spacing:-0.3px!important}
+/* ── Metrics: rounded broadcast score-bug ── */
+[data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;padding:16px 18px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
+[data-testid="stMetric"]:hover{border-color:var(--accent)!important;transform:translateY(-3px)}
+[data-testid="stMetric"]::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius) var(--radius) 0 0;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+[data-testid="stMetricLabel"]{font-family:var(--font-body)!important;font-size:10px!important;font-weight:700!important;color:var(--muted)!important;text-transform:uppercase;letter-spacing:1.2px!important}
+[data-testid="stMetricValue"]{font-family:var(--font-data)!important;font-size:23px!important;font-weight:700!important;color:var(--text)!important;line-height:1.2!important;letter-spacing:-0.3px!important}
 [data-testid="stMetricDelta"]{font-size:11px!important}
 
-/* ── Tabs ── */
-div[data-baseweb="tab-list"]{gap:4px!important;flex-wrap:wrap!important;background:transparent!important;border-bottom:1px solid var(--border)!important;padding-bottom:6px!important}
-div[data-baseweb="tab"]{border-radius:var(--radius-sm)!important;padding:7px 16px!important;background:var(--card)!important;font-weight:700!important;font-size:12px!important;color:var(--subtle)!important;border:1px solid var(--border)!important;transition:all .2s!important;font-family:var(--font-body)!important}
+/* ── Tabs: pill-shaped like a broadcast format switcher ── */
+div[data-baseweb="tab-list"]{gap:6px!important;flex-wrap:wrap!important;background:transparent!important;border-bottom:1px solid var(--border)!important;padding-bottom:8px!important}
+div[data-baseweb="tab"]{border-radius:var(--radius-pill)!important;padding:8px 18px!important;background:var(--card)!important;font-weight:700!important;font-size:12px!important;color:var(--subtle)!important;border:1px solid var(--border)!important;transition:all .2s!important;font-family:var(--font-body)!important}
 div[data-baseweb="tab"]:hover{border-color:var(--accent)!important;color:var(--text)!important}
-div[data-baseweb="tab"][aria-selected="true"]{background:rgba(227,180,49,.1)!important;border-color:var(--accent)!important;color:var(--accent)!important;box-shadow:none!important}
+div[data-baseweb="tab"][aria-selected="true"]{background:linear-gradient(120deg,var(--accent2),var(--accent))!important;border-color:transparent!important;color:#fff!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.35)!important}
 div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!important}
 
 /* ── Inputs ── */
-[data-testid="stTextInput"] input{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;font-family:var(--font-body)!important;font-size:14px!important;padding:11px 14px!important;transition:border-color .2s,box-shadow .2s!important}
-[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(227,180,49,.15)!important;outline:none!important}
+[data-testid="stTextInput"] input{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;color:var(--text)!important;font-family:var(--font-body)!important;font-size:14px!important;padding:12px 18px!important;transition:border-color .2s,box-shadow .2s!important}
+[data-testid="stTextInput"] input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(var(--accent-rgb),.18)!important;outline:none!important}
 [data-testid="stTextInput"] input::placeholder{color:var(--muted)!important}
 [data-testid="stSelectbox"]>div>div{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--text)!important;transition:border-color .2s!important}
 [data-testid="stSelectbox"]>div>div:hover{border-color:var(--accent)!important}
-[data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:5px!important}
-[data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;padding:5px 13px!important;font-size:12px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
+[data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:6px!important}
+[data-testid="stRadio"] label{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;padding:6px 15px!important;font-size:12px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
 [data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important}
-[data-testid="stRadio"] label:has(input:checked){border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(227,180,49,.09)!important}
+[data-testid="stRadio"] label:has(input:checked){border-color:transparent!important;color:#fff!important;background:linear-gradient(120deg,var(--accent2),var(--accent))!important}
 
 /* ── Sliders ── */
-[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(227,180,49,.18)!important}
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.2)!important}
 [data-testid="stSlider"] [data-baseweb="slider"] div[class*="Track"]{background:var(--border)!important}
 
 /* ── DataFrames ── */
 .stDataFrame{border-radius:var(--radius)!important;overflow:hidden!important;border:1px solid var(--border)!important;box-shadow:var(--shadow)}
 .stDataFrame thead th{font-size:10px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.8px;background:var(--surface)!important;color:var(--muted)!important;padding:10px 14px!important;border-bottom:1px solid var(--border)!important}
 .stDataFrame tbody td{font-family:var(--font-data)!important;font-size:12px!important;padding:9px 14px!important;border-bottom:1px solid var(--border)!important}
-.stDataFrame tbody tr:hover td{background:rgba(193,68,45,.03)!important}
+.stDataFrame tbody tr:hover td{background:rgba(var(--accent2-rgb),.06)!important}
 .stDataFrame tbody tr:first-child td{color:var(--gold)!important;font-weight:600!important}
 
 /* ── Spinner / Loading ── */
@@ -129,15 +130,15 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:20p
 .ca-divider-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
 
 /* ── Back button ── */
-[data-testid="stButton"] button[kind="secondary"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;color:var(--subtle)!important;font-size:12px!important;font-weight:600!important;padding:6px 16px!important;transition:all .15s!important;margin-bottom:14px!important}
-[data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(193,68,45,.06)!important}
+[data-testid="stButton"] button[kind="secondary"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;color:var(--subtle)!important;font-size:12px!important;font-weight:600!important;padding:6px 16px!important;transition:all .15s!important;margin-bottom:14px!important}
+[data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(var(--accent-rgb),.08)!important}
 
 /* ── Alerts / Error / Info ── */
 [data-testid="stAlert"]{border-radius:var(--radius-sm)!important;border-left:3px solid!important;font-size:13px!important;padding:10px 14px!important}
 [data-testid="stAlert"][data-type="error"]{background:rgba(255,77,109,.06)!important;border-color:var(--warn)!important}
-[data-testid="stAlert"][data-type="info"]{background:rgba(201,162,39,.06)!important;border-color:var(--accent2)!important}
-[data-testid="stAlert"][data-type="warning"]{background:rgba(251,191,36,.06)!important;border-color:var(--gold)!important}
-[data-testid="stAlert"][data-type="success"]{background:rgba(193,68,45,.06)!important;border-color:var(--accent)!important}
+[data-testid="stAlert"][data-type="info"]{background:rgba(var(--accent2-rgb),.08)!important;border-color:var(--accent2)!important}
+[data-testid="stAlert"][data-type="warning"]{background:rgba(var(--accent-rgb),.08)!important;border-color:var(--gold)!important}
+[data-testid="stAlert"][data-type="success"]{background:rgba(var(--accent-rgb),.08)!important;border-color:var(--accent)!important}
 
 /* ── Plotly chart wrappers ── */
 .js-plotly-plot{touch-action:pan-y!important}
@@ -155,46 +156,47 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
 .ca-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.8s ease infinite;vertical-align:middle;margin-right:4px}
 
 /* ── TOP NAV: scoreboard header bar ── */
-.ca-topnav{position:sticky;top:0;z-index:999;background:var(--surface);border-bottom:2px solid var(--accent);padding:0 24px;display:flex;align-items:center;gap:0;height:56px;width:100%;box-sizing:border-box}
-.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:.4px;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0;text-transform:uppercase}
-.ca-topnav-brand span{color:var(--accent)}
+.ca-topnav{position:sticky;top:0;z-index:999;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:0;height:60px;width:100%;box-sizing:border-box;box-shadow:0 2px 16px rgba(0,0,0,.12)}
+.ca-topnav-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:18px;font-weight:800;letter-spacing:.2px;color:var(--text);white-space:nowrap;margin-right:24px;flex-shrink:0}
+.ca-topnav-brand span{background:linear-gradient(120deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .ca-topnav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
 .ca-topnav-links::-webkit-scrollbar{display:none}
-.ca-navbtn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;font-size:12px;font-weight:700;color:var(--subtle);white-space:nowrap;cursor:pointer;border:none;background:transparent;transition:all .15s;font-family:var(--font-body);text-decoration:none}
-.ca-navbtn:hover{background:rgba(227,180,49,.08);color:var(--text)}
-.ca-navbtn.active{background:rgba(227,180,49,.12);color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
-.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;background:rgba(227,180,49,.08);border:1px solid rgba(227,180,49,.25);font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px;font-family:var(--font-data)}
+.ca-navbtn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--radius-pill);font-size:12px;font-weight:700;color:var(--subtle);white-space:nowrap;cursor:pointer;border:none;background:transparent;transition:all .15s;font-family:var(--font-body);text-decoration:none}
+.ca-navbtn:hover{background:rgba(var(--accent2-rgb),.1);color:var(--text)}
+.ca-navbtn.active{background:linear-gradient(120deg,var(--accent2),var(--accent));color:#fff}
+.ca-topnav-status{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--radius-pill);background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.3);font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;margin-left:12px;font-family:var(--font-data)}
 .ca-content{padding:20px 24px 60px}
 
-/* ── Section cards: seam-stitch divider (cricket-ball seam motif) ── */
-.ca-section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);position:relative}
-.ca-section-card::before{content:'';position:absolute;top:0;left:16px;right:16px;height:2px;
-  background-image:repeating-linear-gradient(90deg,var(--accent) 0 4px,transparent 4px 8px,var(--accent2) 8px 12px,transparent 12px 16px);opacity:.55}
+/* ── Section cards: bold broadcast top bar (no vintage stitching) ── */
+.ca-section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.ca-section-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--accent2),var(--accent))}
 .ca-section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .ca-section-emoji{font-size:24px;line-height:1}
-.ca-section-title{font-family:var(--font-head);font-size:19px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.3px}
+.ca-section-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--text);letter-spacing:.1px}
 .ca-section-sub{font-size:12px;color:var(--muted);margin-top:2px;font-family:var(--font-body)}
 
 /* ── Home grid ── */
 .ca-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:24px}
 .ca-feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:all .22s;text-decoration:none;display:block;box-shadow:var(--shadow)}
-.ca-feature-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.ca-feature-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 10px 28px rgba(var(--accent-rgb),.2)}
 .ca-feature-icon{font-size:28px;margin-bottom:10px}
-.ca-feature-title{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;text-transform:uppercase}
+.ca-feature-title{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
 .ca-feature-desc{font-size:12px;color:var(--muted);line-height:1.5;font-family:var(--font-body)}
 
 /* ── Player card ── */
 .ca-player-card{display:flex;gap:14px;align-items:flex-start;overflow:hidden;box-sizing:border-box}
 .ca-player-img{flex-shrink:0}
+.ca-player-img img{border-radius:var(--radius-sm)!important}
 .ca-player-info{flex:1;min-width:0}
-.ca-player-name{font-family:var(--font-head);color:var(--text);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px;text-transform:uppercase}
+.ca-player-name{font-family:var(--font-head);color:var(--text);font-weight:800;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.1px}
 .ca-player-pills{display:flex;flex-wrap:wrap;margin-bottom:7px}
 .ca-player-bio{color:var(--muted);font-size:11px;line-height:1.6;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;font-family:var(--font-body)}
-.ca-pill{background:rgba(227,180,49,.06);border:1px solid rgba(227,180,49,.18);padding:3px 9px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;margin:2px 2px 2px 0;transition:border-color .15s;font-family:var(--font-data)}
+.ca-pill{background:rgba(var(--accent2-rgb),.08);border:1px solid rgba(var(--accent2-rgb),.25);padding:3px 10px;border-radius:var(--radius-pill);font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;margin:2px 2px 2px 0;transition:border-color .15s;font-family:var(--font-data)}
 .ca-pill:hover{border-color:var(--accent)}
 
 /* ── Insight box ── */
-.ca-insight{background:rgba(227,180,49,.05);border:1px solid rgba(227,180,49,.18);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6;font-family:var(--font-body)}
+.ca-insight{background:rgba(var(--accent-rgb),.07);border:1px solid rgba(var(--accent-rgb),.2);border-radius:var(--radius-sm);padding:12px 16px;margin:8px 0 14px;font-size:12px;color:var(--subtle);line-height:1.6;font-family:var(--font-body)}
 .ca-insight strong{color:var(--accent)}
 
 /* ── Mobile ── */
@@ -239,11 +241,12 @@ if IS_LIGHT:
   --bg:{BG};--surface:{SURFACE};--card:{CARD};--border:{BORDER};
   --text:{TEXT};--muted:{MUTED};--subtle:{SUBTLE};
   --shadow:{SHADOW};--accent:{ACCENT};--accent2:{ACCENT2};--warn:{ACCENT};--gold:{ACCENT2};
+  --accent-rgb:255,90,31;--accent2-rgb:37,87,232;
 }}
-.ca-topnav{{background:{SURFACE}!important;border-bottom:2px solid {ACCENT}!important}}
+.ca-topnav{{background:{SURFACE}!important;border-bottom:1px solid {BORDER}!important}}
 .ca-topnav-brand{{color:{TEXT}!important}}
 [data-testid="stMetricValue"]{{color:{TEXT}!important}}
-.stDataFrame tbody tr:hover td{{background:rgba(138,50,38,.06)!important}}
+.stDataFrame tbody tr:hover td{{background:rgba(37,87,232,.05)!important}}
 [data-testid="stRadio"] label{{color:{SUBTLE}!important}}
 </style>""", unsafe_allow_html=True)
 
@@ -559,14 +562,52 @@ def donut(labels, values, colors, title):
     fig.update_layout(**BASE,height=320,title=title,showlegend=False,margin=M_DEFAULT)
     return fig
 
+# ── Plain-language glossary ───────────────────────────────────────────────────
+# Every stat label across the app is checked against this dict (case-insensitive,
+# partial match) so a small "?" tooltip pops up on hover explaining the term in
+# everyday language — no cricket-analytics background assumed.
+GLOSSARY = {
+    "strike rate": "Runs scored per 100 balls faced. Higher = scores faster.",
+    "average": "Runs scored per time a batter got out. Higher = more consistent.",
+    "economy": "Runs a bowler concedes per over. Lower = more economical/stingy.",
+    "dot ball": "A ball with no runs scored off it. Higher % = more pressure on the batter.",
+    "boundary": "Runs from fours and sixes only. Higher % = more attacking innings.",
+    "runs": "Total runs scored.",
+    "wickets": "Total batters a bowler has dismissed.",
+    "matches": "Total matches played.",
+    "innings": "Total individual batting/bowling turns played.",
+    "50s": "Number of half-centuries (scores of 50–99).",
+    "100s": "Number of centuries (scores of 100+).",
+    "highest": "The single best score/figures recorded.",
+    "balls faced": "Number of balls a batter faced at the crease.",
+    "balls bowled": "Number of balls a bowler has delivered.",
+    "overs": "One over = 6 balls bowled.",
+    "not out": "Times a batter was still batting when the innings ended (not dismissed).",
+    "catches": "Number of catches taken in the field.",
+    "form rating": "A single 0–100 score blending recent performance trends — higher is better form.",
+    "consistency": "How steady a player's scores are match to match — higher means fewer big dips.",
+    "similarity": "How closely two players' statistical profiles match, from 0% (nothing alike) to 100% (near-identical).",
+    "win probability": "The modeled chance a team wins, based on historical head-to-head data.",
+    "clutch": "Performance specifically in tight, high-pressure situations.",
+    "peak": "The best stretch of form in a player's career so far.",
+}
+
+def glossary_help(label):
+    """Look up a stat label in GLOSSARY (partial, case-insensitive) for a tooltip."""
+    low = label.lower()
+    for term, definition in GLOSSARY.items():
+        if term in low:
+            return definition
+    return None
+
 def metrics(d):
     items=list(d.items()); chunk=3
     for i in range(0,len(items),chunk):
         cols=st.columns(len(items[i:i+chunk]))
-        for c,(k,v) in zip(cols,items[i:i+chunk]): c.metric(k,v)
+        for c,(k,v) in zip(cols,items[i:i+chunk]): c.metric(k,v,help=glossary_help(k))
 
 def _hex_to_rgba(hex_color, alpha=0.18):
-    """Convert hex color like #00e5a0 to rgba(193,68,45,0.18)."""
+    """Convert hex color like #00e5a0 to rgba(61,123,255,0.18)."""
     h = hex_color.lstrip("#")
     if len(h) == 3: h = "".join(c*2 for c in h)
     try:
@@ -619,7 +660,7 @@ def form_delta_html(recent_val, career_val, label, higher_is_better=True):
     diff = recent_val - career_val
     pct = (diff / career_val * 100) if career_val else 0
     good = (diff > 0) == higher_is_better
-    color = "#3a7a54" if good else "#8a3226"
+    color = "#3a7a54" if good else "#3d7bff"
     arrow = "▲" if diff > 0 else "▼"
     return (f'<span style="background:{color}18;border:1px solid {color}44;'
             f'color:{color};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">'
@@ -636,7 +677,7 @@ def page_banner(emoji, title, subtitle, ga, gb, glow):
         -45deg,transparent,transparent 18px,rgba(255,255,255,.015) 18px,rgba(255,255,255,.015) 19px);pointer-events:none"></div>
       <div style="font-size:36px;line-height:1;flex-shrink:0">{emoji}</div>
       <div>
-        <div style="font-family:'Big Shoulders Display',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
+        <div style="font-family:'Poppins',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
         <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:3px">{subtitle}</div>
       </div>
     </div>""", unsafe_allow_html=True)
@@ -1032,7 +1073,7 @@ status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 navcol1, navcol2, navcol3 = st.columns([5,1,1])
 with navcol1:
     st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-      <span style="font-family:'Big Shoulders Display',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+      <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
       <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
         <span class="ca-live"></span>{status_txt}</span>
     </div>""", unsafe_allow_html=True)
@@ -1072,18 +1113,18 @@ if section=="🏠 Home":
     st.markdown(f"""<div class="ca-fade" style="background:linear-gradient(150deg,#080c14,#0c1628,#080c14);
       border-radius:16px;padding:36px 32px 28px;margin-bottom:24px;
       border:1px solid var(--border);position:relative;overflow:hidden">
-      <div style="position:absolute;top:-80px;left:20%;width:400px;height:300px;background:radial-gradient(ellipse,rgba(193,68,45,.06) 0%,transparent 70%);pointer-events:none"></div>
-      <div style="position:absolute;bottom:-60px;right:5%;width:300px;height:220px;background:radial-gradient(ellipse,rgba(201,162,39,.05) 0%,transparent 70%);pointer-events:none"></div>
-      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,162,39,.03) 39px,rgba(201,162,39,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,162,39,.03) 39px,rgba(201,162,39,.03) 40px);pointer-events:none"></div>
+      <div style="position:absolute;top:-80px;left:20%;width:400px;height:300px;background:radial-gradient(ellipse,rgba(61,123,255,.06) 0%,transparent 70%);pointer-events:none"></div>
+      <div style="position:absolute;bottom:-60px;right:5%;width:300px;height:220px;background:radial-gradient(ellipse,rgba(255,106,46,.05) 0%,transparent 70%);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,106,46,.03) 39px,rgba(255,106,46,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,106,46,.03) 39px,rgba(255,106,46,.03) 40px);pointer-events:none"></div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
         <span style="font-size:40px">🏏</span>
         <div>
-          <h1 style="font-family:'Big Shoulders Display',sans-serif;color:#fff;margin:0;font-size:30px;font-weight:800;letter-spacing:-0.5px">Cricket <span class="ca-shimmer">Analytics</span></h1>
+          <h1 style="font-family:'Poppins',sans-serif;color:#fff;margin:0;font-size:30px;font-weight:800;letter-spacing:-0.5px">Cricket <span class="ca-shimmer">Analytics</span></h1>
           <p style="color:var(--muted);font-size:13px;margin:4px 0 0">Ball-by-ball data · All-time records · 8 formats</p>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px">{fmt_pills}</div>
-      <div style="display:flex;align-items:center;gap:8px;background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.15);border-radius:20px;padding:6px 14px;width:fit-content">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(61,123,255,.06);border:1px solid rgba(61,123,255,.15);border-radius:20px;padding:6px 14px;width:fit-content">
         <span class="ca-live"></span>
         <span style="font-size:11px;font-weight:600;color:var(--accent)">Auto-updated daily · Cricsheet (2-3 day lag)</span>
       </div>
@@ -1096,6 +1137,17 @@ if section=="🏠 Home":
         st.session_state["_go"]="🔍 Player Search"
         st.session_state["ps_name"]=qname
         st.rerun()
+
+    with st.expander("📖 New to cricket stats? Quick glossary — what the numbers mean"):
+        st.caption("Every stat card in this app also has a small **?** you can hover over for its definition. Here's the full list:")
+        g_items = list(GLOSSARY.items())
+        g_cols = st.columns(2)
+        for i, (term, definition) in enumerate(g_items):
+            g_cols[i % 2].markdown(
+                f'<div class="ca-pill" style="display:block;white-space:normal;margin-bottom:6px;padding:8px 12px">'
+                f'<span style="color:var(--accent);text-transform:capitalize">{term}</span>'
+                f'<br><span style="color:var(--subtle);font-family:var(--font-body);font-weight:400">{definition}</span></div>',
+                unsafe_allow_html=True)
 
     st.markdown("#### Explore")
     features=[
@@ -1206,7 +1258,7 @@ elif section=="📋 Match Results":
 
 # ══ PLAYER FORECAST ═══════════════════════════════════════════════════════════
 elif section=="🔮 Player Forecast":
-    page_banner("🔮","Player Forecast","Pick a player and see their projected runs for next season","#1a1408","#2e2410","#e3b431")
+    page_banner("🔮","Player Forecast","Pick a player and see their projected runs for next season","#1a1408","#2e2410","#ff6a2e")
     forecast = load_player_forecast()
     if forecast.empty:
         st.info("Forecast data isn't available yet — this page reads `cricket_run_forecast.csv` from your "
@@ -1269,7 +1321,7 @@ elif section=="🔮 Player Forecast":
                             st.caption(f"{direction} next season, based on recent trend.")
                             fig = go.Figure()
                             fig.add_trace(go.Bar(x=["Last Season", "Next Season (Projected)"], y=[actual, pred],
-                                marker_color=[FC.get(pick_fmt,"#8a3226"), "#a29bfe"],
+                                marker_color=[FC.get(pick_fmt,"#3d7bff"), "#a29bfe"],
                                 text=[f"{actual:.0f}", f"{pred:.0f}"], textposition="outside",
                                 textfont=dict(size=16, color=TEXT)))
                             fig.update_layout(**BASE, height=340, showlegend=False, margin=dict(l=20,r=20,t=20,b=20),
@@ -1287,7 +1339,7 @@ elif section=="🔮 Player Forecast":
 
 # ══ BOWLER WORKLOAD ═══════════════════════════════════════════════════════════
 elif section=="💪 Bowler Workload":
-    page_banner("💪","Bowler Workload","Simple injury-risk check based on recent bowling load","#1a0d08","#2e1a10","#8a3226")
+    page_banner("💪","Bowler Workload","Simple injury-risk check based on recent bowling load","#1a0d08","#2e1a10","#3d7bff")
     workload = load_bowler_workload()
     if workload.empty:
         st.info("Workload data isn't available yet — this page reads `cricket_bowler_workload.csv` from your "
@@ -1449,12 +1501,12 @@ elif section=="🔍 Player Search":
     fmt_pills="".join([
         f'<span style="background:{FORMAT_META.get(f,("","#00e5a0",""))[1]}18;color:{FORMAT_META.get(f,("","#00e5a0",""))[1]};border:1px solid {FORMAT_META.get(f,("","#00e5a0",""))[1]}44;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">'
         f'{FORMAT_META.get(f,("🏏","",""))[0]} {f}</span>' for f in ALL_FMT])
-    chips=[("Babar","#d98e2b"),("Kohli","#3a7a54"),("Bumrah","#8a95a8"),("Smriti","#b2557a"),("Shaheen","#e3b431"),("Maxwell","#8a3226")]
+    chips=[("Babar","#d98e2b"),("Kohli","#3a7a54"),("Bumrah","#8a95a8"),("Smriti","#b2557a"),("Shaheen","#ff6a2e"),("Maxwell","#3d7bff")]
     chip_html="".join([f'<span style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:{c};padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap">{n}</span>' for n,c in chips])
     st.markdown(f"""<div class="ca-fade" style="background:linear-gradient(160deg,#080c14,#0c1628,#080c14);
       border-radius:14px;padding:24px 28px 20px;margin-bottom:20px;border:1px solid var(--border);
       position:relative;overflow:hidden">
-      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,162,39,.04) 39px,rgba(201,162,39,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,162,39,.04) 39px,rgba(201,162,39,.04) 40px);pointer-events:none"></div>
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,106,46,.04) 39px,rgba(255,106,46,.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,106,46,.04) 39px,rgba(255,106,46,.04) 40px);pointer-events:none"></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">{fmt_pills}</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
         <span style="font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap">Quick search →</span>
@@ -1519,7 +1571,7 @@ elif section=="🔍 Player Search":
                          f"in the repo until Cricsheet catches up.")
             st.stop()
         fmt=st.radio("📋 Format",avl,horizontal=True)
-        clr=FC.get(fmt,"#8a3226")
+        clr=FC.get(fmt,"#3d7bff")
         bat=find_rows(bat_fmt[bat_fmt["format"]==fmt],"striker",sname)
         bowl=find_rows(bowl_fmt[bowl_fmt["format"]==fmt],"bowler",sname)
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
@@ -1528,12 +1580,12 @@ elif section=="🔍 Player Search":
         # Data freshness banner
         lu=get_last_updated()
         if lu:
-            st.markdown(f"""<div style="background:rgba(193,68,45,.06);border:1px solid rgba(193,68,45,.2);
+            st.markdown(f"""<div style="background:rgba(61,123,255,.06);border:1px solid rgba(61,123,255,.2);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>✅</span>
               <span style="font-size:11px;color:#00e5a0">Data last updated: <strong>{lu}</strong> — auto-updated daily from Cricsheet.</span></div>""", unsafe_allow_html=True)
         else:
-            st.markdown("""<div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);
+            st.markdown("""<div style="background:rgba(255,106,46,.07);border:1px solid rgba(255,106,46,.25);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
               <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
@@ -1573,7 +1625,7 @@ elif section=="🔍 Player Search":
                                 f"{fragments}. Verify and add to name_aliases.csv to merge permanently."
                                 if fragments else ""
                             )
-                            st.markdown(f"""<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);
+                            st.markdown(f"""<div style="background:rgba(255,106,46,.08);border:1px solid rgba(255,106,46,.3);
                               border-radius:8px;padding:8px 14px;margin:0 0 10px;font-size:12px;color:#fbbf24">
                               ⚠️ <strong>Official record (Wikipedia): {int(g['wiki_matches'])} {fmt} matches
                               {(', ' + format(int(g['wiki_runs']), ',') + ' runs') if pd.notna(g.get('wiki_runs')) else ''}</strong>
@@ -1703,7 +1755,7 @@ elif section=="🔍 Player Search":
 
 # ══ HEAD TO HEAD ══════════════════════════════════════════════════════════════
 elif section=="⚔️ Head to Head":
-    page_banner("⚔️","Head to Head","Pick two players and see who dominates across formats","#1a0808","#2e1210","#8a3226")
+    page_banner("⚔️","Head to Head","Pick two players and see who dominates across formats","#1a0808","#2e1210","#3d7bff")
     c1,c2=st.columns(2)
     n1=c1.text_input("Player 1","Kohli"); n2=c2.text_input("Player 2","Babar Azam")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
@@ -1895,7 +1947,7 @@ elif section=="🌍 vs Opponent":
 
 # ══ BATTER VS BOWLER ══════════════════════════════════════════════════════════
 elif section=="🤜 Batter vs Bowler":
-    page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a08","#2e1410","#8a3226")
+    page_banner("🤜","Batter vs Bowler","The ultimate matchup — who has the edge ball by ball?","#1a0a08","#2e1410","#3d7bff")
     mt=st.radio("Look up a...",["Batter","Bowler"],horizontal=True)
     if mt=="Batter":
         name=player_input("Batter name",resolve("Babar Azam"),key="bvb_batter")
@@ -1926,7 +1978,7 @@ elif section=="🤜 Batter vs Bowler":
 
 # ══ PERFORMANCE OVER YEARS ════════════════════════════════════════════════════
 elif section=="📈 Over Years":
-    page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#141008","#241c10","#e3b431")
+    page_banner("📈","Performance Over Years","Track how a player has evolved season by season","#141008","#241c10","#ff6a2e")
     name=player_input("Player name",resolve("Kohli")); st_=st.radio("Type",["Batting","Bowling"],horizontal=True)
     if name:
         sname=resolve(name)
@@ -1953,7 +2005,7 @@ elif section=="📈 Over Years":
 
 # ══ LEADERBOARD ═══════════════════════════════════════════════════════════════
 elif section=="🏆 Leaderboard":
-    page_banner("🏆","Leaderboard","The greatest — ranked by format and stat","#1a1608","#2e2610","#e3b431")
+    page_banner("🏆","Leaderboard","The greatest — ranked by format and stat","#1a1608","#2e2610","#ff6a2e")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2=st.tabs(["🏏 Batting","🎳 Bowling"])
     with tab1:
@@ -2074,7 +2126,7 @@ elif section=="🤖 Similar Players":
 
 # ══ FORM & RATINGS ════════════════════════════════════════════════════════════
 elif section=="🔥 Form & Ratings":
-    page_banner("🔥","Form & Ratings","Player form by year, career trend, and who's peaking right now","#1a0d08","#2e1810","#8a3226")
+    page_banner("🔥","Form & Ratings","Player form by year, career trend, and who's peaking right now","#1a0d08","#2e1810","#3d7bff")
     fmt=st.radio("Format",ALL_FMT,horizontal=True)
     tab1,tab2,tab3,tab4=st.tabs(["🔍 Player Form","🔥 Hot List","📉 Cold List","⭐ Player Scores"])
 
