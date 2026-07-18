@@ -48,6 +48,16 @@ CRICSHEET_URLS = {
     "T20I": "https://cricsheet.org/downloads/t20s_csv2.zip",
     "IPL":  "https://cricsheet.org/downloads/ipl_csv2.zip",
     "PSL":  "https://cricsheet.org/downloads/psl_csv2.zip",
+    # These three were listed as selectable formats in the dashboard's
+    # FORMATS constant already, but were never actually downloaded here —
+    # so BBL/CPL/WPL pickers were either empty or (per the Win Probability
+    # bug) silently falling back to unrelated international team names.
+    # Cricsheet uses the same competition-code naming as the JSON/YAML
+    # downloads (bbl/cpl/wpl), following the exact _csv2.zip pattern that
+    # already works for IPL and PSL above.
+    "BBL":  "https://cricsheet.org/downloads/bbl_csv2.zip",
+    "CPL":  "https://cricsheet.org/downloads/cpl_csv2.zip",
+    "WPL":  "https://cricsheet.org/downloads/wpl_csv2.zip",
 }
 
 # ── Logging setup ──────────────────────────────────────────────────────────
@@ -612,10 +622,19 @@ def detect_name_fragments(df, batting_by_format, coverage_gaps):
 def build_coverage_gap_report(batting_by_format):
     """Cross-check Cricsheet's ODI/Test/T20I match counts against Wikipedia's
     official career totals for every player with enough matches to be worth
-    checking. Returns a DataFrame the dashboard can use to show 'official vs
-    tracked here' notices, instead of silently under-reporting a big name's
-    career (this is what happened with Kohli's ODI count)."""
+    checking. Returns (coverage_gaps, search_aliases):
+    - coverage_gaps: 'official vs tracked here' notices, instead of silently
+      under-reporting a big name's career (this is what happened with
+      Kohli's ODI count).
+    - search_aliases: full Wikipedia name -> Cricsheet short name (e.g.
+      "Virat Kohli" -> "V Kohli"), built for free from the same page lookups
+      this function already makes. Cricsheet's raw data only ever stores
+      short forms like "V Kohli", so searching a full first name like
+      "Virat" can never match it via substring search alone — this table is
+      what lets the dashboard's search resolve full names correctly instead
+      of falling through to an unrelated coincidental substring match."""
     rows = []
+    search_alias_rows = []
     candidates = batting_by_format[
         (batting_by_format["format"].isin(INTL_FORMATS_FOR_WIKI_CHECK)) &
         (batting_by_format["matches"] >= WIKI_CHECK_MIN_MATCHES)
@@ -639,6 +658,8 @@ def build_coverage_gap_report(batting_by_format):
         title = page_cache[player]
         if not title:
             continue
+        if not any(r["cricsheet_name"] == player for r in search_alias_rows):
+            search_alias_rows.append({"cricsheet_name": player, "full_name": title})
 
         if player not in stats_cache:
             stats_cache[player] = _fetch_wiki_infobox_stats(title)
@@ -666,7 +687,9 @@ def build_coverage_gap_report(batting_by_format):
         n_flagged = int(out["flagged"].sum())
         log.info(f"Coverage-gap check complete: {n_flagged} player/format combos flagged "
                   f"(Cricsheet short by >{WIKI_GAP_FLAG_THRESHOLD_PCT}% of matches)")
-    return out
+    search_aliases = pd.DataFrame(search_alias_rows)
+    log.info(f"Search aliases built: {len(search_aliases)} full-name -> short-name mappings")
+    return out, search_aliases
 
 
 def apply_true_match_counts(batting_by_format, bowling_by_format, registered_players):
@@ -971,6 +994,9 @@ def main():
         load_format(os.path.join(WORKDIR, "t20i_data"), "T20I"),
         load_format(os.path.join(WORKDIR, "ipl_data"), "IPL"),
         load_format(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        load_format(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        load_format(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        load_format(os.path.join(WORKDIR, "wpl_data"), "WPL"),
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
 
@@ -980,6 +1006,9 @@ def main():
         load_registered_players(os.path.join(WORKDIR, "t20i_data"), "T20I"),
         load_registered_players(os.path.join(WORKDIR, "ipl_data"), "IPL"),
         load_registered_players(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        load_registered_players(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        load_registered_players(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        load_registered_players(os.path.join(WORKDIR, "wpl_data"), "WPL"),
     ], ignore_index=True)
     log.info(f"TOTAL player-registration rows loaded: {registered_players.shape[0]:,}")
 
@@ -997,7 +1026,7 @@ def main():
                                                         batting_yearly, bowling_yearly)
 
     log.info("Running Wikipedia coverage-gap check for international players...")
-    coverage_gaps = build_coverage_gap_report(batting_by_format)
+    coverage_gaps, search_aliases = build_coverage_gap_report(batting_by_format)
 
     log.info("Cross-checking flagged gaps against Cricsheet's own documented missing-matches list...")
     known_missing = fetch_cricsheet_known_missing()
@@ -1028,6 +1057,7 @@ def main():
         "cricket_bowl_similarity.csv": bowl_ml[["bowler", "format", "cluster", "wickets", "economy",
                                                  "average", "dot_pct"]],
         "cricket_coverage_gaps.csv": coverage_gaps,
+        "search_aliases.csv": search_aliases,
     }
 
     log.info(f"Pushing {len(files_to_save)} files to github.com/{GITHUB_USER}/{GITHUB_REPO}...")
