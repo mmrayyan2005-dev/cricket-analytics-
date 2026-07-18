@@ -553,6 +553,62 @@ def _fetch_wiki_infobox_stats(page_title):
         return {}
 
 
+def detect_name_fragments(df, batting_by_format, coverage_gaps):
+    """For every player flagged by the Wikipedia gap-check, look for other
+    'striker' name variants in the raw ball-by-ball data that are probably
+    the SAME real person recorded under a slightly different spelling in
+    one match (e.g. 'Virat Kohli' vs 'V Kohli' in a single file) — a data
+    fragmentation bug, not a genuine archive gap. This matters most for
+    high-profile matches: a whole century innings can silently vanish from
+    a player's totals this way, e.g. Kohli's 122* vs Afghanistan (Asia Cup
+    2022) — far too recent and high-profile a match to be a real coverage
+    gap, which is exactly the kind of case this is meant to catch instead
+    of being mislabeled as 'Cricsheet just doesn't have it'.
+    Only checks the already-small flagged-player list (not all ~10k+ names
+    in the archive) to keep this fast, and only flags OTHER names with few
+    matches (<=5) so it doesn't confuse two genuinely different players who
+    happen to share a similar name."""
+    import difflib
+    if coverage_gaps.empty:
+        coverage_gaps["possible_name_fragments"] = ""
+        return coverage_gaps
+
+    fragments_col = []
+    for _, row in coverage_gaps.iterrows():
+        if not row.get("flagged", False):
+            fragments_col.append("")
+            continue
+        player, fmt = row["player"], row["format"]
+        fmt_names = batting_by_format.loc[batting_by_format["format"] == fmt, "striker"].unique()
+        target_norm = player.lower().replace(".", "").replace(" ", "")
+        target_last = player.split()[-1].lower() if " " in player else player.lower()
+
+        candidates = []
+        for other in fmt_names:
+            if other == player:
+                continue
+            other_norm = other.lower().replace(".", "").replace(" ", "")
+            other_last = other.split()[-1].lower() if " " in other else other.lower()
+            if other_last != target_last:
+                continue  # different surname — not a spelling-variant candidate
+            sim = difflib.SequenceMatcher(None, target_norm, other_norm).ratio()
+            if sim < 0.55:
+                continue
+            other_matches = batting_by_format.loc[
+                (batting_by_format["striker"] == other) & (batting_by_format["format"] == fmt), "matches"]
+            if other_matches.empty or other_matches.iloc[0] > 5:
+                continue  # a real distinct player with a normal career, not a 1-match fragment
+            candidates.append(f"{other} ({int(other_matches.iloc[0])}m, {sim:.0%} match)")
+
+        fragments_col.append("; ".join(candidates))
+        if candidates:
+            log.warning(f"Possible name-fragment for {player} ({fmt}): {'; '.join(candidates)}")
+
+    coverage_gaps = coverage_gaps.copy()
+    coverage_gaps["possible_name_fragments"] = fragments_col
+    return coverage_gaps
+
+
 def build_coverage_gap_report(batting_by_format):
     """Cross-check Cricsheet's ODI/Test/T20I match counts against Wikipedia's
     official career totals for every player with enough matches to be worth
@@ -657,6 +713,52 @@ def apply_true_match_counts(batting_by_format, bowling_by_format, registered_pla
     bowling_by_format = bowling_by_format.drop(columns=["true_matches"])
 
     return batting_by_format, bowling_by_format
+
+
+def apply_name_aliases(df, registered_players):
+    """Load name_aliases.csv (optional, human-maintained) and rename any
+    matching striker/bowler/non_striker/player values from a confirmed
+    variant spelling to the canonical name — e.g. if you verify that the
+    'Virat Kohli' rows in one match file are really the same person as
+    'V Kohli' everywhere else, adding that alias here means every future
+    pipeline run merges them automatically, permanently, no re-checking
+    needed. This is deliberately NOT automatic guessing — detect_name_
+    fragments() only logs candidates for a human to confirm, because
+    auto-merging two similarly-named but genuinely different players would
+    be a worse bug than the fragmentation it's trying to fix.
+    Expected columns: variant_name, canonical_name, note (format optional —
+    if given, only that format's rows are renamed; if blank, applies to all)."""
+    try:
+        resp = requests.get(f"{RAW_REPO_BASE}/name_aliases.csv", timeout=15)
+        if resp.status_code != 200:
+            log.info("No name_aliases.csv found — skipping (this is fine, it's optional).")
+            return df, registered_players
+        aliases = pd.read_csv(io.StringIO(resp.text))
+    except Exception as e:
+        log.warning(f"Could not load name_aliases.csv: {e} — skipping")
+        return df, registered_players
+
+    if aliases.empty:
+        return df, registered_players
+
+    applied = 0
+    for _, row in aliases.iterrows():
+        variant, canonical = row["variant_name"], row["canonical_name"]
+        fmt = row.get("format")
+        fmt_mask = (df["format"] == fmt) if pd.notna(fmt) and fmt else pd.Series(True, index=df.index)
+        for col in ["striker", "bowler", "non_striker"]:
+            if col in df.columns:
+                hit = (df[col] == variant) & fmt_mask
+                if hit.any():
+                    df.loc[hit, col] = canonical
+                    applied += int(hit.sum())
+        if "player" in registered_players.columns:
+            reg_fmt_mask = (registered_players["format"] == fmt) if pd.notna(fmt) and fmt else pd.Series(True, index=registered_players.index)
+            registered_players.loc[(registered_players["player"] == variant) & reg_fmt_mask, "player"] = canonical
+        log.info(f"Applied name alias: '{variant}' -> '{canonical}'"
+                  f"{f' ({fmt} only)' if pd.notna(fmt) and fmt else ''}")
+    log.info(f"Name aliases applied: {len(aliases)} rule(s), {applied} raw row(s) renamed")
+    return df, registered_players
 
 
 def apply_manual_overrides(batting_by_format, bowling_by_format):
@@ -881,6 +983,8 @@ def main():
     ], ignore_index=True)
     log.info(f"TOTAL player-registration rows loaded: {registered_players.shape[0]:,}")
 
+    df, registered_players = apply_name_aliases(df, registered_players)
+
     df = clean_and_validate(df)
     bat_innings, bowl_innings = build_innings_tables(df)
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
@@ -898,6 +1002,9 @@ def main():
     log.info("Cross-checking flagged gaps against Cricsheet's own documented missing-matches list...")
     known_missing = fetch_cricsheet_known_missing()
     coverage_gaps = explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, registered_players)
+
+    log.info("Checking flagged players for possible name-spelling fragments in the raw data...")
+    coverage_gaps = detect_name_fragments(df, batting_by_format, coverage_gaps)
 
     files_to_save = {
         "cricket_batting_stats.csv": batting,
