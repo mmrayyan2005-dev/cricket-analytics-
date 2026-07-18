@@ -91,6 +91,71 @@ def download_and_extract(name, url, workdir):
         return folder  # return the (possibly empty) folder so pipeline continues
 
 
+def build_match_metadata(folder, label):
+    """Parse date + team names from each match's _info.csv. Used to catch
+    the same real-world match appearing under two DIFFERENT match_ids —
+    something Cricsheet occasionally does when a match gets reprocessed or
+    corrected. Row-level drop_duplicates() can never catch this, because
+    every column including match_id differs between the two copies; only
+    matching on (date, teams) — facts about the real match, not the file —
+    can. This is the same bug category that previously inflated Kohli's
+    IPL 2026 numbers (impossible stat totals from a match counted twice),
+    just resurfacing under a different match_id pattern for a different
+    player (Suryavanshi's 206 highest score / 192 sixes in 23 matches is
+    the same symptom: physically impossible T20 numbers from double-
+    counted deliveries)."""
+    if not os.path.isdir(folder):
+        return pd.DataFrame(columns=["match_id", "date", "teams", "format"])
+    files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
+    rows = []
+    for f in files:
+        match_id = f.replace("_info.csv", "")
+        date, teams = None, set()
+        try:
+            with open(os.path.join(folder, f), encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) >= 3 and parts[0] == "info":
+                        if parts[1] == "date" and date is None:
+                            date = parts[2]  # first date only — enough for a dedup key even in multi-day Tests
+                        elif parts[1] == "team":
+                            teams.add(",".join(parts[2:]))
+        except Exception:
+            continue
+        if date and len(teams) == 2:
+            rows.append({"match_id": match_id, "date": date,
+                         "teams": tuple(sorted(teams)), "format": label})
+    return pd.DataFrame(rows)
+
+
+def deduplicate_matches(df, match_meta):
+    """Given match metadata (date, teams) per match_id, find match_ids that
+    share the exact same (format, date, teams) — i.e. are almost certainly
+    the same real match recorded twice under different IDs — and keep only
+    the lowest match_id's deliveries, dropping the rest from df entirely
+    before any stats get aggregated from them."""
+    if match_meta.empty:
+        return df
+    dupe_groups = match_meta.groupby(["format", "date", "teams"])["match_id"].apply(list)
+    dupe_groups = dupe_groups[dupe_groups.apply(len) > 1]
+    if dupe_groups.empty:
+        log.info("Match-level dedup: no same-match/different-match_id duplicates found")
+        return df
+
+    drop_ids = set()
+    for ids in dupe_groups:
+        keep = sorted(ids)[0]
+        drop_ids.update(m for m in ids if m != keep)
+        log.warning(f"Duplicate real-world match detected across match_ids {ids} — "
+                    f"keeping {keep}, dropping deliveries for {[m for m in ids if m != keep]}")
+
+    before = len(df)
+    df = df[~df["match_id"].astype(str).isin(drop_ids)]
+    log.info(f"Match-level dedup: dropped {before - len(df):,} delivery rows from "
+              f"{len(drop_ids)} duplicate match_id(s) across {len(dupe_groups)} real match(es)")
+    return df
+
+
 def load_registered_players(folder, label):
     """Parse the `*_info.csv` companion file Cricsheet ships alongside every
     match's ball-by-ball CSV. It lists every player registered in each
@@ -784,51 +849,19 @@ def apply_name_aliases(df, registered_players):
     return df, registered_players
 
 
-# ── FIXED: apply_manual_overrides ─────────────────────────────────────────────
-# BUG (found via dashboard report): this function used to add matches_add /
-# runs_add on top of whatever was already computed from Cricsheet's raw data,
-# with NO check for whether Cricsheet had since started covering those same
-# matches natively. manual_match_overrides.csv is documented (see below) as
-# being for matches Cricsheet's archive has "no delivery CSV, no _info.csv —
-# nothing to parse or infer" for. If Cricsheet catches up and starts shipping
-# that data, a stale row in this CSV silently double-counts it forever, every
-# single run, because this pipeline rebuilds everything from scratch from the
-# raw Cricsheet zips each time rather than incrementally updating saved totals
-# — so nothing about a stale row degrades or gets "used up" over time; it just
-# keeps adding the same phantom runs/matches on every run until someone
-# manually removes the row.
-#
-# This is exactly what happened to a brand-new IPL debutant (Vaibhav
-# "V" Suryavanshi): his early-season matches were most likely backfilled here
-# by hand before Cricsheet had them, and once Cricsheet added the real data,
-# this function kept adding the override on top — producing a runs total that
-# was almost exactly 2x his real IPL runs (2,056 shown vs. 1,028 actual).
-# Because the Wikipedia coverage-gap check only verifies players with
-# WIKI_CHECK_MIN_MATCHES (100) or more, a low-match debutant like this was
-# never cross-checked automatically, so the doubling went unnoticed.
-#
-# Fix: before applying an override, check whether Cricsheet's own data
-# already shows ANY matches for that player/format. If it does, the premise
-# of the override ("Cricsheet has zero record of this") no longer holds —
-# skip it and log a loud warning instead of silently double-counting. An
-# optional `force_apply` column lets you explicitly confirm a row should
-# still apply even though Cricsheet now has partial data (e.g. you've
-# manually verified there are STILL additional documented-missing matches on
-# top of what Cricsheet now covers). Also now recomputes average/strike_rate
-# after any accepted override, since those were previously left stale from
-# before the runs were added.
 def apply_manual_overrides(batting_by_format, bowling_by_format):
     """Apply a small, human-verified correction list for matches Cricsheet's
     archive genuinely doesn't have on file at all (no delivery CSV, no
-    _info.csv — nothing to parse or infer), guarded against being silently
-    re-applied once Cricsheet's own data catches up and already covers the
-    same matches.
+    _info.csv — nothing to parse or infer, unlike the DNB-match fix above).
+    This is NOT automated scraping of any kind — ESPNCricinfo's robots.txt
+    disallows that, and guessing at numbers isn't an option either. This
+    reads manual_match_overrides.csv, a file YOU maintain by hand after
+    checking a real source yourself (Cricinfo, Wikipedia's year-by-year
+    tour articles, etc.) and copying in the exact figures. Same idea as
+    the manual Afghanistan data supplement — a documented exception list,
+    not a black box.
     Expected columns: player, format, matches_add, runs_add (optional),
-    source, note, force_apply (optional: true/1/yes to apply even if
-    Cricsheet already shows matches for this player/format — use only after
-    manually confirming these are genuinely ADDITIONAL missing matches, not
-    ones Cricsheet has since picked up).
-    Missing file = no-op, logged, not an error."""
+    source, note. Missing file = no-op, logged, not an error."""
     try:
         url = f"{RAW_REPO_BASE}/manual_match_overrides.csv"
         resp = requests.get(url, timeout=15)
@@ -843,66 +876,19 @@ def apply_manual_overrides(batting_by_format, bowling_by_format):
     if overrides.empty:
         return batting_by_format, bowling_by_format
 
-    applied, skipped_stale, skipped_missing = 0, 0, 0
+    applied = 0
     for _, row in overrides.iterrows():
         mask = (batting_by_format["striker"] == row["player"]) & (batting_by_format["format"] == row["format"])
         if not mask.any():
             log.warning(f"Manual override for {row['player']} ({row['format']}) has no matching row — skipped")
-            skipped_missing += 1
             continue
-
-        pre_matches = int(batting_by_format.loc[mask, "matches"].iloc[0])
-        pre_runs = int(batting_by_format.loc[mask, "runs"].iloc[0])
-        matches_add = int(row.get("matches_add", 0) or 0)
-        runs_add = int(row["runs_add"]) if pd.notna(row.get("runs_add")) else 0
-        force = str(row.get("force_apply", "")).strip().lower() in ("1", "true", "yes")
-        source = row.get("source", "unspecified")
-
-        # ── Stale-override guard ──────────────────────────────────────────
-        # This CSV exists specifically for matches Cricsheet has ZERO record
-        # of. If Cricsheet already shows matches for this player/format, the
-        # archive has very likely caught up since this row was written —
-        # applying it now would double-count real data that's already
-        # present. Skip by default; only apply if force_apply is explicitly
-        # set (meaning a human has verified these are genuinely additional
-        # missing matches, on top of what Cricsheet now covers).
-        if pre_matches > 0 and not force:
-            log.warning(
-                f"SKIPPED stale-looking manual override for {row['player']} ({row['format']}): "
-                f"Cricsheet already shows {pre_matches} matches / {pre_runs} runs for them, so "
-                f"this override (+{matches_add} matches, +{runs_add} runs, source: {source}) "
-                f"looks like it's covering matches Cricsheet has since added natively. "
-                f"Remove this row from manual_match_overrides.csv if that's confirmed, or set "
-                f"force_apply=true in that row if you've verified these ARE still-missing matches "
-                f"on top of what Cricsheet now has."
-            )
-            skipped_stale += 1
-            continue
-
-        new_matches = pre_matches + matches_add
-        new_runs = pre_runs + runs_add
-        batting_by_format.loc[mask, "matches"] = new_matches
-        batting_by_format.loc[mask, "runs"] = new_runs
-
-        # Keep average/strike_rate consistent with the corrected runs total
-        # instead of leaving them stale from before the override (dismissals
-        # and balls_faced aren't part of this override file, so they're held
-        # fixed — this at least keeps the displayed average/SR arithmetically
-        # right relative to the new runs total).
-        if "dismissals" in batting_by_format.columns:
-            dismissals = batting_by_format.loc[mask, "dismissals"].iloc[0]
-            batting_by_format.loc[mask, "average"] = round(new_runs / max(dismissals, 1), 2)
-        if "balls_faced" in batting_by_format.columns:
-            balls_faced = batting_by_format.loc[mask, "balls_faced"].iloc[0]
-            batting_by_format.loc[mask, "strike_rate"] = round((new_runs / max(balls_faced, 1)) * 100, 2)
-
+        batting_by_format.loc[mask, "matches"] += int(row.get("matches_add", 0) or 0)
+        if pd.notna(row.get("runs_add")):
+            batting_by_format.loc[mask, "runs"] += int(row["runs_add"])
         applied += 1
         log.info(f"Applied manual override: {row['player']} {row['format']} "
-                  f"{pre_matches}->{new_matches} matches, {pre_runs}->{new_runs} runs "
-                  f"(source: {source}{', FORCED despite existing Cricsheet data' if force and pre_matches > 0 else ''})")
-
-    log.info(f"Manual overrides: {applied} applied, {skipped_stale} skipped as likely-stale, "
-             f"{skipped_missing} skipped (no matching player row), out of {len(overrides)} total rows")
+                  f"+{row.get('matches_add', 0)} matches (source: {row.get('source', 'unspecified')})")
+    log.info(f"Manual overrides applied: {applied}/{len(overrides)} rows")
     return batting_by_format, bowling_by_format
 
 
@@ -1092,6 +1078,21 @@ def main():
     log.info(f"TOTAL player-registration rows loaded: {registered_players.shape[0]:,}")
 
     df, registered_players = apply_name_aliases(df, registered_players)
+
+    log.info("Checking for the same real match appearing under two different match_ids...")
+    match_meta = pd.concat([
+        build_match_metadata(os.path.join(WORKDIR, "odi_data"), "ODI"),
+        build_match_metadata(os.path.join(WORKDIR, "test_data"), "Test"),
+        build_match_metadata(os.path.join(WORKDIR, "t20i_data"), "T20I"),
+        build_match_metadata(os.path.join(WORKDIR, "ipl_data"), "IPL"),
+        build_match_metadata(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        build_match_metadata(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        build_match_metadata(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        build_match_metadata(os.path.join(WORKDIR, "wpl_data"), "WPL"),
+    ], ignore_index=True)
+    df = deduplicate_matches(df, match_meta)
+    valid_ids = set(df["match_id"].astype(str).unique())
+    registered_players = registered_players[registered_players["match_id"].astype(str).isin(valid_ids)]
 
     df = clean_and_validate(df)
     bat_innings, bowl_innings = build_innings_tables(df)
