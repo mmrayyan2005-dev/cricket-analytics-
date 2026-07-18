@@ -457,15 +457,40 @@ def player_input(label, default, key=None):
                          help="Start typing to search — matches filter as you type, like a search engine.")
 
 # ── V12 smart find_rows (more thorough) ──────────────────────────────────────
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_search_aliases():
+    return _try_load("search_aliases.csv")  # optional, pipeline-built: full_name -> cricsheet short name
+
 def find_rows(df, name_col, query):
     import re as _re
     if df.empty: return pd.DataFrame()
     q = query.strip()
     if not q: return pd.DataFrame()
     parts = q.split()
+
+    # Full-first-name lookup first: raw Cricsheet data only ever stores
+    # "V Kohli", never "Virat Kohli", so a plain substring search for
+    # "virat" can never find him on its own — there's no "virat" substring
+    # in "V Kohli" to find. search_aliases.csv (built by the pipeline from
+    # the same Wikipedia lookups already used for the coverage-gap check)
+    # maps full names to the short form so this resolves correctly instead
+    # of silently falling through to an unrelated substring match.
+    aliases = load_search_aliases()
+    if not aliases.empty and "full_name" in aliases.columns:
+        alias_hit = aliases[aliases["full_name"].str.contains(
+            r"(?i)^" + _re.escape(q), na=False, regex=True)]
+        if not alias_hit.empty:
+            short_names = alias_hit["cricsheet_name"].unique()
+            mask = df[name_col].isin(short_names)
+            if mask.any(): return df[mask]
+
     mask = df[name_col].str.match(r"(?i)^"+_re.escape(q)+r"$", na=False)
     if mask.any(): return df[mask]
-    mask = df[name_col].str.contains(_re.escape(q), case=False, na=False)
+    # Word-boundary substring match — was previously unbounded (plain
+    # .str.contains with no boundary), which is how searching "virat"
+    # could match "Seneviratna" (the letters happen to sit mid-word) and
+    # show a completely unrelated player instead of "profile not found".
+    mask = df[name_col].str.contains(rf"(?i)\b{_re.escape(q)}", na=False, regex=True)
     if mask.any(): return df[mask]
     if len(parts) >= 2:
         initial = parts[0][0].upper()
@@ -1337,10 +1362,28 @@ elif section=="🎯 Win Probability":
             form_fmt_col = next((c for c in form_df.columns if c.lower()=="format"), None)
             form_pool = form_df[form_df[form_fmt_col]==wp_fmt] if (form_fmt_col and wp_fmt) else form_df
 
-            avail_teams = sorted([t for t in form_pool[team_col].dropna().unique().tolist() if is_real_country(t)])
+            # BUG FIX: is_real_country() is meant to hide domestic franchise
+            # names from international pickers — but it was being applied
+            # unconditionally, including for IPL/PSL/BBL/CPL/WPL where the
+            # teams are SUPPOSED to be franchises (Mumbai Indians, Karachi
+            # Kings, etc). For those formats it filtered out every real
+            # team, dropped below 2, and fell through to the "not enough
+            # teams" fallback below — which pulls from the UNFILTERED,
+            # ALL-FORMATS team list. That's how selecting "IPL" could show
+            # "Australia vs Bangladesh": those are real country names from
+            # the ODI/Test/T20I data leaking into an IPL-format matchup.
+            is_franchise_league = wp_fmt in ("IPL", "PSL", "BBL", "CPL", "WPL")
+            if is_franchise_league:
+                avail_teams = sorted(form_pool[team_col].dropna().unique().tolist())
+            else:
+                avail_teams = sorted([t for t in form_pool[team_col].dropna().unique().tolist() if is_real_country(t)])
             if len(avail_teams) < 2:
-                avail_teams = sorted([t for t in form_df[team_col].dropna().unique().tolist() if is_real_country(t)])
-                form_pool = form_df
+                # Fallback now stays within the SAME format's data (just
+                # unfiltered by is_real_country), instead of falling all the
+                # way back to every format combined — so a sparse format at
+                # least won't cross-contaminate with a completely different
+                # format's teams.
+                avail_teams = sorted(form_pool[team_col].dropna().unique().tolist())
             if len(avail_teams) < 2:
                 st.info("Not enough recognized teams in the form data to build a matchup.")
             else:
