@@ -1517,18 +1517,25 @@ elif section=="🔍 Player Search":
                         if not grow.empty:
                             g=grow.iloc[0]
                             documented = int(g["documented_missing_candidates"]) if pd.notna(g.get("documented_missing_candidates")) else 0
+                            fragments = g.get("possible_name_fragments", "") or ""
                             documented_note = (
                                 f" Cricsheet's own published missing-matches list includes {documented} {fmt} fixture(s) "
                                 f"involving this team during their playing career — likely explains some or all of this gap."
                                 if documented > 0 else
                                 " This is a known Cricsheet coverage gap, not a stale cache."
                             )
+                            fragment_note = (
+                                f"<br>🔎 <strong>Possible fix, not a real gap:</strong> found similarly-named row(s) in the raw "
+                                f"data that may be this player recorded under a different spelling in a specific match — "
+                                f"{fragments}. Verify and add to name_aliases.csv to merge permanently."
+                                if fragments else ""
+                            )
                             st.markdown(f"""<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);
                               border-radius:8px;padding:8px 14px;margin:0 0 10px;font-size:12px;color:#fbbf24">
                               ⚠️ <strong>Official record (Wikipedia): {int(g['wiki_matches'])} {fmt} matches
                               {(', ' + format(int(g['wiki_runs']), ',') + ' runs') if pd.notna(g.get('wiki_runs')) else ''}</strong>
                               — this app currently tracks {int(g['cricsheet_matches'])} from Cricsheet's ball-by-ball archive
-                              ({abs(g['gap_pct']):.1f}% short).{documented_note}</div>""",
+                              ({abs(g['gap_pct']):.1f}% short).{documented_note}{fragment_note}</div>""",
                               unsafe_allow_html=True)
 
                     # ── Legacy-player fallback ──
