@@ -1429,28 +1429,49 @@ elif section=="🎯 Win Probability":
             form_fmt_col = next((c for c in form_df.columns if c.lower()=="format"), None)
             form_pool = form_df[form_df[form_fmt_col]==wp_fmt] if (form_fmt_col and wp_fmt) else form_df
 
-            # BUG FIX: is_real_country() is meant to hide domestic franchise
-            # names from international pickers — but it was being applied
-            # unconditionally, including for IPL/PSL/BBL/CPL/WPL where the
-            # teams are SUPPOSED to be franchises (Mumbai Indians, Karachi
-            # Kings, etc). For those formats it filtered out every real
-            # team, dropped below 2, and fell through to the "not enough
-            # teams" fallback below — which pulls from the UNFILTERED,
-            # ALL-FORMATS team list. That's how selecting "IPL" could show
-            # "Australia vs Bangladesh": those are real country names from
-            # the ODI/Test/T20I data leaking into an IPL-format matchup.
+            # BUG FIX: previously avail_teams came from form_pool alone, which
+            # depends on form_fmt_col being found AND correctly populated. If
+            # that column was missing/blank for some rows, form_pool silently
+            # fell back to ALL formats combined — so picking "BBL" could still
+            # show PSL/IPL/international team names in the dropdown.
+            #
+            # Fix: build the team list from h2h_pool instead — that's
+            # results_wp already hard-filtered to wp_fmt via
+            # `results_wp["format"]==wp_fmt` a few lines up, so team1/team2
+            # values in it are GUARANTEED to be teams that actually played
+            # a match in this exact format. This is real match evidence,
+            # not a derived/joinable field that can go stale or blank.
+            ground_truth_teams = set()
+            if "team1" in h2h_pool.columns and "team2" in h2h_pool.columns:
+                ground_truth_teams = set(h2h_pool["team1"].dropna().unique().tolist()) | \
+                                      set(h2h_pool["team2"].dropna().unique().tolist())
+
             is_franchise_league = wp_fmt in ("IPL", "PSL", "BBL", "CPL", "WPL")
-            if is_franchise_league:
-                avail_teams = sorted(form_pool[team_col].dropna().unique().tolist())
+            if not is_franchise_league:
+                # For international formats, still strip out any stray
+                # franchise names that shouldn't be there.
+                ground_truth_teams = {t for t in ground_truth_teams if is_real_country(t)}
+
+            if ground_truth_teams:
+                # Only offer teams that ALSO have form data (needed to
+                # actually compute a win probability) — but restrict the
+                # possible pool to this format's real teams first, so form
+                # data from another format can never leak in here.
+                form_teams_this_fmt = set(form_pool[team_col].dropna().unique().tolist())
+                avail_teams = sorted(ground_truth_teams & form_teams_this_fmt)
+                if len(avail_teams) < 2:
+                    # Have match evidence but no form overlap — better to show
+                    # the real teams for this format (even without form-based
+                    # win % nuance) than to fall back to a mismatched format.
+                    avail_teams = sorted(ground_truth_teams)
             else:
-                avail_teams = sorted([t for t in form_pool[team_col].dropna().unique().tolist() if is_real_country(t)])
-            if len(avail_teams) < 2:
-                # Fallback now stays within the SAME format's data (just
-                # unfiltered by is_real_country), instead of falling all the
-                # way back to every format combined — so a sparse format at
-                # least won't cross-contaminate with a completely different
-                # format's teams.
+                # No match-result evidence at all for this format (shouldn't
+                # normally happen since wp_fmt comes from results_wp itself),
+                # fall back to form_pool but keep it scoped to this format only.
                 avail_teams = sorted(form_pool[team_col].dropna().unique().tolist())
+                if not is_franchise_league:
+                    avail_teams = [t for t in avail_teams if is_real_country(t)]
+
             if len(avail_teams) < 2:
                 st.info("Not enough recognized teams in the form data to build a matchup.")
             else:
