@@ -1160,3 +1160,82 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+Data-freshness check patch for pipeline.py
+============================================
+WHAT THIS DOES:
+After loading all match data, this checks the most recent match date
+Cricsheet actually has for each format, compares it to today's date, and
+writes a clear freshness report — both to the log AND to a
+data_freshness.txt file pushed to GitHub — so a lag like "India-England
+series ended July 19 but Cricsheet hasn't published it yet" shows up as
+an obvious, dated explanation instead of looking like a broken pipeline.
+
+HOW TO INSTALL:
+1. Paste the function below into pipeline.py (anywhere above main() works,
+   e.g. right after push_text_to_github()).
+2. In main(), call it right after building `df` (after the big pd.concat
+   that creates `df` from all formats, before clean_and_validate).
+3. Add one line to files_to_save / push section (shown at the bottom of
+   this file) to push the freshness report to GitHub.
+4. Optional: in your Streamlit dashboard, read data_freshness.txt the same
+   way you already read last_updated.txt, and show it near the top of
+   the page.
+"""
+
+from datetime import datetime, timezone
+import pandas as pd
+
+
+def build_data_freshness_report(df, log):
+    """For each format, find the latest match date actually present in the
+    loaded data, and how many days old that is. Flags formats that look
+    stale (>10 days since the most recent match) with a plain-English note,
+    since Cricsheet upload lag (not a pipeline bug) is the #1 cause of
+    'why hasn't X series shown up yet' questions."""
+    today = datetime.now(timezone.utc).date()
+    rows = []
+
+    df = df.copy()
+    df["start_date"] = pd.to_datetime(df["start_date"], errors="coerce")
+
+    for fmt in sorted(df["format"].dropna().unique()):
+        fmt_dates = df.loc[df["format"] == fmt, "start_date"].dropna()
+        if fmt_dates.empty:
+            rows.append({"format": fmt, "latest_match_date": None,
+                         "days_since": None, "status": "NO DATA"})
+            continue
+        latest = fmt_dates.max().date()
+        days_since = (today - latest).days
+        status = "STALE — likely upload lag, not a pipeline bug" if days_since > 10 else "OK"
+        rows.append({"format": fmt, "latest_match_date": str(latest),
+                     "days_since": days_since, "status": status})
+        if days_since > 10:
+            log.warning(f"Data freshness: {fmt} most recent match on record is {latest} "
+                        f"({days_since} days ago). If a newer {fmt} series/match has ended "
+                        f"since then, Cricsheet likely just hasn't published it yet — "
+                        f"check https://cricsheet.org/downloads/ 'last updated' date before "
+                        f"assuming the pipeline is broken.")
+        else:
+            log.info(f"Data freshness: {fmt} up to date as of {latest} ({days_since} days ago)")
+
+    report = pd.DataFrame(rows)
+    checked_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    report_text = f"Freshness check run: {checked_at}\n\n" + report.to_string(index=False)
+    return report, report_text
+
+
+# ── In main(), add these two lines right after `df` is built ──────────────
+#
+#   freshness_report, freshness_text = build_data_freshness_report(df, log)
+#
+# ── Then push it alongside your other files, e.g. next to last_updated.txt:
+#
+#   push_text_to_github(freshness_text, "data_freshness.txt",
+#                        GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
+#
+# That's it. Every run will now log + publish a clear "data current
+# through <date>, X days old" note per format, so a lag like the recent
+# India-England ODI series is obviously an upstream Cricsheet delay,
+# not something broken in your code.
