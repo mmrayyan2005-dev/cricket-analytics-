@@ -387,16 +387,6 @@ def load_coverage_gaps():
     # just returns empty — show_player_card's gap notice below no-ops on that.
     return _try_load("cricket_coverage_gaps.csv")
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_legacy_players():
-    # Players whose Wikipedia-listed international debut predates 2008 —
-    # built by pipeline.py's build_legacy_pre2008_report(), reusing the same
-    # Wikipedia infobox fetch already made for the coverage-gap check (no
-    # extra API cost). Missing/old repo without this file yet just returns
-    # empty — the Legacy Players page below shows a clear "run the pipeline"
-    # message instead of a blank table in that case.
-    return _try_load("cricket_legacy_pre2008.csv")
-
 RECOGNIZED_TEAMS = {
     "Afghanistan","Australia","Bangladesh","England","India","Ireland","New Zealand",
     "Pakistan","South Africa","Sri Lanka","West Indies","Zimbabwe",
@@ -1070,7 +1060,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
 PAGES=["🏠 Home","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
-       "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings","🏛️ Legacy Players"]
+       "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
 
 if "page" not in st.session_state: st.session_state["page"]="🏠 Home"
 if "nav_history" not in st.session_state: st.session_state["nav_history"]=[]
@@ -1195,7 +1185,6 @@ if section=="🏠 Home":
         ("🏆","Leaderboard","Top players ranked by format & stat","🏆 Leaderboard"),
         ("🤖","Similar Players","ML-powered player comparisons","🤖 Similar Players"),
         ("🔥","Form & Ratings","Who's hot, who's cold right now","🔥 Form & Ratings"),
-        ("🏛️","Legacy Players","Official records for careers before 2008","🏛️ Legacy Players"),
     ]
     cols=st.columns(4)
     for i,(emoji,title,desc,target) in enumerate(features):
@@ -1691,35 +1680,43 @@ elif section=="🔍 Player Search":
                               ({abs(g['gap_pct']):.1f}% short).{documented_note}{fragment_note}</div>""",
                               unsafe_allow_html=True)
 
-                    # ── Legacy-player fallback ──
-                    # For careers Cricsheet barely covers at all (mostly players
-                    # whose careers predate ball-by-ball digitization, roughly
-                    # pre-2000s), the Cricsheet-derived "Matches: 4" number isn't
-                    # just short, it's actively misleading. Cross-check against
-                    # Wikipedia's official career totals (same infobox source as
-                    # the gap-check above) and show those instead when Cricsheet's
-                    # coverage is under 40% of the real career — clearly labeled,
-                    # so it's obvious this is an official total, not a Cricsheet
-                    # ball-by-ball figure. Requires wiki_matches>=20 so this only
-                    # fires for genuine full careers, not noise on fringe players.
+                    # ── Merge in pre-2008 / pre-digitization career ──
+                    # Cricsheet's ball-by-ball archive barely covers careers
+                    # that predate ball-by-ball digitization (mostly players
+                    # like Afridi, Dhoni-early-career, etc. whose careers
+                    # started before ~2008). Rather than showing Cricsheet's
+                    # partial number with a side-note about the "real" total,
+                    # the Matches/Runs/Average/100s shown below ARE the full
+                    # official career total (Wikipedia) whenever it covers
+                    # more than Cricsheet does — so "overall record" means
+                    # the whole career, not just the digitized portion.
+                    # Strike rate / 4s / 6s / dot% aren't in Wikipedia's
+                    # infobox, so those stay Cricsheet-only and are labeled
+                    # as covering the tracked portion only.
                     wiki_card = get_wiki(display_name, name)
                     cs = (wiki_card or {}).get("career_stats", {}).get(fmt)
-                    if cs and cs.get("matches") and cs["matches"] >= 20 and int(p["matches"]) < cs["matches"] * 0.4:
-                        st.markdown(f"""<div style="background:rgba(138,50,38,.08);border:1px solid rgba(138,50,38,.35);
-                          border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:12px;color:#e8967f">
-                          📖 <strong>Cricsheet has ball-by-ball data for only {int(p['matches'])} of this player's
-                          {cs['matches']} {fmt} matches</strong> — likely because most of the career predates
-                          digitized ball-by-ball archives. Official career total (Wikipedia): <strong>{cs['matches']} matches
-                          {(', ' + format(cs['runs'], ',') + ' runs') if cs.get('runs') else ''}
-                          {(', avg ' + str(cs['average'])) if cs.get('average') else ''}
-                          {(', ' + str(cs['hundreds']) + ' hundreds') if cs.get('hundreds') is not None else ''}</strong>.
-                          Strike rate, boundary breakdown, and charts below only reflect the portion Cricsheet has.</div>""",
-                          unsafe_allow_html=True)
+                    use_official = cs and cs.get("matches") and cs["matches"] > int(p["matches"])
+                    if use_official:
+                        disp_matches = cs["matches"]
+                        disp_runs = cs["runs"] if cs.get("runs") is not None else int(p["runs"])
+                        disp_avg = cs["average"] if cs.get("average") is not None else p["average"]
+                        disp_100s = cs["hundreds"] if cs.get("hundreds") is not None else \
+                            (int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—")
+                        st.caption(f"📖 Overall record includes {cs['matches'] - int(p['matches'])} match(es) from "
+                                   f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Runs/"
+                                   f"Average/100s below are the full official career total (Wikipedia). Strike rate, "
+                                   f"boundary breakdown, and charts further down only reflect the {int(p['matches'])} "
+                                   f"match(es) Cricsheet has ball-by-ball detail for.")
+                    else:
+                        disp_matches = int(p["matches"])
+                        disp_runs = int(p["runs"])
+                        disp_avg = p["average"]
+                        disp_100s = int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—"
 
-                    metrics({"Matches":int(p["matches"]),"Runs":f"{int(p['runs']):,}","Average":p["average"]})
+                    metrics({"Matches":disp_matches,"Runs":f"{disp_runs:,}","Average":disp_avg})
                     metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
                     metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
-                    h100=int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—"
+                    h100=disp_100s
                     h50=int(p["fifties"]) if "fifties" in p.index and pd.notna(p.get("fifties")) else "—"
                     hs=int(p["highest"]) if "highest" in p.index and pd.notna(p.get("highest")) else "—"
                     dk=int(p["ducks"]) if "ducks" in p.index and pd.notna(p.get("ducks")) else "—"
@@ -1764,31 +1761,38 @@ elif section=="🔍 Player Search":
                 with tabs[ti]:
                     p2=bowl.sort_values("wickets",ascending=False).iloc[0]
 
-                    # ── Legacy-player fallback (bowling) ──
-                    # Same idea as the batting tab above: for careers Cricsheet
-                    # barely covers (mostly pre-digitization), show Wikipedia's
-                    # official wickets/bowling-average total instead of letting
-                    # a misleadingly low Cricsheet count stand unexplained.
-                    # Reuses the same get_wiki() call already made on the
-                    # Batting tab (cached, so this doesn't double the request).
+                    # ── Merge in pre-2008 / pre-digitization career (bowling) ──
+                    # Same idea as the batting tab above: Matches/Wickets/
+                    # Average/Best Bowling shown below are the full official
+                    # career total (Wikipedia) whenever it covers more than
+                    # Cricsheet does, so "overall record" reflects the whole
+                    # career. Economy/dot% aren't in the infobox, so those
+                    # stay Cricsheet-only, labeled as covering the tracked
+                    # portion. Reuses the same get_wiki() call already made
+                    # on the Batting tab (cached, so this doesn't double the request).
                     wiki_card2 = get_wiki(display_name, name)
                     cs2 = (wiki_card2 or {}).get("career_stats", {}).get(fmt)
-                    if cs2 and cs2.get("wickets") and cs2["wickets"] >= 10 and int(p2["matches"]) < cs2.get("matches", 0) * 0.4:
-                        st.markdown(f"""<div style="background:rgba(138,50,38,.08);border:1px solid rgba(138,50,38,.35);
-                          border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:12px;color:#e8967f">
-                          📖 <strong>Cricsheet has ball-by-ball data for only {int(p2['matches'])} of this player's
-                          {cs2['matches']} {fmt} matches</strong> — likely because most of the career predates
-                          digitized ball-by-ball archives. Official career total (Wikipedia): <strong>{cs2['wickets']} wickets</strong>
-                          {(', avg ' + str(cs2['bowl_average'])) if cs2.get('bowl_average') else ''}
-                          {(', best ' + str(cs2['best_bowling'])) if cs2.get('best_bowling') else ''}.
-                          Economy, dot %, and charts below only reflect the portion Cricsheet has.</div>""",
-                          unsafe_allow_html=True)
+                    use_official2 = cs2 and cs2.get("wickets") and cs2.get("matches") and cs2["matches"] > int(p2["matches"])
+                    if use_official2:
+                        disp_matches2 = cs2["matches"]
+                        disp_wkts = cs2["wickets"]
+                        disp_avg2 = cs2["bowl_average"] if cs2.get("bowl_average") is not None else p2["average"]
+                        disp_bb = cs2["best_bowling"] if cs2.get("best_bowling") else p2.get("best_bowling","—")
+                        st.caption(f"📖 Overall record includes {cs2['matches'] - int(p2['matches'])} match(es) from "
+                                   f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Wickets/"
+                                   f"Average/Best Bowling below are the full official career total (Wikipedia). Economy "
+                                   f"and dot % further down only reflect the {int(p2['matches'])} match(es) Cricsheet "
+                                   f"has ball-by-ball detail for.")
+                    else:
+                        disp_matches2 = int(p2["matches"])
+                        disp_wkts = int(p2["wickets"])
+                        disp_avg2 = p2["average"]
+                        disp_bb = p2.get("best_bowling","—") if "best_bowling" in p2.index else "—"
 
-                    metrics({"Matches":int(p2["matches"]),"Wickets":int(p2["wickets"]),"Economy":p2["economy"]})
-                    metrics({"Average":p2["average"],"Strike Rate":p2["strike_rate"],"Dot %":f"{p2['dot_pct']}%"})
+                    metrics({"Matches":disp_matches2,"Wickets":disp_wkts,"Economy":p2["economy"]})
+                    metrics({"Average":disp_avg2,"Strike Rate":p2["strike_rate"],"Dot %":f"{p2['dot_pct']}%"})
                     fw=int(p2["five_wkts"]) if "five_wkts" in p2.index and pd.notna(p2.get("five_wkts")) else "—"
-                    bb=p2.get("best_bowling","—") if "best_bowling" in p2.index else "—"
-                    metrics({"5-Wkt Hauls":fw,"Best Bowling":bb})
+                    metrics({"5-Wkt Hauls":fw,"Best Bowling":disp_bb})
                 ti+=1
             with tabs[ti]:
                 if len(bat)>0:
@@ -2402,71 +2406,6 @@ elif section=="🔥 Form & Ratings":
                 show_bowl=[c for c in ["bowler","player_score","wickets","economy","average","dot_pct"] if c in ps2.columns]
                 st.dataframe(ps2[show_bowl].reset_index(drop=True))
             else: st.info(f"No bowling player score data for {fmt} yet.")
-
-elif section=="🏛️ Legacy Players":
-    page_banner("🏛️","Legacy Players","Official career records for players whose international debut predates 2008 — sourced from Wikipedia, since Cricsheet's ball-by-ball archive barely covers these careers","#1a140d","#2e2010","#d4a24a")
-
-    legacy = load_legacy_players()
-    if legacy.empty:
-        st.warning("No legacy-player data found yet. This page is populated by `build_legacy_pre2008_report()` "
-                   "in pipeline.py, which needs to run at least once and push `cricket_legacy_pre2008.csv` "
-                   "to the repo before this page has anything to show.")
-        st.caption("Why: Cricsheet's ball-by-ball archive is thin or empty for most careers that started before "
-                   "the mid-2000s, since ball-by-ball digitization is a relatively recent effort. This page pulls "
-                   "official career totals from Wikipedia instead, for exactly that group of players.")
-    else:
-        st.caption(f"📖 {len(legacy):,} player/format record(s) — official totals from Wikipedia's infobox, "
-                   "not derived from Cricsheet ball-by-ball data. Debut year shown is the earliest recorded "
-                   "international debut across formats.")
-
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            fmt_opts = ["All"] + sorted(legacy["format"].dropna().unique().tolist()) if "format" in legacy.columns else ["All"]
-            fmt_pick = st.selectbox("Format", fmt_opts)
-        with c2:
-            role_opts = ["All", "Batting record", "Bowling record"]
-            role_pick = st.selectbox("Record type", role_opts)
-        with c3:
-            name_filter = st.text_input("Search player name", "")
-
-        view = legacy.copy()
-        if fmt_pick != "All" and "format" in view.columns:
-            view = view[view["format"] == fmt_pick]
-        if role_pick == "Batting record" and "runs" in view.columns:
-            view = view[view["runs"].notna()]
-        elif role_pick == "Bowling record" and "wickets" in view.columns:
-            view = view[view["wickets"].notna()]
-        if name_filter and "player" in view.columns:
-            view = view[view["player"].str.contains(name_filter, case=False, na=False)]
-
-        if view.empty:
-            st.info("No players match this filter.")
-        else:
-            view = view.sort_values("debut_year", na_position="last") if "debut_year" in view.columns else view
-            show_cols = [c for c in ["player", "format", "debut_year", "matches", "runs", "average",
-                                      "hundreds", "wickets", "bowl_average", "best_bowling"] if c in view.columns]
-            st.dataframe(view[show_cols].reset_index(drop=True), use_container_width=True, height=520)
-
-            st.markdown("---")
-            st.markdown("#### Look up one player")
-            pick = st.selectbox("Player", sorted(view["player"].dropna().unique().tolist())) if "player" in view.columns else None
-            if pick:
-                prow = view[view["player"] == pick]
-                for _, r in prow.iterrows():
-                    with st.container(border=True):
-                        st.markdown(f"**{r.get('player','')} — {r.get('format','')}**"
-                                    + (f" · debut {int(r['debut_year'])}" if pd.notna(r.get("debut_year")) else ""))
-                        m = {}
-                        if pd.notna(r.get("matches")): m["Matches"] = int(r["matches"])
-                        if pd.notna(r.get("runs")): m["Runs"] = f"{int(r['runs']):,}"
-                        if pd.notna(r.get("average")): m["Average"] = r["average"]
-                        if pd.notna(r.get("hundreds")): m["100s"] = int(r["hundreds"])
-                        if m: metrics(m)
-                        m2 = {}
-                        if pd.notna(r.get("wickets")): m2["Wickets"] = int(r["wickets"])
-                        if pd.notna(r.get("bowl_average")): m2["Bowl Avg"] = r["bowl_average"]
-                        if pd.notna(r.get("best_bowling")) and r.get("best_bowling"): m2["Best Bowling"] = r["best_bowling"]
-                        if m2: metrics(m2)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
