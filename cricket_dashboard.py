@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import requests
+import re
 from datetime import datetime, timezone, timedelta
 
 st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="🏏",
@@ -400,6 +401,44 @@ def is_real_country(name):
     shouldn't see a franchise team name and wonder why it's 'playing' a
     country. This isn't exhaustive but covers every ODI/Test/T20I side."""
     return name in RECOGNIZED_TEAMS
+
+def _extract_birth_year(born_str):
+    """Pull a 4-digit year out of Wikipedia's free-text birth date field
+    (e.g. '5 Oct 1952' -> 1952). Returns None if no plausible year found."""
+    if not born_str:
+        return None
+    matches = re.findall(r"(1[89]\d{2}|20\d{2})", born_str)
+    return int(matches[-1]) if matches else None
+
+def check_name_collision(wiki_card, fmt, year_series):
+    """Cross-checks the player's birth year (from the matched Wikipedia
+    bio) against the years their Cricsheet match data for this specific
+    format actually spans. A working cricketer is essentially always
+    under ~50 at their last match and over ~14 at their first — if the
+    matched bio's birth year makes that impossible, the stats almost
+    certainly belong to a DIFFERENT real person who happens to share the
+    exact same name (Cricsheet stores names as plain text, so two
+    unrelated people with an identical name get merged together). This
+    catches the general case (any name collision), not just one hardcoded
+    player, and needs no extra data beyond what's already loaded.
+    Returns (is_collision: bool, note: str or None)."""
+    if not wiki_card or not wiki_card.get("born") or year_series is None or year_series.empty:
+        return False, None
+    byear = _extract_birth_year(wiki_card["born"])
+    if not byear:
+        return False, None
+    first_year, last_year = int(year_series.min()), int(year_series.max())
+    age_first, age_last = first_year - byear, last_year - byear
+    if age_last > 50 or age_first < 14:
+        note = (f"⚠️ **Possible name collision, not a display bug:** the photo/bio above is for someone born "
+                 f"{byear} ({wiki_card.get('title','this name')}), but the {fmt} match data below runs from "
+                 f"{first_year} to {last_year} (age {age_first}–{age_last} at the time) — not physically plausible "
+                 f"for one person's playing career. Cricsheet stores player names as plain text with no unique ID, "
+                 f"so this is very likely two different real people who happen to share the exact name "
+                 f"'{wiki_card.get('title','')}' being merged together. The stats below are what Cricsheet has "
+                 f"under this name, but they may not all belong to the person pictured above.")
+        return True, note
+    return False, None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_last_updated():
@@ -1695,7 +1734,18 @@ elif section=="🔍 Player Search":
                     # as covering the tracked portion only.
                     wiki_card = get_wiki(display_name, name)
                     cs = (wiki_card or {}).get("career_stats", {}).get(fmt)
-                    use_official = cs and cs.get("matches") and cs["matches"] > int(p["matches"])
+
+                    # Age-plausibility check FIRST — if this player+format
+                    # combo looks like two different real people sharing a
+                    # name, never merge in the wiki "official" numbers
+                    # (that would just compound the error), and warn instead.
+                    yrs = bat_yr[(bat_yr["format"]==fmt) & (bat_yr["striker"]==p.get("striker",display_name))]["year"] \
+                          if not bat_yr.empty and "striker" in bat_yr.columns else pd.Series(dtype=float)
+                    is_collision, collision_note = check_name_collision(wiki_card, fmt, yrs)
+                    if is_collision:
+                        st.error(collision_note)
+
+                    use_official = (not is_collision) and cs and cs.get("matches") and cs["matches"] > int(p["matches"])
                     if use_official:
                         disp_matches = cs["matches"]
                         disp_runs = cs["runs"] if cs.get("runs") is not None else int(p["runs"])
@@ -1772,7 +1822,14 @@ elif section=="🔍 Player Search":
                     # on the Batting tab (cached, so this doesn't double the request).
                     wiki_card2 = get_wiki(display_name, name)
                     cs2 = (wiki_card2 or {}).get("career_stats", {}).get(fmt)
-                    use_official2 = cs2 and cs2.get("wickets") and cs2.get("matches") and cs2["matches"] > int(p2["matches"])
+
+                    yrs2 = bowl_yr[(bowl_yr["format"]==fmt) & (bowl_yr["bowler"]==p2.get("bowler",display_name))]["year"] \
+                           if not bowl_yr.empty and "bowler" in bowl_yr.columns else pd.Series(dtype=float)
+                    is_collision2, collision_note2 = check_name_collision(wiki_card2, fmt, yrs2)
+                    if is_collision2:
+                        st.error(collision_note2)
+
+                    use_official2 = (not is_collision2) and cs2 and cs2.get("wickets") and cs2.get("matches") and cs2["matches"] > int(p2["matches"])
                     if use_official2:
                         disp_matches2 = cs2["matches"]
                         disp_wkts = cs2["wickets"]
