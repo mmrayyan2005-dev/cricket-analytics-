@@ -101,6 +101,10 @@ div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!im
 [data-testid="stRadio"]>div{flex-wrap:wrap!important;gap:8px!important}
 [data-testid="stRadio"] label{display:flex!important;align-items:center!important;background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;padding:8px 16px!important;font-size:12.5px!important;font-weight:700!important;color:var(--subtle)!important;cursor:pointer;transition:all .15s!important;font-family:var(--font-body)!important}
 [data-testid="stRadio"] label>div:first-child{display:none!important}
+[data-testid="stRadio"] label input[type="radio"]{position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;pointer-events:none!important}
+[data-testid="stRadio"] label svg{display:none!important}
+[data-testid="stRadio"] label>div,[data-testid="stRadio"] label>span{margin:0!important}
+[data-testid="stRadio"] label>div:first-of-type:not(:last-of-type){display:none!important}
 [data-testid="stRadio"] label>div{margin:0!important}
 [data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important;transform:translateY(-1px)}
 [data-testid="stRadio"] label:has(input:checked){border-color:transparent!important;color:#fff!important;background:linear-gradient(120deg,var(--accent2),var(--accent))!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important}
@@ -309,7 +313,13 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
   .ca-nav-status{display:none!important}
   /* 3) the page nav (14 pages) — instead of wrapping into a tall wall of
         pills that pushes all content below the fold, keep it one row and
-        let it scroll horizontally, like a broadcast format switcher. */
+        let it scroll horizontally, like a broadcast format switcher.
+        Targeted by shape (>=11 pills) via :has(), not by container key —
+        st.container(key=...) needs a newer Streamlit than may be deployed,
+        so this doesn't depend on that landing correctly. */
+  [data-testid="stRadio"]:has(label:nth-child(11))>div{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:2px 2px 6px!important}
+  [data-testid="stRadio"]:has(label:nth-child(11))>div::-webkit-scrollbar{display:none!important}
+  [data-testid="stRadio"]:has(label:nth-child(11)) label{flex:0 0 auto!important;font-size:11px!important;padding:7px 12px!important;min-height:36px!important}
   .st-key-ca_page_nav [data-testid="stRadio"]>div{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:2px 2px 6px!important}
   .st-key-ca_page_nav [data-testid="stRadio"]>div::-webkit-scrollbar{display:none!important}
   .st-key-ca_page_nav [data-testid="stRadio"] label{flex:0 0 auto!important;font-size:11px!important;padding:7px 12px!important;min-height:36px!important}
