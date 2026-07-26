@@ -73,18 +73,35 @@ logging.basicConfig(
 )
 log = logging.getLogger("cricket_pipeline")
 
+import shutil
 
 def download_and_extract(name, url, workdir):
     """Download one Cricsheet zip and extract it. Logs failures instead of
     letting a bad download silently produce zero data for a format."""
     folder = os.path.join(workdir, f"{name.lower()}_data")
+
+    # Wipe any leftovers from a previous run BEFORE extracting. extractall()
+    # only overwrites files that share a filename with the new zip — it never
+    # deletes files that used to be there but have since disappeared or been
+    # renamed upstream. Left uncleared, this is exactly what caused IPL/PSL
+    # to double-count: a stale file from an old download (e.g. a match filed
+    # under "Royal Challengers Bangalore") sits next to a freshly extracted
+    # one for the same real match (now "Royal Challengers Bengaluru"), the
+    # (format, date, teams) dedup key in deduplicate_matches() no longer
+    # matches because the team name literally changed, and both copies'
+    # deliveries get summed. Always extracting into a clean, empty folder
+    # makes that class of bug structurally impossible — there's never a
+    # stale file left to collide with.
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     os.makedirs(folder, exist_ok=True)
+
     try:
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
         with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
             z.extractall(folder)
-        log.info(f"Downloaded and extracted {name} from {url}")
+        log.info(f"Downloaded and extracted {name} from {url} (folder cleared first)")
         return folder
     except Exception as e:
         log.error(f"FAILED to download {name} from {url}: {e}")
