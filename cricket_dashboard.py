@@ -2113,6 +2113,26 @@ elif section=="🔍 Player Search":
                     if len(by)>=1:
                         st.markdown("**🏏 Batting Trends**")
                         ch(bar_v(by,"year","runs","Runs per Year",clr))
+                        # Sanity check, not a data fix: these are generous
+                        # ceilings above any realistic real-world single-
+                        # season run tally for the format. A year exceeding
+                        # this almost always means duplicate rows upstream
+                        # in cricket_batting_yearly.csv (e.g. a stale manual
+                        # override stacking on top of the auto-updated
+                        # Cricsheet pull for that year) rather than a real
+                        # record — flagged here instead of silently shown
+                        # as fact, since this app has no way to know which
+                        # of the duplicated rows is the correct one.
+                        _season_ceiling = {"IPL":1000,"PSL":950,"BBL":950,"CPL":950,
+                                            "WPL":850,"T20I":1100,"ODI":1600,"Test":2300}.get(fmt)
+                        if _season_ceiling:
+                            _flagged = by[by["runs"]>_season_ceiling]
+                            if not _flagged.empty:
+                                _yrs = ", ".join(str(int(yv)) for yv in _flagged["year"].tolist())
+                                st.caption(f"⚠️ {_yrs} shows more {fmt} runs than any real season on record — "
+                                           f"likely duplicate rows for that year in `cricket_batting_yearly.csv` "
+                                           f"upstream, not an actual number. Worth checking the pipeline for that "
+                                           f"player/year rather than trusting the chart as-is.")
                         if len(by)>1:
                             c1,c2=st.columns(2)
                             with c1: ch(line(by,"year","average","Batting Average",clr),260)
