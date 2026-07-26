@@ -1480,9 +1480,18 @@ elif section=="🔮 Player Forecast":
             st.warning("Forecast file is missing expected columns — showing raw data instead.")
             st.dataframe(forecast.reset_index(drop=True), hide_index=True)
         else:
+            # This only needs to catch genuine data-corruption outliers
+            # (e.g. a stray 9999 from a model artifact) — the real,
+            # format-aware ceiling (Test 2200 / ODI 1600 / T20I 1000 / etc.)
+            # is applied per-player-per-format further down, once we know
+            # which format we're looking at. This blanket pass used to cut
+            # off at 1200 for every format, which silently discarded valid
+            # Test-season numbers (a strong Test year can easily be
+            # 1300-2000+ runs) before the per-format check ever got a
+            # chance to correctly allow them.
             for c in [actual_col, pred_col]:
                 if c in forecast.columns:
-                    forecast.loc[forecast[c] > 1200, c] = pd.NA
+                    forecast.loc[forecast[c] > 3000, c] = pd.NA
 
             st.markdown('<div class="ca-insight">This is a simple statistical estimate based on a player\'s recent '
                          'seasons — <strong>not a guarantee</strong>. Think of it as "if their recent trend continues," '
