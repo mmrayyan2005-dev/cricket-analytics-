@@ -711,6 +711,34 @@ def bar_v(df, x, y, title, color, h=360):
         fig.update_xaxes(dtick=1, tickformat="d")
     return fig
 
+# Generous ceilings — comfortably above any real single-season tally ever
+# recorded for the format — used only to FLAG likely duplicate-row years
+# in the yearly CSVs (e.g. a stale manual override stacking on top of the
+# freshly-pulled Cricsheet row for the same match), not to alter or hide
+# the numbers. This isn't Kohli-specific: the same pipeline step builds
+# every player's yearly row, so the same bug can surface for anyone.
+SEASON_CEILING = {
+    "runs":    {"IPL":1000,"PSL":950,"BBL":950,"CPL":950,"WPL":850,"T20I":1100,"ODI":1600,"Test":2300},
+    "wickets": {"IPL":35,  "PSL":35, "BBL":35, "CPL":35, "WPL":30, "T20I":45,  "ODI":55,  "Test":80},
+}
+
+def flag_season_anomalies(df, fmt, stat="runs", year_col="year", who=""):
+    """Show a caption naming any year whose per-season total exceeds a
+    realistic ceiling for the format — a strong signal of duplicated rows
+    upstream rather than an actual record. Returns silently if nothing
+    looks off, or if fmt/stat aren't in the ceiling table."""
+    if df is None or df.empty or stat not in df.columns or year_col not in df.columns:
+        return
+    ceiling = SEASON_CEILING.get(stat, {}).get(fmt)
+    if not ceiling:
+        return
+    flagged = df[df[stat] > ceiling]
+    if not flagged.empty:
+        yrs = ", ".join(str(int(v)) for v in sorted(flagged[year_col].unique().tolist()))
+        subj = f"{who}'s " if who else ""
+        st.caption(f"⚠️ {subj}{yrs} shows more {fmt} {stat} in a season than any real record — "
+                   f"likely duplicate rows for that year upstream in the yearly CSV, not an actual number.")
+
 def line(df, x, y, title, color, h=280):
     if df.empty: return go.Figure()
     fig = px.line(df,x=x,y=y,markers=True,title=title)
@@ -2113,26 +2141,7 @@ elif section=="🔍 Player Search":
                     if len(by)>=1:
                         st.markdown("**🏏 Batting Trends**")
                         ch(bar_v(by,"year","runs","Runs per Year",clr))
-                        # Sanity check, not a data fix: these are generous
-                        # ceilings above any realistic real-world single-
-                        # season run tally for the format. A year exceeding
-                        # this almost always means duplicate rows upstream
-                        # in cricket_batting_yearly.csv (e.g. a stale manual
-                        # override stacking on top of the auto-updated
-                        # Cricsheet pull for that year) rather than a real
-                        # record — flagged here instead of silently shown
-                        # as fact, since this app has no way to know which
-                        # of the duplicated rows is the correct one.
-                        _season_ceiling = {"IPL":1000,"PSL":950,"BBL":950,"CPL":950,
-                                            "WPL":850,"T20I":1100,"ODI":1600,"Test":2300}.get(fmt)
-                        if _season_ceiling:
-                            _flagged = by[by["runs"]>_season_ceiling]
-                            if not _flagged.empty:
-                                _yrs = ", ".join(str(int(yv)) for yv in _flagged["year"].tolist())
-                                st.caption(f"⚠️ {_yrs} shows more {fmt} runs than any real season on record — "
-                                           f"likely duplicate rows for that year in `cricket_batting_yearly.csv` "
-                                           f"upstream, not an actual number. Worth checking the pipeline for that "
-                                           f"player/year rather than trusting the chart as-is.")
+                        flag_season_anomalies(by, fmt, "runs")
                         if len(by)>1:
                             c1,c2=st.columns(2)
                             with c1: ch(line(by,"year","average","Batting Average",clr),260)
@@ -2148,6 +2157,7 @@ elif section=="🔍 Player Search":
                     if len(by2)>=1:
                         st.markdown("**🎳 Bowling Trends**")
                         ch(bar_v(by2,"year","wickets","Wickets per Year",clr))
+                        flag_season_anomalies(by2, fmt, "wickets")
                         if len(by2)>1:
                             c1,c2=st.columns(2)
                             with c1: ch(line(by2,"year","economy","Economy Rate","#d63031"),260)
@@ -2214,6 +2224,8 @@ elif section=="⚔️ Head to Head":
                 fy.update_xaxes(title="Year",tickmode="linear",dtick=2,showgrid=True,gridcolor=GRID)
                 fy.update_yaxes(title="Runs",showgrid=True,gridcolor=GRID)
                 st.plotly_chart(fy,**CFG)
+                flag_season_anomalies(by1, fmt, "runs", who=p1n)
+                flag_season_anomalies(by2y, fmt, "runs", who=p2n)
                 # V12 extra: average comparison over years
                 fy2=px.line(combined,x="year",y="average",color="player",markers=True,
                             title=f"Batting Average — {fmt}",
@@ -2396,12 +2408,14 @@ elif section=="📈 Over Years":
             by=src[src["format"]==fmt].sort_values("year"); clr=FC.get(fmt,"#00b894")
             if st_=="Batting":
                 ch(bar_v(by,"year","runs","Runs per Year",clr))
+                flag_season_anomalies(by, fmt, "runs", who=name)
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","average","Batting Average",clr),280)
                 with c2: ch(line(by,"year","strike_rate","Strike Rate","#fdcb6e"),280)
                 st.dataframe(by[["year","matches","runs","average","strike_rate","fours","sixes"]].reset_index(drop=True))
             else:
                 ch(bar_v(by,"year","wickets","Wickets per Year",clr))
+                flag_season_anomalies(by, fmt, "wickets", who=name)
                 c1,c2=st.columns(2)
                 with c1: ch(line(by,"year","economy","Economy Rate","#d63031"),280)
                 with c2: ch(line(by,"year","average","Bowling Average","#6c5ce7"),280)
@@ -2582,6 +2596,7 @@ elif section=="🔥 Form & Ratings":
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#00b894")
                     ch(bar_v(pyr,"year","runs",f"{pname} — Runs per Year ({fmt})",clr))
+                    flag_season_anomalies(pyr, fmt, "runs", who=pname)
                     c1,c2=st.columns(2)
                     fig_avg=px.line(pyr,x="year",y="average",markers=True,title=f"{pname} — Batting Average by Year")
                     fig_avg.update_traces(line=dict(color=clr,width=3),
@@ -2634,6 +2649,7 @@ elif section=="🔥 Form & Ratings":
                             st.markdown(f'<div style="margin:4px 0 12px;display:flex;gap:6px;flex-wrap:wrap">{badges2}</div>',unsafe_allow_html=True)
                     clr=FC.get(fmt,"#d63031")
                     ch(bar_v(pyr,"year","wickets",f"{pname} — Wickets per Year ({fmt})","#d63031"))
+                    flag_season_anomalies(pyr, fmt, "wickets", who=pname)
                     c1,c2=st.columns(2)
                     fig_econ=px.line(pyr,x="year",y="economy",markers=True,title=f"{pname} — Economy by Year")
                     fig_econ.update_traces(line=dict(color="#d63031",width=3),
