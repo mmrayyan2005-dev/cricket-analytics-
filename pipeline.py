@@ -25,6 +25,7 @@ in plain text inside a script that might get committed by accident.
 import os
 import sys
 import io
+import shutil
 import zipfile
 import base64
 import logging
@@ -73,7 +74,6 @@ logging.basicConfig(
 )
 log = logging.getLogger("cricket_pipeline")
 
-import shutil
 
 def download_and_extract(name, url, workdir):
     """Download one Cricsheet zip and extract it. Logs failures instead of
@@ -81,17 +81,12 @@ def download_and_extract(name, url, workdir):
     folder = os.path.join(workdir, f"{name.lower()}_data")
 
     # Wipe any leftovers from a previous run BEFORE extracting. extractall()
-    # only overwrites files that share a filename with the new zip — it never
-    # deletes files that used to be there but have since disappeared or been
-    # renamed upstream. Left uncleared, this is exactly what caused IPL/PSL
-    # to double-count: a stale file from an old download (e.g. a match filed
-    # under "Royal Challengers Bangalore") sits next to a freshly extracted
-    # one for the same real match (now "Royal Challengers Bengaluru"), the
-    # (format, date, teams) dedup key in deduplicate_matches() no longer
-    # matches because the team name literally changed, and both copies'
-    # deliveries get summed. Always extracting into a clean, empty folder
-    # makes that class of bug structurally impossible — there's never a
-    # stale file left to collide with.
+    # only overwrites files that share a filename with the new zip — it
+    # never deletes files that used to be there but have since disappeared
+    # or been renamed upstream. Left uncleared, a stale file from an old
+    # download can sit next to a freshly extracted one for the same real
+    # match and confuse match-level dedup. Always extracting into a clean,
+    # empty folder makes that class of bug structurally impossible.
     if os.path.isdir(folder):
         shutil.rmtree(folder)
     os.makedirs(folder, exist_ok=True)
@@ -115,12 +110,7 @@ def build_match_metadata(folder, label):
     corrected. Row-level drop_duplicates() can never catch this, because
     every column including match_id differs between the two copies; only
     matching on (date, teams) — facts about the real match, not the file —
-    can. This is the same bug category that previously inflated Kohli's
-    IPL 2026 numbers (impossible stat totals from a match counted twice),
-    just resurfacing under a different match_id pattern for a different
-    player (Suryavanshi's 206 highest score / 192 sixes in 23 matches is
-    the same symptom: physically impossible T20 numbers from double-
-    counted deliveries)."""
+    can."""
     if not os.path.isdir(folder):
         return pd.DataFrame(columns=["match_id", "date", "teams", "format"])
     files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
@@ -182,8 +172,7 @@ def load_registered_players(folder, label):
     know he was even in that match; this file is the only source for that.
     Row format: info,player,<Team Name>,<Player Name>
     Without this, "matches played" silently undercounts anyone who has
-    innings where they didn't get to bat — which is exactly what caused
-    Cricsheet's Kohli ODI count to sit under his real career total."""
+    innings where they didn't get to bat."""
     if not os.path.isdir(folder):
         return pd.DataFrame(columns=["match_id", "team", "player", "format"])
     files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
@@ -210,12 +199,29 @@ def load_registered_players(folder, label):
 
 
 def load_format(folder, label):
-    """Load all per-match CSVs for one format. Logs which individual match
-    files failed to parse instead of the previous bare `except: pass`."""
+    """Load all per-match CSVs for one format. Only accepts files whose
+    name (minus extension) is purely numeric — i.e. a real Cricsheet
+    match_id. Some competition zips (notably the smaller league ones like
+    IPL/PSL) bundle an extra combined file such as all_matches.csv
+    alongside the individual per-match files, as a convenience export. That
+    file isn't a real match — it's every delivery from every match in the
+    competition re-listed in one place — so if it got picked up here on top
+    of the individual files, every delivery would be summed twice: once
+    from its own match file, once again from the bundled combined file.
+    Match count stays correct either way (match_id nunique doesn't care how
+    many times a delivery appears), but runs/wickets/balls all come out
+    doubled — this is what caused the IPL/PSL-only inflated-stats bug.
+    Logs which files got explicitly rejected, and which individual match
+    files failed to parse, instead of a bare `except: pass`."""
     if not os.path.isdir(folder):
         log.warning(f"{label}: folder {folder} does not exist, skipping")
         return pd.DataFrame()
-    files = [f for f in os.listdir(folder) if f.endswith(".csv") and not f.endswith("_info.csv")]
+    all_csvs = [f for f in os.listdir(folder) if f.endswith(".csv") and not f.endswith("_info.csv")]
+    files = [f for f in all_csvs if f[:-4].isdigit()]
+    rejected = sorted(set(all_csvs) - set(files))
+    if rejected:
+        log.warning(f"{label}: rejected {len(rejected)} non-match-id file(s) "
+                    f"(likely a bundled combined/summary export, not a real match): {rejected}")
     dfs, failed = [], []
     for f in sorted(files):
         try:
@@ -650,12 +656,7 @@ def detect_name_fragments(df, batting_by_format, coverage_gaps):
     'striker' name variants in the raw ball-by-ball data that are probably
     the SAME real person recorded under a slightly different spelling in
     one match (e.g. 'Virat Kohli' vs 'V Kohli' in a single file) — a data
-    fragmentation bug, not a genuine archive gap. This matters most for
-    high-profile matches: a whole century innings can silently vanish from
-    a player's totals this way, e.g. Kohli's 122* vs Afghanistan (Asia Cup
-    2022) — far too recent and high-profile a match to be a real coverage
-    gap, which is exactly the kind of case this is meant to catch instead
-    of being mislabeled as 'Cricsheet just doesn't have it'.
+    fragmentation bug, not a genuine archive gap.
     Only checks the already-small flagged-player list (not all ~10k+ names
     in the archive) to keep this fast, and only flags OTHER names with few
     matches (<=5) so it doesn't confuse two genuinely different players who
@@ -706,15 +707,9 @@ def build_coverage_gap_report(batting_by_format):
     official career totals for every player with enough matches to be worth
     checking. Returns (coverage_gaps, search_aliases):
     - coverage_gaps: 'official vs tracked here' notices, instead of silently
-      under-reporting a big name's career (this is what happened with
-      Kohli's ODI count).
+      under-reporting a big name's career.
     - search_aliases: full Wikipedia name -> Cricsheet short name (e.g.
-      "Virat Kohli" -> "V Kohli"), built for free from the same page lookups
-      this function already makes. Cricsheet's raw data only ever stores
-      short forms like "V Kohli", so searching a full first name like
-      "Virat" can never match it via substring search alone — this table is
-      what lets the dashboard's search resolve full names correctly instead
-      of falling through to an unrelated coincidental substring match."""
+      "Virat Kohli" -> "V Kohli")."""
     rows = []
     search_alias_rows = []
     candidates = batting_by_format[
@@ -777,13 +772,10 @@ def build_coverage_gap_report(batting_by_format):
 def apply_true_match_counts(batting_by_format, bowling_by_format, registered_players):
     """Replace the ball-derived 'matches' count (which only counts matches
     where the player actually faced a ball / bowled a delivery) with the
-    true squad-appearance count from the _info.csv registration data. This
-    is the fix for players showing fewer 'matches' than their real career
-    total — the gap was never missing Cricsheet data, it was matches where
-    they were part of the XI but simply didn't need to bat/bowl.
+    true squad-appearance count from the _info.csv registration data.
     The old ball-derived count is kept as 'innings_batted'/'innings_bowled'
-    since that's still a genuinely useful, different number (e.g. for
-    strike-rate-style analysis), just not what should be labeled 'Matches'."""
+    since that's still a genuinely useful, different number, just not what
+    should be labeled 'Matches'."""
     if registered_players.empty:
         log.warning("No player-registration data available — 'matches' still reflects "
                     "ball-derived innings counts only, not true squad appearances.")
@@ -823,14 +815,11 @@ def apply_true_match_counts(batting_by_format, bowling_by_format, registered_pla
 def apply_name_aliases(df, registered_players):
     """Load name_aliases.csv (optional, human-maintained) and rename any
     matching striker/bowler/non_striker/player values from a confirmed
-    variant spelling to the canonical name — e.g. if you verify that the
-    'Virat Kohli' rows in one match file are really the same person as
-    'V Kohli' everywhere else, adding that alias here means every future
-    pipeline run merges them automatically, permanently, no re-checking
-    needed. This is deliberately NOT automatic guessing — detect_name_
-    fragments() only logs candidates for a human to confirm, because
-    auto-merging two similarly-named but genuinely different players would
-    be a worse bug than the fragmentation it's trying to fix.
+    variant spelling to the canonical name. This is deliberately NOT
+    automatic guessing — detect_name_fragments() only logs candidates for
+    a human to confirm, because auto-merging two similarly-named but
+    genuinely different players would be a worse bug than the
+    fragmentation it's trying to fix.
     Expected columns: variant_name, canonical_name, note (format optional —
     if given, only that format's rows are renamed; if blank, applies to all)."""
     try:
@@ -868,15 +857,11 @@ def apply_name_aliases(df, registered_players):
 
 def apply_manual_overrides(batting_by_format, bowling_by_format):
     """Apply a small, human-verified correction list for matches Cricsheet's
-    archive genuinely doesn't have on file at all (no delivery CSV, no
-    _info.csv — nothing to parse or infer, unlike the DNB-match fix above).
-    This is NOT automated scraping of any kind — ESPNCricinfo's robots.txt
-    disallows that, and guessing at numbers isn't an option either. This
-    reads manual_match_overrides.csv, a file YOU maintain by hand after
-    checking a real source yourself (Cricinfo, Wikipedia's year-by-year
-    tour articles, etc.) and copying in the exact figures. Same idea as
-    the manual Afghanistan data supplement — a documented exception list,
-    not a black box.
+    archive genuinely doesn't have on file at all. This is NOT automated
+    scraping of any kind. This reads manual_match_overrides.csv, a file YOU
+    maintain by hand after checking a real source yourself (Cricinfo,
+    Wikipedia's year-by-year tour articles, etc.) and copying in the exact
+    figures — a documented exception list, not a black box.
     Expected columns: player, format, matches_add, runs_add (optional),
     source, note. Missing file = no-op, logged, not an error."""
     try:
@@ -912,12 +897,9 @@ def apply_manual_overrides(batting_by_format, bowling_by_format):
 def fetch_cricsheet_known_missing():
     """Cricsheet publishes its own list of specific matches (by date and
     teams) that it knows it's missing from its archive — for Test matches
-    and ODIs specifically (they don't track this for T20Is or most domestic
-    competitions). This is cricsheet.org's own page, not a third-party site,
-    so unlike ESPNCricinfo there's no robots.txt concern fetching it.
-    This turns "there's probably a coverage gap somewhere" into a specific,
-    permanent, dated explanation — for every player, not just one — without
-    ever needing to guess or manually chase down individual matches.
+    and ODIs specifically. This is cricsheet.org's own page, not a
+    third-party site, so unlike ESPNCricinfo there's no robots.txt concern
+    fetching it.
     Returns a DataFrame: format, gender, date, team1, team2."""
     try:
         resp = requests.get("https://cricsheet.org/missing/", timeout=20,
@@ -983,10 +965,9 @@ def explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, regis
     overlap with Cricsheet's own documented missing-matches list: matches
     involving that player's team, dated within the span of matches we
     already have for them (their first to last match in that format). This
-    doesn't claim certainty the player was in every such match — squad
-    selection isn't in this list — but it turns a vague 'may be a coverage
-    gap' into a specific, sourced count of documented missing fixtures,
-    for every flagged player automatically, no manual lookup required."""
+    doesn't claim certainty the player was in every such match — it turns
+    a vague 'may be a coverage gap' into a specific, sourced count of
+    documented missing fixtures, for every flagged player automatically."""
     if coverage_gaps.empty or known_missing.empty:
         coverage_gaps["documented_missing_candidates"] = 0
         return coverage_gaps
@@ -1177,82 +1158,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-"""
-Data-freshness check patch for pipeline.py
-============================================
-WHAT THIS DOES:
-After loading all match data, this checks the most recent match date
-Cricsheet actually has for each format, compares it to today's date, and
-writes a clear freshness report — both to the log AND to a
-data_freshness.txt file pushed to GitHub — so a lag like "India-England
-series ended July 19 but Cricsheet hasn't published it yet" shows up as
-an obvious, dated explanation instead of looking like a broken pipeline.
-
-HOW TO INSTALL:
-1. Paste the function below into pipeline.py (anywhere above main() works,
-   e.g. right after push_text_to_github()).
-2. In main(), call it right after building `df` (after the big pd.concat
-   that creates `df` from all formats, before clean_and_validate).
-3. Add one line to files_to_save / push section (shown at the bottom of
-   this file) to push the freshness report to GitHub.
-4. Optional: in your Streamlit dashboard, read data_freshness.txt the same
-   way you already read last_updated.txt, and show it near the top of
-   the page.
-"""
-
-from datetime import datetime, timezone
-import pandas as pd
-
-
-def build_data_freshness_report(df, log):
-    """For each format, find the latest match date actually present in the
-    loaded data, and how many days old that is. Flags formats that look
-    stale (>10 days since the most recent match) with a plain-English note,
-    since Cricsheet upload lag (not a pipeline bug) is the #1 cause of
-    'why hasn't X series shown up yet' questions."""
-    today = datetime.now(timezone.utc).date()
-    rows = []
-
-    df = df.copy()
-    df["start_date"] = pd.to_datetime(df["start_date"], errors="coerce")
-
-    for fmt in sorted(df["format"].dropna().unique()):
-        fmt_dates = df.loc[df["format"] == fmt, "start_date"].dropna()
-        if fmt_dates.empty:
-            rows.append({"format": fmt, "latest_match_date": None,
-                         "days_since": None, "status": "NO DATA"})
-            continue
-        latest = fmt_dates.max().date()
-        days_since = (today - latest).days
-        status = "STALE — likely upload lag, not a pipeline bug" if days_since > 10 else "OK"
-        rows.append({"format": fmt, "latest_match_date": str(latest),
-                     "days_since": days_since, "status": status})
-        if days_since > 10:
-            log.warning(f"Data freshness: {fmt} most recent match on record is {latest} "
-                        f"({days_since} days ago). If a newer {fmt} series/match has ended "
-                        f"since then, Cricsheet likely just hasn't published it yet — "
-                        f"check https://cricsheet.org/downloads/ 'last updated' date before "
-                        f"assuming the pipeline is broken.")
-        else:
-            log.info(f"Data freshness: {fmt} up to date as of {latest} ({days_since} days ago)")
-
-    report = pd.DataFrame(rows)
-    checked_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    report_text = f"Freshness check run: {checked_at}\n\n" + report.to_string(index=False)
-    return report, report_text
-
-
-# ── In main(), add these two lines right after `df` is built ──────────────
-#
-#   freshness_report, freshness_text = build_data_freshness_report(df, log)
-#
-# ── Then push it alongside your other files, e.g. next to last_updated.txt:
-#
-#   push_text_to_github(freshness_text, "data_freshness.txt",
-#                        GITHUB_TOKEN, GITHUB_USER, GITHUB_REPO, BRANCH)
-#
-# That's it. Every run will now log + publish a clear "data current
-# through <date>, X days old" note per format, so a lag like the recent
-# India-England ODI series is obviously an upstream Cricsheet delay,
-# not something broken in your code.
