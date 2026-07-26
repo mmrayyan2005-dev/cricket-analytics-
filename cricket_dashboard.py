@@ -290,20 +290,54 @@ div[data-testid="stHorizontalBlock"]>div[data-testid="column"]{min-width:0!impor
   [data-testid="stMetric"]{padding:10px 12px!important}
   [data-testid="stHorizontalBlock"]{flex-direction:column!important;gap:8px!important}
   [data-testid="stHorizontalBlock"]>div[data-testid="column"]{width:100%!important;min-width:100%!important;flex:1 1 100%!important}
+  /* Exceptions to the blanket stacking rule above, by structural shape
+     rather than by page, so they don't need per-call container keys: */
+  /* 1) the player bio card (avatar + name/pills) stays a row — a single
+        [1,9]/[1,12] column pair that always contains an <img>. */
+  [data-testid="stHorizontalBlock"]:has(img){flex-direction:row!important;flex-wrap:nowrap!important;align-items:flex-start!important;gap:10px!important}
+  [data-testid="stHorizontalBlock"]:has(img)>div[data-testid="column"]{width:auto!important;min-width:0!important}
+  [data-testid="stHorizontalBlock"]:has(img)>div[data-testid="column"]:first-child{flex:0 0 auto!important}
+  [data-testid="stHorizontalBlock"]:has(img)>div[data-testid="column"]:last-child{flex:1 1 auto!important;min-width:0!important}
+  /* 2) the top nav row (brand / refresh / theme toggle), tagged via
+        st.container(key="ca_topnav_row") so it can't collide with any
+        other 3-column layout in the app. */
+  .st-key-ca_topnav_row [data-testid="stHorizontalBlock"]{flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:6px!important}
+  .st-key-ca_topnav_row [data-testid="column"]{width:auto!important;min-width:0!important;flex:0 0 auto!important}
+  .st-key-ca_topnav_row [data-testid="column"]:first-child{flex:1 1 auto!important;min-width:0!important;overflow:hidden!important}
+  .st-key-ca_topnav_row [data-testid="stButton"] button{padding:6px 10px!important;font-size:11px!important;white-space:nowrap!important;min-height:38px!important}
+  .st-key-ca_topnav_row [data-testid="stToggle"]{white-space:nowrap!important}
+  .ca-nav-status{display:none!important}
+  /* 3) the page nav (14 pages) — instead of wrapping into a tall wall of
+        pills that pushes all content below the fold, keep it one row and
+        let it scroll horizontally, like a broadcast format switcher. */
+  .st-key-ca_page_nav [data-testid="stRadio"]>div{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:2px 2px 6px!important}
+  .st-key-ca_page_nav [data-testid="stRadio"]>div::-webkit-scrollbar{display:none!important}
+  .st-key-ca_page_nav [data-testid="stRadio"] label{flex:0 0 auto!important;font-size:11px!important;padding:7px 12px!important;min-height:36px!important}
   div[data-baseweb="tab"]{padding:5px 8px!important;font-size:10px!important}
+  div[data-baseweb="tab-list"]{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important}
+  div[data-baseweb="tab-list"]::-webkit-scrollbar{display:none!important}
   .stPlotlyChart{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
   .stDataFrame{overflow-x:auto!important}
-  [data-testid="stRadio"] label{font-size:11px!important;padding:4px 8px!important}
+  /* Plotly renders its own text as SVG with fixed pixel font-sizes that
+     don't shrink with a narrower container, which is what turns
+     many-category bar charts into overlapping/unreadable labels on a
+     phone. !important here beats the inline style Plotly sets. */
+  .js-plotly-plot .plot-container text{font-size:9px!important}
+  [data-testid="stRadio"] label{font-size:11px!important;padding:4px 8px!important;min-height:32px!important}
   .ca-home-grid{grid-template-columns:1fr 1fr}
   .ca-feature-icon{font-size:22px;margin-bottom:6px}
   .ca-feature-title{font-size:13px}
   .ca-feature-desc{display:none}
   [data-testid="stPlotlyChart"]{border-radius:var(--radius-sm)!important}
+  [data-testid="stTextInput"] input{font-size:16px!important}
 }
 @media(min-width:641px) and (max-width:900px){
   .ca-content{padding:16px 18px 40px}
   [data-testid="stMetricValue"]{font-size:20px!important}
   div[data-baseweb="tab"]{font-size:12px!important;padding:6px 12px!important}
+  .st-key-ca_page_nav [data-testid="stRadio"]>div{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important}
+  .st-key-ca_page_nav [data-testid="stRadio"]>div::-webkit-scrollbar{display:none!important}
+  .st-key-ca_page_nav [data-testid="stRadio"] label{flex:0 0 auto!important}
 }
 </style>""", unsafe_allow_html=True)
 
@@ -1153,6 +1187,16 @@ def get_wiki(cricsheet_name, search_name):
 # Streamlit itself controls how they render rather than relying on the
 # browser to correctly parse a hand-assembled string.
 import html as _html
+import inspect
+
+# st.container(key=...) (added in newer Streamlit) tags the wrapper div with
+# a "st-key-<key>" class, which lets specific blocks (e.g. the top nav row)
+# opt out of the blanket mobile column-stacking rule below without affecting
+# every other st.columns() call in the app. Guarded with a signature check +
+# fallback so this can't break the app on an older Streamlit that lacks it.
+_SUPPORTS_CONTAINER_KEY = "key" in inspect.signature(st.container).parameters
+def scoped(key):
+    return st.container(key=key) if _SUPPORTS_CONTAINER_KEY else st.container()
 
 def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
     card=get_wiki(cricsheet_name,search_name)
@@ -1221,25 +1265,27 @@ status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 # debugging an unreliable custom nav, this replaces it with a native
 # st.radio(horizontal=True) — guaranteed to render every time, since
 # it's a real Streamlit widget rather than raw HTML we're hoping survives.
-navcol1, navcol2, navcol3 = st.columns([5,1,1])
-with navcol1:
-    st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-      <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
-      <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
-        <span class="ca-live"></span>{status_txt}</span>
-    </div>""", unsafe_allow_html=True)
-with navcol2:
-    # The app caches data for up to an hour for speed — if you just pushed
-    # fresh data from the notebook and it's not showing yet, this clears
-    # the cache immediately instead of waiting.
-    if st.button("🔄 Refresh", help="Force-reload the latest data now"):
-        st.cache_data.clear()
-        st.rerun()
-with navcol3:
-    st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
-              help="Switch between dark and light mode")
+with scoped("ca_topnav_row"):
+    navcol1, navcol2, navcol3 = st.columns([5,1,1])
+    with navcol1:
+        st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px;min-width:0">
+          <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+          <span class="ca-nav-status" style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0">
+            <span class="ca-live"></span>{status_txt}</span>
+        </div>""", unsafe_allow_html=True)
+    with navcol2:
+        # The app caches data for up to an hour for speed — if you just pushed
+        # fresh data from the notebook and it's not showing yet, this clears
+        # the cache immediately instead of waiting.
+        if st.button("🔄 Refresh", help="Force-reload the latest data now"):
+            st.cache_data.clear()
+            st.rerun()
+    with navcol3:
+        st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
+                  help="Switch between dark and light mode")
 
-section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
+with scoped("ca_page_nav"):
+    section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
 
