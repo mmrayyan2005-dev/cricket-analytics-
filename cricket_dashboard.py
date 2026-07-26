@@ -136,25 +136,52 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:20p
 [data-testid="stButton"] button[kind="secondary"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;color:var(--subtle)!important;font-size:12px!important;font-weight:600!important;padding:6px 16px!important;transition:all .15s!important;margin-bottom:14px!important}
 [data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(var(--accent-rgb),.08)!important}
 
-/* ── Primary buttons (was completely unstyled — default grey box, clashed
-     with everything else) ── */
-[data-testid="stButton"] button[kind="primary"]{background:linear-gradient(120deg,var(--accent2),var(--accent))!important;border:none!important;border-radius:var(--radius-pill)!important;color:#fff!important;font-weight:700!important;font-size:13px!important;padding:8px 20px!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important;transition:transform .15s,box-shadow .15s!important}
-[data-testid="stButton"] button[kind="primary"]:hover{transform:translateY(-2px)!important;box-shadow:0 8px 22px rgba(var(--accent-rgb),.4)!important}
-[data-testid="stButton"] button[kind="primary"]:active{transform:translateY(0)!important}
+/* ── Primary buttons — covers both the modern data-testid attribute AND
+     the older class-based selector, since Streamlit has changed this
+     internal structure across versions and a selector that only matches
+     one version silently does nothing on another. ── */
+[data-testid="stButton"] button[kind="primary"],
+button[kind="primary"],
+.stButton>button[kind="primary"]{background:linear-gradient(120deg,var(--accent2),var(--accent))!important;border:none!important;border-radius:var(--radius-pill)!important;color:#fff!important;font-weight:700!important;font-size:13px!important;padding:8px 20px!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important;transition:transform .15s,box-shadow .15s!important}
+[data-testid="stButton"] button[kind="primary"]:hover,
+button[kind="primary"]:hover,
+.stButton>button[kind="primary"]:hover{transform:translateY(-2px)!important;box-shadow:0 8px 22px rgba(var(--accent-rgb),.4)!important}
 
-/* ── Expanders (used for "verify raw data" panels — was default Streamlit
-     grey, looked like a totally different app bolted on) ── */
-[data-testid="stExpander"]{border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;background:var(--card)!important;overflow:hidden!important;margin:8px 0!important}
-[data-testid="stExpander"] summary{font-family:var(--font-body)!important;font-size:12.5px!important;font-weight:700!important;color:var(--subtle)!important;padding:10px 14px!important;transition:color .15s!important}
-[data-testid="stExpander"] summary:hover{color:var(--accent)!important}
-[data-testid="stExpander"] [data-testid="stExpanderDetails"]{border-top:1px solid var(--border)!important;padding:12px 14px!important}
+/* ── Expanders — three selector generations covered:
+     1) current data-testid based (Streamlit ~1.3x+)
+     2) older class-based .streamlit-expanderHeader/.streamlit-expanderContent
+     3) generic native <details>/<summary> fallback, in case neither
+        specific selector matches this exact version at all.
+     Belt-and-suspenders on purpose — a selector mismatch here is
+     invisible (no error, just silently does nothing), so covering every
+     known Streamlit version's DOM shape is cheap insurance. ── */
+[data-testid="stExpander"],
+div.streamlit-expander{border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;background:var(--card)!important;overflow:hidden!important;margin:8px 0!important}
+[data-testid="stExpander"] summary,
+.streamlit-expanderHeader{font-family:var(--font-body)!important;font-size:12.5px!important;font-weight:700!important;color:var(--subtle)!important;padding:10px 14px!important;background:var(--card)!important;transition:color .15s!important}
+[data-testid="stExpander"] summary:hover,
+.streamlit-expanderHeader:hover{color:var(--accent)!important}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"],
+.streamlit-expanderContent{border-top:1px solid var(--border)!important;padding:12px 14px!important;background:var(--card)!important}
+/* Generic native details/summary fallback (lowest specificity, only
+   kicks in if neither selector set above matched anything) */
+details{border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);overflow:hidden;margin:8px 0}
+details summary{padding:10px 14px;color:var(--subtle);cursor:pointer}
 
 /* ── Checkboxes / toggles ── */
 [data-testid="stCheckbox"] label{font-family:var(--font-body)!important;font-size:13px!important;color:var(--subtle)!important}
 
-/* ── Custom scrollbar — small detail, but a default grey scrollbar on an
-     otherwise fully-themed dark app is exactly the kind of mismatch that
-     makes a UI feel unfinished ── */
+/* ── Banner icon float — moved here (into the one stylesheet block that's
+     provably working) instead of a separate <style> tag injected via a
+     later st.markdown() call. Streamlit's markdown renderer doesn't
+     reliably keep a <style> tag that's a SIBLING of other HTML in the
+     same call — this is almost certainly why the earlier version of
+     this animation never actually appeared despite being in the deployed
+     file. ── */
+@keyframes bannerFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.ca-banner-icon{animation:bannerFloat 3.5s ease-in-out infinite}
+
+/* ── Custom scrollbar ── */
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-track{background:var(--surface)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
@@ -777,14 +804,12 @@ def page_banner(emoji, title, subtitle, ga, gb, glow):
       <div style="position:absolute;inset:0;background:repeating-linear-gradient(
         -45deg,transparent,transparent 18px,rgba(255,255,255,.015) 18px,rgba(255,255,255,.015) 19px);pointer-events:none"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,{glow}88,transparent)"></div>
-      <div style="font-size:36px;line-height:1;flex-shrink:0;animation:bannerFloat 3.5s ease-in-out infinite">{emoji}</div>
+      <div class="ca-banner-icon" style="font-size:36px;line-height:1;flex-shrink:0">{emoji}</div>
       <div>
         <div style="font-family:'Poppins',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
         <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:3px">{subtitle}</div>
       </div>
-    </div>
-    <style>@keyframes bannerFloat{{0%,100%{{transform:translateY(0)}}50%{{transform:translateY(-3px)}}}}</style>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 # ── Name aliases ──────────────────────────────────────────────────────────────
 NAME_ALIASES={
