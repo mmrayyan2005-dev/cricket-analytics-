@@ -1790,9 +1790,33 @@ elif section=="🔍 Player Search":
                             disp_avg = p["average"]
                             disp_100s = int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—"
 
+                        # Both this block and the 100s/50s/Highest/Ducks
+                        # block below need the raw per-innings rows for this
+                        # player+format — computed once here from
+                        # cricket_bat_innings.csv (the most granular file we
+                        # have), instead of trusting the separately-pushed
+                        # batting_by_format summary file, which can drift out
+                        # of sync if one of the pipeline's per-file pushes
+                        # fails while the other succeeds.
+                        _innings = bat_inn[(bat_inn["striker"]==p["striker"]) & (bat_inn["format"]==fmt)] \
+                                   if not bat_inn.empty and "striker" in bat_inn.columns else pd.DataFrame()
+
+                        if not _innings.empty and {"fours","sixes","balls_faced","dismissed"}.issubset(_innings.columns):
+                            live_fours = int(_innings["fours"].sum())
+                            live_sixes = int(_innings["sixes"].sum())
+                            live_balls = int(_innings["balls_faced"].sum())
+                            live_runs = int(_innings["runs"].sum())
+                            live_dismissals = int(_innings["dismissed"].sum())
+                            live_sr = round((live_runs/live_balls)*100, 2) if live_balls else p["strike_rate"]
+                            live_boundary_pct = round(((live_fours+live_sixes)/live_balls)*100, 2) if live_balls else p["boundary_pct"]
+                        else:
+                            live_fours, live_sixes = int(p["fours"]), int(p["sixes"])
+                            live_sr, live_dismissals = p["strike_rate"], int(p["dismissals"])
+                            live_boundary_pct = p["boundary_pct"]
+
                         metrics({"Matches":disp_matches,"Runs":f"{disp_runs:,}","Average":disp_avg})
-                        metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
-                        metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
+                        metrics({"Strike Rate":live_sr,"4s":live_fours,"6s":live_sixes})
+                        metrics({"Dismissals":live_dismissals,"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{live_boundary_pct}%"})
                         h100=disp_100s
 
                         # BUG FIX: 100s/50s/Highest/Ducks used to come straight
@@ -1809,8 +1833,6 @@ elif section=="🔍 Player Search":
                         # same raw, most-granular file the "Verify raw match
                         # count" expander below already trusts as ground
                         # truth — removes that whole failure mode.
-                        _innings = bat_inn[(bat_inn["striker"]==p["striker"]) & (bat_inn["format"]==fmt)] \
-                                   if not bat_inn.empty and "striker" in bat_inn.columns else pd.DataFrame()
                         if not _innings.empty and "runs" in _innings.columns:
                             hs = int(_innings["runs"].max())
                             h50 = int(((_innings["runs"] >= 50) & (_innings["runs"] < 100)).sum())
@@ -1911,8 +1933,27 @@ elif section=="🔍 Player Search":
                             disp_avg2 = p2["average"]
                             disp_bb = p2.get("best_bowling","—") if "best_bowling" in p2.index else "—"
 
-                        metrics({"Matches":disp_matches2,"Wickets":disp_wkts,"Economy":p2["economy"]})
-                        metrics({"Average":disp_avg2,"Strike Rate":p2["strike_rate"],"Dot %":f"{p2['dot_pct']}%"})
+                        # Same staleness fix as the batting tab — Economy/
+                        # Strike Rate/Dot % recomputed from the raw
+                        # per-innings file (cricket_bowl_innings.csv, which
+                        # does store dot_balls per innings, unlike the
+                        # batting one) instead of trusting the separately
+                        # pushed bowling_by_format summary file.
+                        _bowl_innings = bowl_inn[(bowl_inn["bowler"]==p2["bowler"]) & (bowl_inn["format"]==fmt)] \
+                                        if not bowl_inn.empty and "bowler" in bowl_inn.columns else pd.DataFrame()
+                        if not _bowl_innings.empty and {"balls","runs_given","wickets","dot_balls"}.issubset(_bowl_innings.columns):
+                            live_balls2 = int(_bowl_innings["balls"].sum())
+                            live_runs_given = int(_bowl_innings["runs_given"].sum())
+                            live_wkts2 = int(_bowl_innings["wickets"].sum())
+                            live_dots = int(_bowl_innings["dot_balls"].sum())
+                            live_economy = round((live_runs_given/live_balls2)*6, 2) if live_balls2 else p2["economy"]
+                            live_bowl_sr = round(live_balls2/live_wkts2, 2) if live_wkts2 else p2["strike_rate"]
+                            live_dot_pct = round((live_dots/live_balls2)*100, 2) if live_balls2 else p2["dot_pct"]
+                        else:
+                            live_economy, live_bowl_sr, live_dot_pct = p2["economy"], p2["strike_rate"], p2["dot_pct"]
+
+                        metrics({"Matches":disp_matches2,"Wickets":disp_wkts,"Economy":live_economy})
+                        metrics({"Average":disp_avg2,"Strike Rate":live_bowl_sr,"Dot %":f"{live_dot_pct}%"})
                         fw=int(p2["five_wkts"]) if "five_wkts" in p2.index and pd.notna(p2.get("five_wkts")) else "—"
                         metrics({"5-Wkt Hauls":fw,"Best Bowling":disp_bb})
                 ti+=1
