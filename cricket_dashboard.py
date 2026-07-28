@@ -136,6 +136,81 @@ hr{border:none!important;border-top:1px solid var(--border)!important;margin:20p
 [data-testid="stButton"] button[kind="secondary"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius-pill)!important;color:var(--subtle)!important;font-size:12px!important;font-weight:600!important;padding:6px 16px!important;transition:all .15s!important;margin-bottom:14px!important}
 [data-testid="stButton"] button[kind="secondary"]:hover{border-color:var(--accent)!important;color:var(--accent)!important;background:rgba(var(--accent-rgb),.08)!important}
 
+/* ── Primary buttons — covers both the modern data-testid attribute AND
+     the older class-based selector, since Streamlit has changed this
+     internal structure across versions and a selector that only matches
+     one version silently does nothing on another. ── */
+[data-testid="stButton"] button[kind="primary"],
+button[kind="primary"],
+.stButton>button[kind="primary"]{background:linear-gradient(120deg,var(--accent2),var(--accent))!important;border:none!important;border-radius:var(--radius-pill)!important;color:#fff!important;font-weight:700!important;font-size:13px!important;padding:8px 20px!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important;transition:transform .15s,box-shadow .15s!important}
+[data-testid="stButton"] button[kind="primary"]:hover,
+button[kind="primary"]:hover,
+.stButton>button[kind="primary"]:hover{transform:translateY(-2px)!important;box-shadow:0 8px 22px rgba(var(--accent-rgb),.4)!important}
+
+/* ── Expanders — three selector generations covered:
+     1) current data-testid based (Streamlit ~1.3x+)
+     2) older class-based .streamlit-expanderHeader/.streamlit-expanderContent
+     3) generic native <details>/<summary> fallback, in case neither
+        specific selector matches this exact version at all.
+     Belt-and-suspenders on purpose — a selector mismatch here is
+     invisible (no error, just silently does nothing), so covering every
+     known Streamlit version's DOM shape is cheap insurance. ── */
+[data-testid="stExpander"],
+div.streamlit-expander{border:1px solid var(--border)!important;border-radius:var(--radius-sm)!important;background:var(--card)!important;overflow:hidden!important;margin:8px 0!important}
+[data-testid="stExpander"] summary,
+.streamlit-expanderHeader{font-family:var(--font-body)!important;font-size:12.5px!important;font-weight:700!important;color:var(--subtle)!important;padding:10px 14px!important;background:var(--card)!important;transition:color .15s!important}
+[data-testid="stExpander"] summary:hover,
+.streamlit-expanderHeader:hover{color:var(--accent)!important}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"],
+.streamlit-expanderContent{border-top:1px solid var(--border)!important;padding:12px 14px!important;background:var(--card)!important}
+/* Generic native details/summary fallback (lowest specificity, only
+   kicks in if neither selector set above matched anything) */
+details{border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);overflow:hidden;margin:8px 0}
+details summary{padding:10px 14px;color:var(--subtle);cursor:pointer}
+
+/* ── Checkboxes / toggles ── */
+[data-testid="stCheckbox"] label{font-family:var(--font-body)!important;font-size:13px!important;color:var(--subtle)!important}
+
+/* ── Banner icon float — moved here (into the one stylesheet block that's
+     provably working) instead of a separate <style> tag injected via a
+     later st.markdown() call. Streamlit's markdown renderer doesn't
+     reliably keep a <style> tag that's a SIBLING of other HTML in the
+     same call — this is almost certainly why the earlier version of
+     this animation never actually appeared despite being in the deployed
+     file. ── */
+@keyframes bannerFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.ca-banner-icon{animation:bannerFloat 3.5s ease-in-out infinite}
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ── Metric row rhythm — grouped metric rows (3 at a time, called back to
+     back) previously sat flush against each other with no breathing room,
+     which is a big part of what reads as "options thrown on the page."
+     A little vertical rhythm between consecutive rows fixes that without
+     touching a single line of Python. ── */
+.element-container:has([data-testid="stMetric"]){margin-bottom:10px!important}
+
+/* ── Section rhythm between major blocks ── */
+.ca-section-card + .ca-section-card{margin-top:4px}
+
+/* ── Richer ambient background depth — one more slow-drifting soft glow
+     layered under the existing static gradients, for a less flat, more
+     "premium broadcast studio" feel. Pure CSS, GPU-composited, no JS. ── */
+@keyframes driftGlow{
+  0%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(-2%,3%) scale(1.08)}
+  100%{transform:translate(0,0) scale(1)}
+}
+.stApp::before{
+  content:'';position:fixed;top:-20%;right:-10%;width:60vw;height:60vw;max-width:800px;max-height:800px;
+  background:radial-gradient(circle,rgba(var(--accent2-rgb),.10) 0%,transparent 70%);
+  animation:driftGlow 22s ease-in-out infinite;pointer-events:none;z-index:0;
+}
+
 /* ── Alerts / Error / Info ── */
 [data-testid="stAlert"]{border-radius:var(--radius-sm)!important;border-left:3px solid!important;font-size:13px!important;padding:10px 14px!important}
 [data-testid="stAlert"][data-type="error"]{background:rgba(255,77,109,.06)!important;border-color:var(--warn)!important}
@@ -725,10 +800,11 @@ def page_banner(emoji, title, subtitle, ga, gb, glow):
       background:linear-gradient(120deg,{ga} 0%,{gb} 100%);
       border-radius:var(--radius);padding:18px 22px;margin:0 0 20px 0;
       border:1px solid {glow}33;display:flex;align-items:center;gap:16px;
-      position:relative;overflow:hidden">
+      position:relative;overflow:hidden;box-shadow:0 8px 26px {glow}14">
       <div style="position:absolute;inset:0;background:repeating-linear-gradient(
         -45deg,transparent,transparent 18px,rgba(255,255,255,.015) 18px,rgba(255,255,255,.015) 19px);pointer-events:none"></div>
-      <div style="font-size:36px;line-height:1;flex-shrink:0">{emoji}</div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,{glow}88,transparent)"></div>
+      <div class="ca-banner-icon" style="font-size:36px;line-height:1;flex-shrink:0">{emoji}</div>
       <div>
         <div style="font-family:'Poppins',sans-serif;color:#fff;font-size:19px;font-weight:800;letter-spacing:-0.3px;line-height:1.2">{title}</div>
         <div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:3px">{subtitle}</div>
@@ -1013,6 +1089,16 @@ def get_wiki(cricsheet_name, search_name):
             avg_v = _num(_field(["bat avg", "batting average", "bat_avg"]))
             hs50 = _field(["100s/50s", "100s_50s"])
             hundreds = int(float(hs50.split("/")[0])) if hs50 and hs50.split("/")[0].replace(".", "").isdigit() else None
+            # Highest/top individual innings score — Wikipedia's actual
+            # infobox field name for this is "top score" (not "high score"),
+            # so that alias needs to come first to match on the first try.
+            # Needed to correctly show a player's real highest score when
+            # Cricsheet is missing the specific match it happened in — the
+            # Cricsheet-derived "Highest" card only reflects innings
+            # Cricsheet actually has ball-by-ball data for, so it can
+            # understate a player's true highest score.
+            top_score_raw = _field(["top score", "high score", "hs", "best score"])
+            top_score_v = _num(top_score_raw) if top_score_raw else None
             # Bowling side of the same per-format column — same infobox,
             # just the wicket-taking fields instead of run-scoring ones.
             # Needed so bowlers with pre-digitization careers (the same
@@ -1024,7 +1110,7 @@ def get_wiki(cricsheet_name, search_name):
             if matches_v is not None:
                 career_stats[fmt_match] = {"matches": int(matches_v),
                     "runs": int(runs_v) if runs_v is not None else None,
-                    "average": avg_v, "hundreds": hundreds,
+                    "average": avg_v, "hundreds": hundreds, "top_score": top_score_v,
                     "wickets": int(wickets_v) if wickets_v is not None else None,
                     "bowl_average": bowl_avg_v,
                     "best_bowling": best_bowling_v}
@@ -1353,12 +1439,24 @@ elif section=="🔮 Player Forecast":
                 if pname:
                     sname = resolve(pname)
                     prow = find_rows(forecast, name_col, sname)
-                    # Always offer every format as a choice, not just the ones
-                    # this player happens to have a forecast row for — so the
-                    # picker looks consistent no matter who you search, and
-                    # a missing format shows a clear reason instead of just
-                    # not being there at all (which looked like a bug).
-                    all_formats_avail = ALL_FMT if ALL_FMT else FORMATS
+                    # Only offer formats this player has ACTUALLY played,
+                    # determined from real career data (bat_fmt/bowl_fmt —
+                    # built directly from ball-by-ball match records), not
+                    # just "every format that exists." Showing PSL/CPL/WPL
+                    # as options for a player who's never played them (e.g.
+                    # Kohli, Babar) just leads to a dead "no data" click.
+                    played_formats = set()
+                    if not bat_fmt.empty and "striker" in bat_fmt.columns:
+                        played_formats |= set(find_rows(bat_fmt, "striker", sname)["format"].dropna().unique().tolist())
+                    if not bowl_fmt.empty and "bowler" in bowl_fmt.columns:
+                        played_formats |= set(find_rows(bowl_fmt, "bowler", sname)["format"].dropna().unique().tolist())
+                    all_formats_avail = [f for f in (ALL_FMT if ALL_FMT else FORMATS) if f in played_formats]
+                    if not all_formats_avail:
+                        # No career data found for this name at all (e.g. a
+                        # typo or genuinely unknown player) — fall back to
+                        # the full list rather than showing an empty picker,
+                        # same behavior as before for this edge case only.
+                        all_formats_avail = ALL_FMT if ALL_FMT else FORMATS
                     pick_fmt = st.radio("Format", all_formats_avail, horizontal=True, key="pf_fmt")
                     r_match = prow[prow["format"]==pick_fmt] if (not prow.empty and "format" in prow.columns) else pd.DataFrame()
 
@@ -1742,70 +1840,134 @@ elif section=="🔍 Player Search":
                     yrs = bat_yr[(bat_yr["format"]==fmt) & (bat_yr["striker"]==p.get("striker",display_name))]["year"] \
                           if not bat_yr.empty and "striker" in bat_yr.columns else pd.Series(dtype=float)
                     is_collision, collision_note = check_name_collision(wiki_card, fmt, yrs)
+
                     if is_collision:
-                        st.error(collision_note)
-
-                    use_official = (not is_collision) and cs and cs.get("matches") and cs["matches"] > int(p["matches"])
-                    if use_official:
-                        disp_matches = cs["matches"]
-                        disp_runs = cs["runs"] if cs.get("runs") is not None else int(p["runs"])
-                        disp_avg = cs["average"] if cs.get("average") is not None else p["average"]
-                        disp_100s = cs["hundreds"] if cs.get("hundreds") is not None else \
-                            (int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—")
-                        st.caption(f"📖 Overall record includes {cs['matches'] - int(p['matches'])} match(es) from "
-                                   f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Runs/"
-                                   f"Average/100s below are the full official career total (Wikipedia). Strike rate, "
-                                   f"boundary breakdown, and charts further down only reflect the {int(p['matches'])} "
-                                   f"match(es) Cricsheet has ball-by-ball detail for.")
+                        # Don't show the mismatched numbers at all — showing
+                        # them with a warning attached still puts a wrong
+                        # stat line on screen next to a real person's photo.
+                        # Cleaner to just not render it.
+                        st.info(f"No verified {fmt} record available for this player.")
                     else:
-                        disp_matches = int(p["matches"])
-                        disp_runs = int(p["runs"])
-                        disp_avg = p["average"]
-                        disp_100s = int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—"
-
-                    metrics({"Matches":disp_matches,"Runs":f"{disp_runs:,}","Average":disp_avg})
-                    metrics({"Strike Rate":p["strike_rate"],"4s":int(p["fours"]),"6s":int(p["sixes"])})
-                    metrics({"Dismissals":int(p["dismissals"]),"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{p['boundary_pct']}%"})
-                    h100=disp_100s
-                    h50=int(p["fifties"]) if "fifties" in p.index and pd.notna(p.get("fifties")) else "—"
-                    hs=int(p["highest"]) if "highest" in p.index and pd.notna(p.get("highest")) else "—"
-                    dk=int(p["ducks"]) if "ducks" in p.index and pd.notna(p.get("ducks")) else "—"
-                    ps_=round(float(p["player_score"]),1) if "player_score" in p.index and pd.notna(p.get("player_score")) else "—"
-                    metrics({"100s":h100,"50s":h50,"Highest":hs,"Ducks":dk,"⭐ Score":ps_})
-                    fr=int(p["fours"])*4; sr_=int(p["sixes"])*6; or_=max(0,int(p["runs"])-fr-sr_)
-                    ch(donut(["Fours","Sixes","Other"],[fr,sr_,or_],[clr,"#d63031","#636e72"],"Scoring Breakdown"),300)
-
-                    # ── Raw data verification ──────────────────────────
-                    # This recomputes the match count completely
-                    # independently of everything above — directly from
-                    # cricket_bat_innings.csv (one row per match+player,
-                    # the most granular data we have), with no
-                    # aggregation, caching, or display logic in between.
-                    # If this number matches the "Matches" card above,
-                    # that PROVES the card is accurately reflecting what's
-                    # actually in the CSV — a low number is then a real
-                    # Cricsheet coverage gap, not a display bug. If they
-                    # ever differ, that's a genuine bug to report back.
-                    with st.expander("🔍 Verify this player's raw match count (bypasses all display logic)"):
-                        if not bat_inn.empty and "striker" in bat_inn.columns:
-                            _verify_name = p["striker"]
-                            raw_rows = bat_inn[(bat_inn["striker"]==_verify_name) & (bat_inn["format"]==fmt)]
-                            raw_match_count = raw_rows["match_id"].nunique()
-                            st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {_verify_name} ({fmt}): {raw_match_count}**")
-                            st.write(f"**Matches shown in the card above: {int(p['matches'])}**")
-                            if raw_match_count == int(p["matches"]):
-                                st.success("✅ These match exactly — the card is correctly displaying everything "
-                                           "that exists in the CSV. If this number is lower than the player's real "
-                                           "career total, that's Cricsheet's own data coverage, not an app bug.")
-                            else:
-                                st.error(f"⚠️ These DON'T match ({raw_match_count} vs {int(p['matches'])}) — "
-                                         f"this is a genuine display/aggregation bug, please report this exact "
-                                         f"player name and both numbers.")
-                            if raw_match_count > 0:
-                                dates = pd.to_datetime(raw_rows["start_date"])
-                                st.caption(f"Date range of matches found: {dates.min().date()} to {dates.max().date()}")
+                        use_official = cs and cs.get("matches") and cs["matches"] > int(p["matches"])
+                        if use_official:
+                            disp_matches = cs["matches"]
+                            disp_runs = cs["runs"] if cs.get("runs") is not None else int(p["runs"])
+                            disp_avg = cs["average"] if cs.get("average") is not None else p["average"]
+                            disp_100s = cs["hundreds"] if cs.get("hundreds") is not None else \
+                                (int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—")
+                            st.caption(f"📖 Overall record includes {cs['matches'] - int(p['matches'])} match(es) from "
+                                       f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Runs/"
+                                       f"Average/100s below are the full official career total (Wikipedia). Strike rate, "
+                                       f"boundary breakdown, and charts further down only reflect the {int(p['matches'])} "
+                                       f"match(es) Cricsheet has ball-by-ball detail for.")
                         else:
-                            st.warning("Raw innings data not available to verify against.")
+                            disp_matches = int(p["matches"])
+                            disp_runs = int(p["runs"])
+                            disp_avg = p["average"]
+                            disp_100s = int(p["hundreds"]) if "hundreds" in p.index and pd.notna(p.get("hundreds")) else "—"
+
+                        # Both this block and the 100s/50s/Highest/Ducks
+                        # block below need the raw per-innings rows for this
+                        # player+format — computed once here from
+                        # cricket_bat_innings.csv (the most granular file we
+                        # have), instead of trusting the separately-pushed
+                        # batting_by_format summary file, which can drift out
+                        # of sync if one of the pipeline's per-file pushes
+                        # fails while the other succeeds.
+                        _innings = bat_inn[(bat_inn["striker"]==p["striker"]) & (bat_inn["format"]==fmt)] \
+                                   if not bat_inn.empty and "striker" in bat_inn.columns else pd.DataFrame()
+
+                        if not _innings.empty and {"fours","sixes","balls_faced","dismissed"}.issubset(_innings.columns):
+                            live_fours = int(_innings["fours"].sum())
+                            live_sixes = int(_innings["sixes"].sum())
+                            live_balls = int(_innings["balls_faced"].sum())
+                            live_runs = int(_innings["runs"].sum())
+                            live_dismissals = int(_innings["dismissed"].sum())
+                            live_sr = round((live_runs/live_balls)*100, 2) if live_balls else p["strike_rate"]
+                            live_boundary_pct = round(((live_fours+live_sixes)/live_balls)*100, 2) if live_balls else p["boundary_pct"]
+                        else:
+                            live_fours, live_sixes = int(p["fours"]), int(p["sixes"])
+                            live_sr, live_dismissals = p["strike_rate"], int(p["dismissals"])
+                            live_boundary_pct = p["boundary_pct"]
+
+                        metrics({"Matches":disp_matches,"Runs":f"{disp_runs:,}","Average":disp_avg})
+                        metrics({"Strike Rate":live_sr,"4s":live_fours,"6s":live_sixes})
+                        metrics({"Dismissals":live_dismissals,"Dot Ball %":f"{p['dot_pct']}%","Boundary %":f"{live_boundary_pct}%"})
+                        h100=disp_100s
+
+                        # BUG FIX: 100s/50s/Highest/Ducks used to come straight
+                        # from the batting_by_format CSV (a separately-pushed,
+                        # pre-aggregated summary file). That file and
+                        # cricket_bat_innings.csv (the raw, per-innings file)
+                        # are pushed as two different files in the same
+                        # pipeline run — if one push succeeds and the other
+                        # fails (the pipeline already tracks per-file push
+                        # failures), they can silently drift out of sync,
+                        # which is exactly the kind of bug that makes a
+                        # "Highest" number look wrong for no visible reason.
+                        # Recomputing directly from bat_innings here — the
+                        # same raw, most-granular file the "Verify raw match
+                        # count" expander below already trusts as ground
+                        # truth — removes that whole failure mode.
+                        if not _innings.empty and "runs" in _innings.columns:
+                            hs = int(_innings["runs"].max())
+                            h50 = int(((_innings["runs"] >= 50) & (_innings["runs"] < 100)).sum())
+                            dk = int((_innings["runs"] == 0).sum())
+                        else:
+                            # No raw innings rows found (shouldn't normally
+                            # happen if Matches > 0) — fall back to the
+                            # summary file rather than showing nothing.
+                            h50=int(p["fifties"]) if "fifties" in p.index and pd.notna(p.get("fifties")) else "—"
+                            hs=int(p["highest"]) if "highest" in p.index and pd.notna(p.get("highest")) else "—"
+                            dk=int(p["ducks"]) if "ducks" in p.index and pd.notna(p.get("ducks")) else "—"
+
+                        # If the merge is active (official record covers more
+                        # matches than Cricsheet does), the real highest score
+                        # may have happened in a match Cricsheet doesn't have
+                        # ball-by-ball data for at all — recomputing from
+                        # bat_innings alone can't recover that. Wikipedia's
+                        # infobox "top score" field covers exactly this case,
+                        # so use whichever number is higher.
+                        if use_official and cs.get("top_score") is not None and isinstance(hs, int):
+                            if cs["top_score"] > hs:
+                                hs = int(cs["top_score"])
+
+                        ps_=round(float(p["player_score"]),1) if "player_score" in p.index and pd.notna(p.get("player_score")) else "—"
+                        metrics({"100s":h100,"50s":h50,"Highest":hs,"Ducks":dk,"⭐ Score":ps_})
+                        fr=int(p["fours"])*4; sr_=int(p["sixes"])*6; or_=max(0,int(p["runs"])-fr-sr_)
+                        ch(donut(["Fours","Sixes","Other"],[fr,sr_,or_],[clr,"#d63031","#636e72"],"Scoring Breakdown"),300)
+
+                        # ── Raw data verification ──────────────────────────
+                        # This recomputes the match count completely
+                        # independently of everything above — directly from
+                        # cricket_bat_innings.csv (one row per match+player,
+                        # the most granular data we have), with no
+                        # aggregation, caching, or display logic in between.
+                        # If this number matches the "Matches" card above,
+                        # that PROVES the card is accurately reflecting what's
+                        # actually in the CSV — a low number is then a real
+                        # Cricsheet coverage gap, not a display bug. If they
+                        # ever differ, that's a genuine bug to report back.
+                        with st.expander("🔍 Verify this player's raw match count (bypasses all display logic)"):
+                            if not bat_inn.empty and "striker" in bat_inn.columns:
+                                _verify_name = p["striker"]
+                                raw_rows = bat_inn[(bat_inn["striker"]==_verify_name) & (bat_inn["format"]==fmt)]
+                                raw_match_count = raw_rows["match_id"].nunique()
+                                st.write(f"**Independently counted matches in `cricket_bat_innings.csv` for {_verify_name} ({fmt}): {raw_match_count}**")
+                                st.write(f"**Matches shown in the card above: {int(p['matches'])}**")
+                                if raw_match_count == int(p["matches"]):
+                                    st.success("✅ These match exactly — the card is correctly displaying everything "
+                                               "that exists in the CSV. If this number is lower than the player's real "
+                                               "career total, that's Cricsheet's own data coverage, not an app bug.")
+                                else:
+                                    st.error(f"⚠️ These DON'T match ({raw_match_count} vs {int(p['matches'])}) — "
+                                             f"this is a genuine display/aggregation bug, please report this exact "
+                                             f"player name and both numbers.")
+                                if raw_match_count > 0:
+                                    dates = pd.to_datetime(raw_rows["start_date"])
+                                    st.caption(f"Date range of matches found: {dates.min().date()} to {dates.max().date()}")
+                            else:
+                                st.warning("Raw innings data not available to verify against.")
                 ti+=1
             if len(bowl)>0:
                 with tabs[ti]:
@@ -1826,30 +1988,50 @@ elif section=="🔍 Player Search":
                     yrs2 = bowl_yr[(bowl_yr["format"]==fmt) & (bowl_yr["bowler"]==p2.get("bowler",display_name))]["year"] \
                            if not bowl_yr.empty and "bowler" in bowl_yr.columns else pd.Series(dtype=float)
                     is_collision2, collision_note2 = check_name_collision(wiki_card2, fmt, yrs2)
+
                     if is_collision2:
-                        st.error(collision_note2)
-
-                    use_official2 = (not is_collision2) and cs2 and cs2.get("wickets") and cs2.get("matches") and cs2["matches"] > int(p2["matches"])
-                    if use_official2:
-                        disp_matches2 = cs2["matches"]
-                        disp_wkts = cs2["wickets"]
-                        disp_avg2 = cs2["bowl_average"] if cs2.get("bowl_average") is not None else p2["average"]
-                        disp_bb = cs2["best_bowling"] if cs2.get("best_bowling") else p2.get("best_bowling","—")
-                        st.caption(f"📖 Overall record includes {cs2['matches'] - int(p2['matches'])} match(es) from "
-                                   f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Wickets/"
-                                   f"Average/Best Bowling below are the full official career total (Wikipedia). Economy "
-                                   f"and dot % further down only reflect the {int(p2['matches'])} match(es) Cricsheet "
-                                   f"has ball-by-ball detail for.")
+                        st.info(f"No verified {fmt} record available for this player.")
                     else:
-                        disp_matches2 = int(p2["matches"])
-                        disp_wkts = int(p2["wickets"])
-                        disp_avg2 = p2["average"]
-                        disp_bb = p2.get("best_bowling","—") if "best_bowling" in p2.index else "—"
+                        use_official2 = cs2 and cs2.get("wickets") and cs2.get("matches") and cs2["matches"] > int(p2["matches"])
+                        if use_official2:
+                            disp_matches2 = cs2["matches"]
+                            disp_wkts = cs2["wickets"]
+                            disp_avg2 = cs2["bowl_average"] if cs2.get("bowl_average") is not None else p2["average"]
+                            disp_bb = cs2["best_bowling"] if cs2.get("best_bowling") else p2.get("best_bowling","—")
+                            st.caption(f"📖 Overall record includes {cs2['matches'] - int(p2['matches'])} match(es) from "
+                                       f"before Cricsheet's ball-by-ball coverage begins for this player — Matches/Wickets/"
+                                       f"Average/Best Bowling below are the full official career total (Wikipedia). Economy "
+                                       f"and dot % further down only reflect the {int(p2['matches'])} match(es) Cricsheet "
+                                       f"has ball-by-ball detail for.")
+                        else:
+                            disp_matches2 = int(p2["matches"])
+                            disp_wkts = int(p2["wickets"])
+                            disp_avg2 = p2["average"]
+                            disp_bb = p2.get("best_bowling","—") if "best_bowling" in p2.index else "—"
 
-                    metrics({"Matches":disp_matches2,"Wickets":disp_wkts,"Economy":p2["economy"]})
-                    metrics({"Average":disp_avg2,"Strike Rate":p2["strike_rate"],"Dot %":f"{p2['dot_pct']}%"})
-                    fw=int(p2["five_wkts"]) if "five_wkts" in p2.index and pd.notna(p2.get("five_wkts")) else "—"
-                    metrics({"5-Wkt Hauls":fw,"Best Bowling":disp_bb})
+                        # Same staleness fix as the batting tab — Economy/
+                        # Strike Rate/Dot % recomputed from the raw
+                        # per-innings file (cricket_bowl_innings.csv, which
+                        # does store dot_balls per innings, unlike the
+                        # batting one) instead of trusting the separately
+                        # pushed bowling_by_format summary file.
+                        _bowl_innings = bowl_inn[(bowl_inn["bowler"]==p2["bowler"]) & (bowl_inn["format"]==fmt)] \
+                                        if not bowl_inn.empty and "bowler" in bowl_inn.columns else pd.DataFrame()
+                        if not _bowl_innings.empty and {"balls","runs_given","wickets","dot_balls"}.issubset(_bowl_innings.columns):
+                            live_balls2 = int(_bowl_innings["balls"].sum())
+                            live_runs_given = int(_bowl_innings["runs_given"].sum())
+                            live_wkts2 = int(_bowl_innings["wickets"].sum())
+                            live_dots = int(_bowl_innings["dot_balls"].sum())
+                            live_economy = round((live_runs_given/live_balls2)*6, 2) if live_balls2 else p2["economy"]
+                            live_bowl_sr = round(live_balls2/live_wkts2, 2) if live_wkts2 else p2["strike_rate"]
+                            live_dot_pct = round((live_dots/live_balls2)*100, 2) if live_balls2 else p2["dot_pct"]
+                        else:
+                            live_economy, live_bowl_sr, live_dot_pct = p2["economy"], p2["strike_rate"], p2["dot_pct"]
+
+                        metrics({"Matches":disp_matches2,"Wickets":disp_wkts,"Economy":live_economy})
+                        metrics({"Average":disp_avg2,"Strike Rate":live_bowl_sr,"Dot %":f"{live_dot_pct}%"})
+                        fw=int(p2["five_wkts"]) if "five_wkts" in p2.index and pd.notna(p2.get("five_wkts")) else "—"
+                        metrics({"5-Wkt Hauls":fw,"Best Bowling":disp_bb})
                 ti+=1
             with tabs[ti]:
                 if len(bat)>0:
@@ -2217,7 +2399,20 @@ elif section=="🤖 Similar Players":
     page_banner("🤖","Similar Players","ML-powered: find cricketers who play just like your favourite","#0a0d14","#141c2e","#8a95a8")
     st.markdown("Uses **KMeans clustering + cosine similarity** on career stats to find statistically similar players.")
     st_type=st.radio("Type",["Batter","Bowler"],horizontal=True)
-    name=player_input("Player name",resolve("Babar"),key="leaderboard_player"); fmt=st.radio("Format",ALL_FMT,horizontal=True)
+    name=player_input("Player name",resolve("Babar"),key="leaderboard_player")
+    # Same fix as Player Forecast: only offer formats this player has
+    # actually played (from real career data), not every format that exists.
+    _sim_formats = ALL_FMT if ALL_FMT else FORMATS
+    if name:
+        _sn = resolve(name)
+        _played = set()
+        if not bat_fmt.empty and "striker" in bat_fmt.columns:
+            _played |= set(find_rows(bat_fmt, "striker", _sn)["format"].dropna().unique().tolist())
+        if not bowl_fmt.empty and "bowler" in bowl_fmt.columns:
+            _played |= set(find_rows(bowl_fmt, "bowler", _sn)["format"].dropna().unique().tolist())
+        if _played:
+            _sim_formats = [f for f in _sim_formats if f in _played]
+    fmt=st.radio("Format",_sim_formats,horizontal=True)
     if name:
         sname=resolve(name)
         if st_type=="Batter":
