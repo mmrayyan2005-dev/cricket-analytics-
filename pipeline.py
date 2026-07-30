@@ -25,6 +25,7 @@ in plain text inside a script that might get committed by accident.
 import os
 import sys
 import io
+import shutil
 import zipfile
 import base64
 import logging
@@ -40,6 +41,7 @@ GITHUB_USER  = os.environ.get("GITHUB_USER", "")
 GITHUB_REPO  = os.environ.get("GITHUB_REPO", "")
 BRANCH       = os.environ.get("BRANCH", "main")
 WORKDIR      = os.environ.get("WORKDIR", "cricsheet_data")
+RAW_REPO_BASE = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{BRANCH}"
 
 CRICSHEET_URLS = {
     "ODI":  "https://cricsheet.org/downloads/odis_csv2.zip",
@@ -47,6 +49,16 @@ CRICSHEET_URLS = {
     "T20I": "https://cricsheet.org/downloads/t20s_csv2.zip",
     "IPL":  "https://cricsheet.org/downloads/ipl_csv2.zip",
     "PSL":  "https://cricsheet.org/downloads/psl_csv2.zip",
+    # These three were listed as selectable formats in the dashboard's
+    # FORMATS constant already, but were never actually downloaded here —
+    # so BBL/CPL/WPL pickers were either empty or (per the Win Probability
+    # bug) silently falling back to unrelated international team names.
+    # Cricsheet uses the same competition-code naming as the JSON/YAML
+    # downloads (bbl/cpl/wpl), following the exact _csv2.zip pattern that
+    # already works for IPL and PSL above.
+    "BBL":  "https://cricsheet.org/downloads/bbl_csv2.zip",
+    "CPL":  "https://cricsheet.org/downloads/cpl_csv2.zip",
+    "WPL":  "https://cricsheet.org/downloads/wpl_csv2.zip",
 }
 
 # ── Logging setup ──────────────────────────────────────────────────────────
@@ -67,26 +79,149 @@ def download_and_extract(name, url, workdir):
     """Download one Cricsheet zip and extract it. Logs failures instead of
     letting a bad download silently produce zero data for a format."""
     folder = os.path.join(workdir, f"{name.lower()}_data")
+
+    # Wipe any leftovers from a previous run BEFORE extracting. extractall()
+    # only overwrites files that share a filename with the new zip — it
+    # never deletes files that used to be there but have since disappeared
+    # or been renamed upstream. Left uncleared, a stale file from an old
+    # download can sit next to a freshly extracted one for the same real
+    # match and confuse match-level dedup. Always extracting into a clean,
+    # empty folder makes that class of bug structurally impossible.
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     os.makedirs(folder, exist_ok=True)
+
     try:
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
         with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
             z.extractall(folder)
-        log.info(f"Downloaded and extracted {name} from {url}")
+        log.info(f"Downloaded and extracted {name} from {url} (folder cleared first)")
         return folder
     except Exception as e:
         log.error(f"FAILED to download {name} from {url}: {e}")
         return folder  # return the (possibly empty) folder so pipeline continues
 
 
+def build_match_metadata(folder, label):
+    """Parse date + team names from each match's _info.csv. Used to catch
+    the same real-world match appearing under two DIFFERENT match_ids —
+    something Cricsheet occasionally does when a match gets reprocessed or
+    corrected. Row-level drop_duplicates() can never catch this, because
+    every column including match_id differs between the two copies; only
+    matching on (date, teams) — facts about the real match, not the file —
+    can."""
+    if not os.path.isdir(folder):
+        return pd.DataFrame(columns=["match_id", "date", "teams", "format"])
+    files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
+    rows = []
+    for f in files:
+        match_id = f.replace("_info.csv", "")
+        date, teams = None, set()
+        try:
+            with open(os.path.join(folder, f), encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) >= 3 and parts[0] == "info":
+                        if parts[1] == "date" and date is None:
+                            date = parts[2]  # first date only — enough for a dedup key even in multi-day Tests
+                        elif parts[1] == "team":
+                            teams.add(",".join(parts[2:]))
+        except Exception:
+            continue
+        if date and len(teams) == 2:
+            rows.append({"match_id": match_id, "date": date,
+                         "teams": tuple(sorted(teams)), "format": label})
+    return pd.DataFrame(rows)
+
+
+def deduplicate_matches(df, match_meta):
+    """Given match metadata (date, teams) per match_id, find match_ids that
+    share the exact same (format, date, teams) — i.e. are almost certainly
+    the same real match recorded twice under different IDs — and keep only
+    the lowest match_id's deliveries, dropping the rest from df entirely
+    before any stats get aggregated from them."""
+    if match_meta.empty:
+        return df
+    dupe_groups = match_meta.groupby(["format", "date", "teams"])["match_id"].apply(list)
+    dupe_groups = dupe_groups[dupe_groups.apply(len) > 1]
+    if dupe_groups.empty:
+        log.info("Match-level dedup: no same-match/different-match_id duplicates found")
+        return df
+
+    drop_ids = set()
+    for ids in dupe_groups:
+        keep = sorted(ids)[0]
+        drop_ids.update(m for m in ids if m != keep)
+        log.warning(f"Duplicate real-world match detected across match_ids {ids} — "
+                    f"keeping {keep}, dropping deliveries for {[m for m in ids if m != keep]}")
+
+    before = len(df)
+    df = df[~df["match_id"].astype(str).isin(drop_ids)]
+    log.info(f"Match-level dedup: dropped {before - len(df):,} delivery rows from "
+              f"{len(drop_ids)} duplicate match_id(s) across {len(dupe_groups)} real match(es)")
+    return df
+
+
+def load_registered_players(folder, label):
+    """Parse the `*_info.csv` companion file Cricsheet ships alongside every
+    match's ball-by-ball CSV. It lists every player registered in each
+    team's XI for that match — including anyone who never faced a ball or
+    bowled a delivery (e.g. a top-order batter whose team won the chase
+    before he needed to bat). The ball-by-ball data alone has no way to
+    know he was even in that match; this file is the only source for that.
+    Row format: info,player,<Team Name>,<Player Name>
+    Without this, "matches played" silently undercounts anyone who has
+    innings where they didn't get to bat."""
+    if not os.path.isdir(folder):
+        return pd.DataFrame(columns=["match_id", "team", "player", "format"])
+    files = [f for f in os.listdir(folder) if f.endswith("_info.csv")]
+    rows = []
+    failed = 0
+    for f in files:
+        match_id = f.replace("_info.csv", "")
+        try:
+            with open(os.path.join(folder, f), encoding="utf-8", errors="ignore") as fh:
+                for line in fh:
+                    parts = [p.strip() for p in line.strip().split(",")]
+                    if len(parts) >= 4 and parts[0] == "info" and parts[1] == "player":
+                        team = parts[2]
+                        player = ",".join(parts[3:])  # player names rarely contain commas, but be safe
+                        rows.append((match_id, team, player))
+        except Exception:
+            failed += 1
+    if failed:
+        log.warning(f"{label}: {failed} _info.csv file(s) failed to parse for player registration")
+    out = pd.DataFrame(rows, columns=["match_id", "team", "player"])
+    out["format"] = label
+    log.info(f"{label}: {len(out):,} player-registration rows from {out['match_id'].nunique():,} matches")
+    return out
+
+
 def load_format(folder, label):
-    """Load all per-match CSVs for one format. Logs which individual match
-    files failed to parse instead of the previous bare `except: pass`."""
+    """Load all per-match CSVs for one format. Only accepts files whose
+    name (minus extension) is purely numeric — i.e. a real Cricsheet
+    match_id. Some competition zips (notably the smaller league ones like
+    IPL/PSL) bundle an extra combined file such as all_matches.csv
+    alongside the individual per-match files, as a convenience export. That
+    file isn't a real match — it's every delivery from every match in the
+    competition re-listed in one place — so if it got picked up here on top
+    of the individual files, every delivery would be summed twice: once
+    from its own match file, once again from the bundled combined file.
+    Match count stays correct either way (match_id nunique doesn't care how
+    many times a delivery appears), but runs/wickets/balls all come out
+    doubled — this is what caused the IPL/PSL-only inflated-stats bug.
+    Logs which files got explicitly rejected, and which individual match
+    files failed to parse, instead of a bare `except: pass`."""
     if not os.path.isdir(folder):
         log.warning(f"{label}: folder {folder} does not exist, skipping")
         return pd.DataFrame()
-    files = [f for f in os.listdir(folder) if f.endswith(".csv") and not f.endswith("_info.csv")]
+    all_csvs = [f for f in os.listdir(folder) if f.endswith(".csv") and not f.endswith("_info.csv")]
+    files = [f for f in all_csvs if f[:-4].isdigit()]
+    rejected = sorted(set(all_csvs) - set(files))
+    if rejected:
+        log.warning(f"{label}: rejected {len(rejected)} non-match-id file(s) "
+                    f"(likely a bundled combined/summary export, not a real match): {rejected}")
     dfs, failed = [], []
     for f in sorted(files):
         try:
@@ -304,21 +439,7 @@ def build_yearly_venue_opponent_matchup(df):
     ).reset_index()
     batter_vs_bowler["strike_rate"] = ((batter_vs_bowler["runs"] / batter_vs_bowler["balls_faced"].replace(0, 1)) * 100).round(2)
     batter_vs_bowler["average"] = (batter_vs_bowler["runs"] / batter_vs_bowler["dismissals"].replace(0, 1)).round(2)
-    # A flat "balls_faced >= 10" threshold works fine for high-volume formats
-    # (ODI/Test/T20I/IPL, where players rack up hundreds of matches), but it
-    # wipes out almost every matchup in low-volume leagues like BBL/CPL/PSL/WPL,
-    # where a player might only have 5-15 innings total in that competition —
-    # not enough to ever face one bowler for 10+ balls. Use a lower bar for
-    # those leagues so real matchups survive instead of being filtered to near-zero.
-    LOW_VOLUME_FORMATS = {"BBL", "CPL", "PSL", "WPL"}
-    low_vol_min_balls = 3
-    high_vol_min_balls = 10
-    is_low_volume = batter_vs_bowler["format"].isin(LOW_VOLUME_FORMATS)
-    keep_mask = (
-        (is_low_volume & (batter_vs_bowler["balls_faced"] >= low_vol_min_balls)) |
-        (~is_low_volume & (batter_vs_bowler["balls_faced"] >= high_vol_min_balls))
-    )
-    batter_vs_bowler = batter_vs_bowler[keep_mask]
+    batter_vs_bowler = batter_vs_bowler[batter_vs_bowler["balls_faced"] >= 10]
 
     bowler_vs_batter = df.groupby(["bowler", "striker", "format"]).agg(
         balls_bowled=("is_wide", lambda x: (x == 0).sum()), runs_given=("bowler_runs", "sum"),
@@ -329,13 +450,7 @@ def build_yearly_venue_opponent_matchup(df):
     bowler_vs_batter["economy"] = ((bowler_vs_batter["runs_given"] / bowler_vs_batter["balls_bowled"].replace(0, 1)) * 6).round(2)
     bowler_vs_batter["strike_rate"] = (bowler_vs_batter["balls_bowled"] / bowler_vs_batter["wickets"].replace(0, 1)).round(2)
     bowler_vs_batter["dot_pct"] = ((bowler_vs_batter["dot_balls"] / bowler_vs_batter["balls_bowled"].replace(0, 1)) * 100).round(2)
-    # Same low-volume-league fix as batter_vs_bowler above.
-    is_low_volume_bowl = bowler_vs_batter["format"].isin(LOW_VOLUME_FORMATS)
-    keep_mask_bowl = (
-        (is_low_volume_bowl & (bowler_vs_batter["balls_bowled"] >= low_vol_min_balls)) |
-        (~is_low_volume_bowl & (bowler_vs_batter["balls_bowled"] >= high_vol_min_balls))
-    )
-    bowler_vs_batter = bowler_vs_batter[keep_mask_bowl]
+    bowler_vs_batter = bowler_vs_batter[bowler_vs_batter["balls_bowled"] >= 10]
 
     log.info("Yearly/venue/opponent/matchup tables built")
     return (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
@@ -402,6 +517,488 @@ def build_ml_tables(batting_by_format, bowling_by_format, batting_yearly, bowlin
     return bat_ml, bowl_ml, form, bowl_form
 
 
+# ── Coverage-gap detection (Wikipedia cross-check) ────────────────────────────
+# Cricsheet is a community-maintained ball-by-ball archive. It's excellent but
+# NOT guaranteed complete — a handful of officially recognized international
+# matches per player can be missing (rain-affected games, matches whose feed
+# was never digitized, etc). Silently living with that is what caused the
+# "Kohli shows fewer ODIs than Wikipedia" issue. Rather than trying to patch
+# missing ball-by-ball data (which we can't fabricate), we cross-check our
+# aggregate Cricsheet totals against Wikipedia's infobox career stats — the
+# same structured table ESPNCricinfo-style "official" figures come from — and
+# flag any player/format where our count is meaningfully short. This gets
+# surfaced in the dashboard as "official: X | tracked here: Y" instead of
+# pretending the two numbers are the same thing.
+INTL_FORMATS_FOR_WIKI_CHECK = ["ODI", "Test", "T20I"]
+# 100+ matches keeps this to established/veteran international players —
+# ~130-150 unique names across all three formats combined, based on a test
+# run. That's the group where a coverage gap actually dents credibility
+# (nobody is checking a 20-match fringe player's exact total), and it keeps
+# this to a couple hundred Wikipedia calls rather than several thousand, so
+# the Action run stays fast and doesn't hammer Wikipedia's API.
+WIKI_CHECK_MIN_MATCHES = 100
+WIKI_GAP_FLAG_THRESHOLD_PCT = 3.0    # flag if Cricsheet is short by more than this % of matches
+
+_FORMAT_ALIASES = {
+    "ODI":  ["odi", "one day international", "one-day international"],
+    "Test": ["test"],
+    "T20I": ["t20i", "twenty20 international", "t20 international"],
+}
+
+def _wiki_search_title(player_name):
+    """Find the best-matching Wikipedia page title for a player name.
+    Mirrors the scoring logic used in the dashboard's get_wiki() — name
+    similarity dominates, cricket-related snippet keywords break ties."""
+    import re, difflib
+    try:
+        sr = requests.get("https://en.wikipedia.org/w/api.php",
+            params={"action": "query", "list": "search", "srsearch": f"{player_name} cricketer",
+                    "format": "json", "utf8": 1, "srlimit": 5},
+            timeout=10, headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        sr.raise_for_status()
+        results = sr.json().get("query", {}).get("search", [])
+        if not results:
+            return None
+        target = player_name.lower()
+        def sim(title):
+            t = title.lower().replace("(cricketer)", "").strip()
+            return difflib.SequenceMatcher(None, target, t).ratio()
+        def score(r):
+            snippet = re.sub(r"<[^>]+>", "", r.get("snippet", "")).lower()
+            s = sim(r.get("title", "")) * 20
+            if "cricket" in snippet: s += 3
+            if sim(r.get("title", "")) < 0.4: s -= 15
+            return s
+        best = sorted(results, key=score, reverse=True)[0]
+        if score(best) <= 0:
+            return None
+        return best["title"]
+    except Exception as e:
+        log.warning(f"Wiki search failed for '{player_name}': {e}")
+        return None
+
+
+def _fetch_wiki_infobox_stats(page_title):
+    """Pull the Infobox cricketer wikitext and parse the per-format career
+    stats table (column1/matches1/runs1/bat avg1/100s-50s1, column2/..., etc).
+    Returns {format_label: {"matches":..,"runs":..,"average":..,"hundreds":..}}.
+    Wikipedia's infobox field naming isn't perfectly standardized across
+    pages, so this tries a couple of common key variants and skips anything
+    it can't confidently parse rather than guessing."""
+    import re
+    try:
+        safe = page_title.replace(" ", "_")
+        ir = requests.get("https://en.wikipedia.org/w/api.php",
+            params={"action": "query", "titles": page_title, "prop": "revisions",
+                    "rvprop": "content", "rvslots": "main", "format": "json", "rvsection": 0},
+            timeout=10, headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        ir.raise_for_status()
+        pages = ir.json().get("query", {}).get("pages", {})
+        wt = next(iter(pages.values())).get("revisions", [{}])[0].get("slots", {}).get("main", {}).get("*", "")
+        if not wt:
+            return {}
+
+        out = {}
+        # Column labels can be up to ~6 (Test/ODI/T20I/FC/LA/T20 domestic etc.)
+        for i in range(1, 8):
+            col_m = re.search(rf"\|\s*column{i}\s*=\s*([^\n\|]{{2,40}})", wt, re.IGNORECASE)
+            if not col_m:
+                continue
+            col_label = re.sub(r"\[\[([^\]|]+\|)?([^\]]+)\]\]", r"\2", col_m.group(1)).strip().lower()
+            fmt_match = None
+            for fmt, aliases in _FORMAT_ALIASES.items():
+                if any(a in col_label for a in aliases):
+                    fmt_match = fmt
+                    break
+            if not fmt_match or fmt_match in out:
+                continue
+
+            def field(names):
+                for n in names:
+                    m = re.search(rf"\|\s*{re.escape(n)}{i}\s*=\s*([^\n\|]{{1,20}})", wt, re.IGNORECASE)
+                    if m:
+                        v = m.group(1).strip()
+                        v = re.sub(r"<[^>]+>", "", v).replace(",", "").strip()
+                        return v
+                return None
+
+            matches_v = field(["matches"])
+            runs_v = field(["runs"])
+            avg_v = field(["bat avg", "batting average", "bat_avg"])
+            hs50_v = field(["100s/50s", "100s_50s"])
+
+            def to_num(v):
+                if v is None: return None
+                m = re.search(r"[\d.]+", v)
+                return float(m.group()) if m else None
+
+            hundreds = None
+            if hs50_v:
+                parts = hs50_v.split("/")
+                if parts and parts[0].strip().replace(".", "").isdigit():
+                    hundreds = int(float(parts[0].strip()))
+
+            m_num, r_num = to_num(matches_v), to_num(runs_v)
+            if m_num is None:
+                continue
+            out[fmt_match] = {
+                "matches": m_num, "runs": r_num,
+                "average": to_num(avg_v), "hundreds": hundreds,
+            }
+        return out
+    except Exception as e:
+        log.warning(f"Wiki infobox parse failed for '{page_title}': {e}")
+        return {}
+
+
+def detect_name_fragments(df, batting_by_format, coverage_gaps):
+    """For every player flagged by the Wikipedia gap-check, look for other
+    'striker' name variants in the raw ball-by-ball data that are probably
+    the SAME real person recorded under a slightly different spelling in
+    one match (e.g. 'Virat Kohli' vs 'V Kohli' in a single file) — a data
+    fragmentation bug, not a genuine archive gap.
+    Only checks the already-small flagged-player list (not all ~10k+ names
+    in the archive) to keep this fast, and only flags OTHER names with few
+    matches (<=5) so it doesn't confuse two genuinely different players who
+    happen to share a similar name."""
+    import difflib
+    if coverage_gaps.empty:
+        coverage_gaps["possible_name_fragments"] = ""
+        return coverage_gaps
+
+    fragments_col = []
+    for _, row in coverage_gaps.iterrows():
+        if not row.get("flagged", False):
+            fragments_col.append("")
+            continue
+        player, fmt = row["player"], row["format"]
+        fmt_names = batting_by_format.loc[batting_by_format["format"] == fmt, "striker"].unique()
+        target_norm = player.lower().replace(".", "").replace(" ", "")
+        target_last = player.split()[-1].lower() if " " in player else player.lower()
+
+        candidates = []
+        for other in fmt_names:
+            if other == player:
+                continue
+            other_norm = other.lower().replace(".", "").replace(" ", "")
+            other_last = other.split()[-1].lower() if " " in other else other.lower()
+            if other_last != target_last:
+                continue  # different surname — not a spelling-variant candidate
+            sim = difflib.SequenceMatcher(None, target_norm, other_norm).ratio()
+            if sim < 0.55:
+                continue
+            other_matches = batting_by_format.loc[
+                (batting_by_format["striker"] == other) & (batting_by_format["format"] == fmt), "matches"]
+            if other_matches.empty or other_matches.iloc[0] > 5:
+                continue  # a real distinct player with a normal career, not a 1-match fragment
+            candidates.append(f"{other} ({int(other_matches.iloc[0])}m, {sim:.0%} match)")
+
+        fragments_col.append("; ".join(candidates))
+        if candidates:
+            log.warning(f"Possible name-fragment for {player} ({fmt}): {'; '.join(candidates)}")
+
+    coverage_gaps = coverage_gaps.copy()
+    coverage_gaps["possible_name_fragments"] = fragments_col
+    return coverage_gaps
+
+
+def build_coverage_gap_report(batting_by_format):
+    """Cross-check Cricsheet's ODI/Test/T20I match counts against Wikipedia's
+    official career totals for every player with enough matches to be worth
+    checking. Returns (coverage_gaps, search_aliases):
+    - coverage_gaps: 'official vs tracked here' notices, instead of silently
+      under-reporting a big name's career.
+    - search_aliases: full Wikipedia name -> Cricsheet short name (e.g.
+      "Virat Kohli" -> "V Kohli")."""
+    rows = []
+    search_alias_rows = []
+    candidates = batting_by_format[
+        (batting_by_format["format"].isin(INTL_FORMATS_FOR_WIKI_CHECK)) &
+        (batting_by_format["matches"] >= WIKI_CHECK_MIN_MATCHES)
+    ]
+    log.info(f"Coverage-gap check: {len(candidates)} player/format rows to verify against Wikipedia")
+
+    # Cache one Wikipedia page fetch per player across their formats
+    page_cache = {}
+    stats_cache = {}
+
+    import time
+    for _, row in candidates.iterrows():
+        player = row["striker"]
+        fmt = row["format"]
+        cs_matches = row["matches"]
+        cs_runs = row["runs"]
+
+        if player not in page_cache:
+            time.sleep(0.3)  # be polite to Wikipedia's API across ~150 players
+            page_cache[player] = _wiki_search_title(player)
+        title = page_cache[player]
+        if not title:
+            continue
+        if not any(r["cricsheet_name"] == player for r in search_alias_rows):
+            search_alias_rows.append({"cricsheet_name": player, "full_name": title})
+
+        if player not in stats_cache:
+            stats_cache[player] = _fetch_wiki_infobox_stats(title)
+        wiki_stats = stats_cache[player].get(fmt)
+        if not wiki_stats or wiki_stats.get("matches") is None:
+            continue
+
+        wiki_matches = wiki_stats["matches"]
+        if wiki_matches <= 0:
+            continue
+        gap_matches = wiki_matches - cs_matches
+        gap_pct = (gap_matches / wiki_matches) * 100
+
+        rows.append({
+            "player": player, "format": fmt,
+            "cricsheet_matches": cs_matches, "wiki_matches": wiki_matches,
+            "gap_matches": gap_matches, "gap_pct": round(gap_pct, 2),
+            "cricsheet_runs": cs_runs, "wiki_runs": wiki_stats.get("runs"),
+            "wiki_page": title,
+            "flagged": gap_pct > WIKI_GAP_FLAG_THRESHOLD_PCT,
+        })
+
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        n_flagged = int(out["flagged"].sum())
+        log.info(f"Coverage-gap check complete: {n_flagged} player/format combos flagged "
+                  f"(Cricsheet short by >{WIKI_GAP_FLAG_THRESHOLD_PCT}% of matches)")
+    search_aliases = pd.DataFrame(search_alias_rows)
+    log.info(f"Search aliases built: {len(search_aliases)} full-name -> short-name mappings")
+    return out, search_aliases
+
+
+def apply_true_match_counts(batting_by_format, bowling_by_format, registered_players):
+    """Replace the ball-derived 'matches' count (which only counts matches
+    where the player actually faced a ball / bowled a delivery) with the
+    true squad-appearance count from the _info.csv registration data.
+    The old ball-derived count is kept as 'innings_batted'/'innings_bowled'
+    since that's still a genuinely useful, different number, just not what
+    should be labeled 'Matches'."""
+    if registered_players.empty:
+        log.warning("No player-registration data available — 'matches' still reflects "
+                    "ball-derived innings counts only, not true squad appearances.")
+        return batting_by_format, bowling_by_format
+
+    true_counts = (registered_players.groupby(["player", "format"])["match_id"]
+                   .nunique().reset_index().rename(columns={"match_id": "true_matches"}))
+
+    batting_by_format = batting_by_format.rename(columns={"matches": "innings_batted"})
+    batting_by_format = batting_by_format.merge(
+        true_counts.rename(columns={"player": "striker"}), on=["striker", "format"], how="left")
+    # Fall back to the ball-derived count if a player has no registration
+    # match (e.g. name-spelling mismatch between the two Cricsheet files)
+    # rather than silently zeroing out their matches.
+    missing_reg = batting_by_format["true_matches"].isna()
+    if missing_reg.any():
+        log.warning(f"{missing_reg.sum():,} batting rows had no player-registration match "
+                    f"(likely name-format mismatch) — falling back to innings-batted count for those")
+    batting_by_format["matches"] = batting_by_format["true_matches"].fillna(batting_by_format["innings_batted"])
+    batting_by_format["matches"] = batting_by_format["matches"].astype(int)
+    batting_by_format = batting_by_format.drop(columns=["true_matches"])
+
+    bowling_by_format = bowling_by_format.rename(columns={"matches": "innings_bowled"})
+    bowling_by_format = bowling_by_format.merge(
+        true_counts.rename(columns={"player": "bowler"}), on=["bowler", "format"], how="left")
+    missing_reg2 = bowling_by_format["true_matches"].isna()
+    if missing_reg2.any():
+        log.warning(f"{missing_reg2.sum():,} bowling rows had no player-registration match — "
+                    f"falling back to innings-bowled count for those")
+    bowling_by_format["matches"] = bowling_by_format["true_matches"].fillna(bowling_by_format["innings_bowled"])
+    bowling_by_format["matches"] = bowling_by_format["matches"].astype(int)
+    bowling_by_format = bowling_by_format.drop(columns=["true_matches"])
+
+    return batting_by_format, bowling_by_format
+
+
+def apply_name_aliases(df, registered_players):
+    """Load name_aliases.csv (optional, human-maintained) and rename any
+    matching striker/bowler/non_striker/player values from a confirmed
+    variant spelling to the canonical name. This is deliberately NOT
+    automatic guessing — detect_name_fragments() only logs candidates for
+    a human to confirm, because auto-merging two similarly-named but
+    genuinely different players would be a worse bug than the
+    fragmentation it's trying to fix.
+    Expected columns: variant_name, canonical_name, note (format optional —
+    if given, only that format's rows are renamed; if blank, applies to all)."""
+    try:
+        resp = requests.get(f"{RAW_REPO_BASE}/name_aliases.csv", timeout=15)
+        if resp.status_code != 200:
+            log.info("No name_aliases.csv found — skipping (this is fine, it's optional).")
+            return df, registered_players
+        aliases = pd.read_csv(io.StringIO(resp.text))
+    except Exception as e:
+        log.warning(f"Could not load name_aliases.csv: {e} — skipping")
+        return df, registered_players
+
+    if aliases.empty:
+        return df, registered_players
+
+    applied = 0
+    for _, row in aliases.iterrows():
+        variant, canonical = row["variant_name"], row["canonical_name"]
+        fmt = row.get("format")
+        fmt_mask = (df["format"] == fmt) if pd.notna(fmt) and fmt else pd.Series(True, index=df.index)
+        for col in ["striker", "bowler", "non_striker"]:
+            if col in df.columns:
+                hit = (df[col] == variant) & fmt_mask
+                if hit.any():
+                    df.loc[hit, col] = canonical
+                    applied += int(hit.sum())
+        if "player" in registered_players.columns:
+            reg_fmt_mask = (registered_players["format"] == fmt) if pd.notna(fmt) and fmt else pd.Series(True, index=registered_players.index)
+            registered_players.loc[(registered_players["player"] == variant) & reg_fmt_mask, "player"] = canonical
+        log.info(f"Applied name alias: '{variant}' -> '{canonical}'"
+                  f"{f' ({fmt} only)' if pd.notna(fmt) and fmt else ''}")
+    log.info(f"Name aliases applied: {len(aliases)} rule(s), {applied} raw row(s) renamed")
+    return df, registered_players
+
+
+def apply_manual_overrides(batting_by_format, bowling_by_format):
+    """Apply a small, human-verified correction list for matches Cricsheet's
+    archive genuinely doesn't have on file at all. This is NOT automated
+    scraping of any kind. This reads manual_match_overrides.csv, a file YOU
+    maintain by hand after checking a real source yourself (Cricinfo,
+    Wikipedia's year-by-year tour articles, etc.) and copying in the exact
+    figures — a documented exception list, not a black box.
+    Expected columns: player, format, matches_add, runs_add (optional),
+    source, note. Missing file = no-op, logged, not an error."""
+    try:
+        url = f"{RAW_REPO_BASE}/manual_match_overrides.csv"
+        resp = requests.get(url, timeout=15)
+        if resp.status_code != 200:
+            log.info("No manual_match_overrides.csv found — skipping manual corrections (this is fine, it's optional).")
+            return batting_by_format, bowling_by_format
+        overrides = pd.read_csv(io.StringIO(resp.text))
+    except Exception as e:
+        log.warning(f"Could not load manual_match_overrides.csv: {e} — skipping manual corrections")
+        return batting_by_format, bowling_by_format
+
+    if overrides.empty:
+        return batting_by_format, bowling_by_format
+
+    applied = 0
+    for _, row in overrides.iterrows():
+        mask = (batting_by_format["striker"] == row["player"]) & (batting_by_format["format"] == row["format"])
+        if not mask.any():
+            log.warning(f"Manual override for {row['player']} ({row['format']}) has no matching row — skipped")
+            continue
+        batting_by_format.loc[mask, "matches"] += int(row.get("matches_add", 0) or 0)
+        if pd.notna(row.get("runs_add")):
+            batting_by_format.loc[mask, "runs"] += int(row["runs_add"])
+        applied += 1
+        log.info(f"Applied manual override: {row['player']} {row['format']} "
+                  f"+{row.get('matches_add', 0)} matches (source: {row.get('source', 'unspecified')})")
+    log.info(f"Manual overrides applied: {applied}/{len(overrides)} rows")
+    return batting_by_format, bowling_by_format
+
+
+def fetch_cricsheet_known_missing():
+    """Cricsheet publishes its own list of specific matches (by date and
+    teams) that it knows it's missing from its archive — for Test matches
+    and ODIs specifically. This is cricsheet.org's own page, not a
+    third-party site, so unlike ESPNCricinfo there's no robots.txt concern
+    fetching it.
+    Returns a DataFrame: format, gender, date, team1, team2."""
+    try:
+        resp = requests.get("https://cricsheet.org/missing/", timeout=20,
+                             headers={"User-Agent": "CricketAnalyticsPipeline/1.0"})
+        resp.raise_for_status()
+        text = resp.text
+    except Exception as e:
+        log.warning(f"Could not fetch cricsheet.org/missing/: {e} — "
+                     "coverage-gap explanations will fall back to the generic note")
+        return pd.DataFrame(columns=["format", "gender", "date", "team1", "team2"])
+
+    import re
+    from html.parser import HTMLParser
+
+    class TextExtractor(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.chunks = []
+        def handle_data(self, data):
+            self.chunks.append(data)
+
+    extractor = TextExtractor()
+    extractor.feed(text)
+    plain = "\n".join(extractor.chunks)
+
+    rows = []
+    current_format, current_gender, current_date = None, None, None
+    date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    vs_re = re.compile(r"^(.+?)\s+vs\s+(.+?)$")
+    fmt_header_re = re.compile(r"^(Test|Odi)\s+Matches$", re.IGNORECASE)
+    gender_header_re = re.compile(r"^(Female|Male)\s+matches$", re.IGNORECASE)
+
+    for raw_line in plain.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line == "By competition":
+            break  # only want the international Test/ODI section, not domestic competitions
+        m = fmt_header_re.match(line)
+        if m:
+            current_format = "Test" if m.group(1).lower() == "test" else "ODI"
+            continue
+        m = gender_header_re.match(line)
+        if m:
+            current_gender = m.group(1).lower()
+            continue
+        if date_re.match(line):
+            current_date = line
+            continue
+        m = vs_re.match(line)
+        if m and current_format and current_date:
+            rows.append({"format": current_format, "gender": current_gender,
+                         "date": current_date, "team1": m.group(1).strip(),
+                         "team2": m.group(2).strip()})
+
+    out = pd.DataFrame(rows)
+    log.info(f"Cricsheet's own missing-matches list: {len(out):,} known-missing Test/ODI entries parsed")
+    return out
+
+
+def explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, registered_players):
+    """For every player flagged by the Wikipedia coverage-gap check, look for
+    overlap with Cricsheet's own documented missing-matches list: matches
+    involving that player's team, dated within the span of matches we
+    already have for them (their first to last match in that format). This
+    doesn't claim certainty the player was in every such match — it turns
+    a vague 'may be a coverage gap' into a specific, sourced count of
+    documented missing fixtures, for every flagged player automatically."""
+    if coverage_gaps.empty or known_missing.empty:
+        coverage_gaps["documented_missing_candidates"] = 0
+        return coverage_gaps
+
+    known_missing = known_missing.copy()
+    known_missing["date"] = pd.to_datetime(known_missing["date"], errors="coerce")
+
+    candidate_counts = []
+    for _, row in coverage_gaps.iterrows():
+        if not row.get("flagged", False):
+            candidate_counts.append(0)
+            continue
+        player, fmt = row["player"], row["format"]
+        player_matches = registered_players[registered_players["player"] == player]
+        if player_matches.empty:
+            candidate_counts.append(0)
+            continue
+        team = player_matches["team"].mode().iloc[0] if not player_matches["team"].mode().empty else None
+        if team is None:
+            candidate_counts.append(0)
+            continue
+
+        fmt_known = known_missing[known_missing["format"] == fmt]
+        team_missing = fmt_known[(fmt_known["team1"] == team) | (fmt_known["team2"] == team)]
+        candidate_counts.append(len(team_missing))
+
+    coverage_gaps = coverage_gaps.copy()
+    coverage_gaps["documented_missing_candidates"] = candidate_counts
+    return coverage_gaps
+
+
 def push_csv_to_github(df, filename, token, user, repo, branch="main"):
     """Push a DataFrame as CSV to GitHub. Returns True/False so the caller
     can track failures instead of just printing and moving on."""
@@ -460,16 +1057,61 @@ def main():
         load_format(os.path.join(WORKDIR, "t20i_data"), "T20I"),
         load_format(os.path.join(WORKDIR, "ipl_data"), "IPL"),
         load_format(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        load_format(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        load_format(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        load_format(os.path.join(WORKDIR, "wpl_data"), "WPL"),
     ], ignore_index=True)
     log.info(f"TOTAL raw rows loaded: {df.shape[0]:,}")
+
+    registered_players = pd.concat([
+        load_registered_players(os.path.join(WORKDIR, "odi_data"), "ODI"),
+        load_registered_players(os.path.join(WORKDIR, "test_data"), "Test"),
+        load_registered_players(os.path.join(WORKDIR, "t20i_data"), "T20I"),
+        load_registered_players(os.path.join(WORKDIR, "ipl_data"), "IPL"),
+        load_registered_players(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        load_registered_players(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        load_registered_players(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        load_registered_players(os.path.join(WORKDIR, "wpl_data"), "WPL"),
+    ], ignore_index=True)
+    log.info(f"TOTAL player-registration rows loaded: {registered_players.shape[0]:,}")
+
+    df, registered_players = apply_name_aliases(df, registered_players)
+
+    log.info("Checking for the same real match appearing under two different match_ids...")
+    match_meta = pd.concat([
+        build_match_metadata(os.path.join(WORKDIR, "odi_data"), "ODI"),
+        build_match_metadata(os.path.join(WORKDIR, "test_data"), "Test"),
+        build_match_metadata(os.path.join(WORKDIR, "t20i_data"), "T20I"),
+        build_match_metadata(os.path.join(WORKDIR, "ipl_data"), "IPL"),
+        build_match_metadata(os.path.join(WORKDIR, "psl_data"), "PSL"),
+        build_match_metadata(os.path.join(WORKDIR, "bbl_data"), "BBL"),
+        build_match_metadata(os.path.join(WORKDIR, "cpl_data"), "CPL"),
+        build_match_metadata(os.path.join(WORKDIR, "wpl_data"), "WPL"),
+    ], ignore_index=True)
+    df = deduplicate_matches(df, match_meta)
+    valid_ids = set(df["match_id"].astype(str).unique())
+    registered_players = registered_players[registered_players["match_id"].astype(str).isin(valid_ids)]
 
     df = clean_and_validate(df)
     bat_innings, bowl_innings = build_innings_tables(df)
     batting, bowling, batting_by_format, bowling_by_format = build_career_and_milestones(df, bat_innings, bowl_innings)
+    batting_by_format, bowling_by_format = apply_true_match_counts(
+        batting_by_format, bowling_by_format, registered_players)
+    batting_by_format, bowling_by_format = apply_manual_overrides(batting_by_format, bowling_by_format)
     (batting_yearly, bowling_yearly, batting_venue, batting_opponent,
      bowling_venue, bowling_opponent, batter_vs_bowler, bowler_vs_batter) = build_yearly_venue_opponent_matchup(df)
     bat_ml, bowl_ml, form, bowl_form = build_ml_tables(batting_by_format, bowling_by_format,
                                                         batting_yearly, bowling_yearly)
+
+    log.info("Running Wikipedia coverage-gap check for international players...")
+    coverage_gaps, search_aliases = build_coverage_gap_report(batting_by_format)
+
+    log.info("Cross-checking flagged gaps against Cricsheet's own documented missing-matches list...")
+    known_missing = fetch_cricsheet_known_missing()
+    coverage_gaps = explain_coverage_gaps_from_known_missing(coverage_gaps, known_missing, registered_players)
+
+    log.info("Checking flagged players for possible name-spelling fragments in the raw data...")
+    coverage_gaps = detect_name_fragments(df, batting_by_format, coverage_gaps)
 
     files_to_save = {
         "cricket_batting_stats.csv": batting,
@@ -492,6 +1134,8 @@ def main():
                                                "boundary_pct", "dot_pct", "runs", "player_score"]],
         "cricket_bowl_similarity.csv": bowl_ml[["bowler", "format", "cluster", "wickets", "economy",
                                                  "average", "dot_pct"]],
+        "cricket_coverage_gaps.csv": coverage_gaps,
+        "search_aliases.csv": search_aliases,
     }
 
     log.info(f"Pushing {len(files_to_save)} files to github.com/{GITHUB_USER}/{GITHUB_REPO}...")
