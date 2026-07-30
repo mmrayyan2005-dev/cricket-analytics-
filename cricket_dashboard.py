@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+import plotly.graph_objects as go 
 import requests
 import re
 from datetime import datetime, timezone, timedelta
@@ -848,6 +848,95 @@ CRICSHEET_NAME={"Smriti Mandhana":"S Mandhana","Harmanpreet Kaur":"H Kaur",
 def resolve(name):
     display=NAME_ALIASES.get(name.strip().lower(),name)
     return CRICSHEET_NAME.get(display,display)
+
+def get_player_stats_context(query):
+    """Find a player name in the question and pull their real stats as text."""
+    words = query.split()
+    candidates = []
+    for n in (3, 2, 1):
+        for i in range(len(words) - n + 1):
+            candidates.append(" ".join(words[i:i+n]))
+    context_parts = []
+    seen = set()
+    for cand in candidates:
+        if len(cand) < 3 or cand.lower() in seen:
+            continue
+        seen.add(cand.lower())
+        resolved = resolve(cand)
+        bat_rows = find_rows(bat_fmt, "striker", resolved)
+        bowl_rows = find_rows(bowl_fmt, "bowler", resolved)
+        if not bat_rows.empty:
+            name = bat_rows["striker"].iloc[0]
+            lines = [f"{name} — Batting:"]
+            for _, r in bat_rows.iterrows():
+                lines.append(
+                    f"  {r['format']}: {r['matches']} matches, {r['runs']} runs, "
+                    f"avg {r['average']}, SR {r['strike_rate']}, "
+                    f"{r['fours']} fours, {r['sixes']} sixes, HS {r['highest']}, "
+                    f"{r['hundreds']} hundreds, {r['fifties']} fifties"
+                )
+            context_parts.append("\n".join(lines))
+        if not bowl_rows.empty:
+            name = bowl_rows["bowler"].iloc[0]
+            lines = [f"{name} — Bowling:"]
+            for _, r in bowl_rows.iterrows():
+                lines.append(
+                    f"  {r['format']}: {r['matches']} matches, {r['wickets']} wickets, "
+                    f"avg {r['average']}, econ {r['economy']}, "
+                    f"best {r['best_bowling']}, 5-wkt hauls {r['five_wkts']}"
+                )
+            context_parts.append("\n".join(lines))
+    return "\n\n".join(context_parts[:4])
+
+
+def render_cricket_chat():
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+
+    col1, col2 = st.columns([10, 1])
+    with col2:
+        with st.popover("🤖 Ask", use_container_width=True):
+            st.markdown("**🏏 Cricket Chat**")
+            chat_box = st.container(height=320)
+            with chat_box:
+                for m in st.session_state.chat_messages:
+                    with st.chat_message(m["role"]):
+                        st.markdown(m["content"])
+
+            with st.form(key="cricket_chat_form", clear_on_submit=True):
+                user_q = st.text_input(
+                    "Ask about any player or cricket in general...",
+                    label_visibility="collapsed",
+                )
+                submitted = st.form_submit_button("Send")
+
+            if submitted and user_q:
+                st.session_state.chat_messages.append({"role": "user", "content": user_q})
+                api_key = st.secrets.get("GROQ_API_KEY", "")
+                if not api_key:
+                    reply = "GROQ_API_KEY isn't set in secrets.toml yet."
+                else:
+                    data_context = get_player_stats_context(user_q)
+                    system_prompt = (
+                        "You are a friendly, knowledgeable cricket assistant embedded in a "
+                        "cricket analytics dashboard. Answer general cricket questions from "
+                        "your own knowledge. If the dashboard data below is relevant, prefer "
+                        "it and cite those exact numbers — never invent stats.\n\n"
+                    )
+                    if data_context:
+                        system_prompt += f"--- Dashboard data ---\n{data_context}\n--- End data ---"
+                    try:
+                        client = Groq(api_key=api_key)
+                        resp = client.chat.completions.create(
+                            model="llama-3.3-70b-versatile",
+                            messages=[{"role": "system", "content": system_prompt}]
+                            + st.session_state.chat_messages[-10:],
+                        )
+                        reply = resp.choices[0].message.content
+                    except Exception as e:
+                        reply = f"Error reaching the chat model: {e}"
+                st.session_state.chat_messages.append({"role": "assistant", "content": reply})
+                st.rerun()
 
 # ── Known data errors: player/format combos that are factually impossible ────
 # These aren't display bugs — they come from Cricsheet itself (likely a name
