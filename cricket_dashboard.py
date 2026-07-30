@@ -849,44 +849,88 @@ def resolve(name):
     display=NAME_ALIASES.get(name.strip().lower(),name)
     return CRICSHEET_NAME.get(display,display)
 
+# Common words that show up in questions but should never be treated as
+# part of a player name — without this filter, generic words like "what"
+# or "score" fuzzy-match unrelated player surnames in the data and crowd
+# out the actual player the person asked about.
+STOPWORDS = {
+    "what","is","are","was","were","the","a","an","of","in","on","at","to",
+    "for","and","or","who","how","much","many","did","does","do","has",
+    "have","had","score","scores","highest","best","top","most","runs",
+    "run","wicket","wickets","average","strike","rate","economy","stats",
+    "stat","statistics","career","total","number","tell","me","about",
+    "compare","vs","versus","between","player","batting","bowling",
+    "match","matches","game","games","odi","odis","test","tests","t20",
+    "t20i","t20is","ipl","psl","bbl","cpl","wpl","format","overall",
+    "record","records","hundred","hundreds","fifty","fifties","century",
+    "centuries","when","where","why","which","his","her","he","she",
+    "their","it","this","that","currently","current","hit","hits","get",
+    "gets","got","with","from","you","i","can","please","know","out",
+    "all","time","times","win","wins","won","lost","lose","team","teams",
+}
+
 def get_player_stats_context(query):
     """Find a player name in the question and pull their real stats as text."""
-    words = query.split()
+    words = [w.strip(".,?!") for w in query.split()]
     candidates = []
+    # Longer phrases first (n=3 then 2 then 1) so a full name like
+    # "Babar Azam" is tried before its individual words.
     for n in (3, 2, 1):
         for i in range(len(words) - n + 1):
-            candidates.append(" ".join(words[i:i+n]))
-    context_parts = []
-    seen = set()
+            phrase_words = words[i:i+n]
+            # Skip a candidate if ANY word in it is a stopword/too short —
+            # this is what stops "what is", "score in", "and virat kohli",
+            # etc. from ever being treated as a name lookup. Real player
+            # names don't contain filler/question words.
+            if any(w.lower() in STOPWORDS or len(w) < 2 for w in phrase_words):
+                continue
+            candidates.append(" ".join(phrase_words))
+
+    matches = []  # (specificity_rank, candidate_word_count, text_block)
+    seen_players = set()
+    seen_cands = set()
     for cand in candidates:
-        if len(cand) < 3 or cand.lower() in seen:
+        if len(cand) < 3 or cand.lower() in seen_cands:
             continue
-        seen.add(cand.lower())
+        seen_cands.add(cand.lower())
         resolved = resolve(cand)
         bat_rows = find_rows(bat_fmt, "striker", resolved)
         bowl_rows = find_rows(bowl_fmt, "bowler", resolved)
+        word_count = len(cand.split())
+
         if not bat_rows.empty:
             name = bat_rows["striker"].iloc[0]
-            lines = [f"{name} — Batting:"]
-            for _, r in bat_rows.iterrows():
-                lines.append(
-                    f"  {r['format']}: {r['matches']} matches, {r['runs']} runs, "
-                    f"avg {r['average']}, SR {r['strike_rate']}, "
-                    f"{r['fours']} fours, {r['sixes']} sixes, HS {r['highest']}, "
-                    f"{r['hundreds']} hundreds, {r['fifties']} fifties"
-                )
-            context_parts.append("\n".join(lines))
+            key = ("bat", name)
+            if key not in seen_players:
+                seen_players.add(key)
+                lines = [f"{name} — Batting:"]
+                for _, r in bat_rows.iterrows():
+                    lines.append(
+                        f"  {r['format']}: {r['matches']} matches, {r['runs']} runs, "
+                        f"avg {r['average']}, SR {r['strike_rate']}, "
+                        f"{r['fours']} fours, {r['sixes']} sixes, HS {r['highest']}, "
+                        f"{r['hundreds']} hundreds, {r['fifties']} fifties"
+                    )
+                matches.append((word_count, "\n".join(lines)))
+
         if not bowl_rows.empty:
             name = bowl_rows["bowler"].iloc[0]
-            lines = [f"{name} — Bowling:"]
-            for _, r in bowl_rows.iterrows():
-                lines.append(
-                    f"  {r['format']}: {r['matches']} matches, {r['wickets']} wickets, "
-                    f"avg {r['average']}, econ {r['economy']}, "
-                    f"best {r['best_bowling']}, 5-wkt hauls {r['five_wkts']}"
-                )
-            context_parts.append("\n".join(lines))
-    return "\n\n".join(context_parts[:4])
+            key = ("bowl", name)
+            if key not in seen_players:
+                seen_players.add(key)
+                lines = [f"{name} — Bowling:"]
+                for _, r in bowl_rows.iterrows():
+                    lines.append(
+                        f"  {r['format']}: {r['matches']} matches, {r['wickets']} wickets, "
+                        f"avg {r['average']}, econ {r['economy']}, "
+                        f"best {r['best_bowling']}, 5-wkt hauls {r['five_wkts']}"
+                    )
+                matches.append((word_count, "\n".join(lines)))
+
+    # Prefer matches found from longer, more specific phrases (full names)
+    # over ones found from single leftover words.
+    matches.sort(key=lambda m: -m[0])
+    return "\n\n".join(text for _, text in matches[:4])
 
 
 def render_cricket_chat():
