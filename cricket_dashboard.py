@@ -1331,6 +1331,8 @@ with navcol3:
 
 section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
 
+render_cricket_chat()
+
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
 
 # ── In-app Back button (shown on all pages except Home) ──────────────────────
