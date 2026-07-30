@@ -14,7 +14,7 @@ st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="ğŸ
 # Read the saved choice before the toggle widget itself is drawn further down
 # the page â€” this is safe in Streamlit because session_state persists across
 # reruns, so on the run right after someone flips the switch, this already
-# reflects their new choice even though the widget itself renders later.
+# reflects their new choice even though the widget itself renders later. 
 IS_LIGHT = st.session_state.get("is_light_mode", False)
 
 RAW_BASE = "https://raw.githubusercontent.com/mmrayyan2005-dev/cricket-analytics_-/main"
