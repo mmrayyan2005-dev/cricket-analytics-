@@ -913,6 +913,23 @@ def get_player_stats_context(query):
                     )
                 matches.append((word_count, "\n".join(lines)))
 
+                # Also pull which bowlers have dismissed this player the most,
+                # from the dedicated batter-vs-bowler matchup data.
+                if not bvb.empty and "dismissals" in bvb.columns:
+                    vs_rows = bvb[bvb["striker"] == name]
+                    vs_rows = vs_rows[vs_rows["dismissals"] > 0]
+                    if not vs_rows.empty:
+                        top_dismissals = (
+                            vs_rows.groupby("bowler")["dismissals"]
+                            .sum()
+                            .sort_values(ascending=False)
+                            .head(5)
+                        )
+                        vlines = [f"{name} — Most dismissed by:"]
+                        for bowler_name, dismissal_count in top_dismissals.items():
+                            vlines.append(f"  {bowler_name}: {dismissal_count} dismissals")
+                        matches.append((word_count, "\n".join(vlines)))
+
         if not bowl_rows.empty:
             name = bowl_rows["bowler"].iloc[0]
             key = ("bowl", name)
@@ -930,7 +947,7 @@ def get_player_stats_context(query):
     # Prefer matches found from longer, more specific phrases (full names)
     # over ones found from single leftover words.
     matches.sort(key=lambda m: -m[0])
-    return "\n\n".join(text for _, text in matches[:4])
+    return "\n\n".join(text for _, text in matches[:6])
 
 
 def render_cricket_chat():
