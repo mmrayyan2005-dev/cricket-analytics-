@@ -106,6 +106,28 @@ div[data-baseweb="tab-highlight"],div[data-baseweb="tab-border"]{display:none!im
 [data-testid="stRadio"] label:hover{border-color:var(--accent)!important;color:var(--text)!important;transform:translateY(-1px)}
 [data-testid="stRadio"] label:has(input:checked){border-color:transparent!important;color:#fff!important;background:linear-gradient(120deg,var(--accent2),var(--accent))!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.3)!important}
 
+/* ── Main page nav: scoped to its own container so it reads as a distinct
+   navigation bar, not just another filter row. Sticky, no-wrap with a
+   horizontal scroll (14 pages no longer wrap into a messy multi-row block),
+   bigger touch targets, and a stronger active/hover state. ── */
+.st-key-ca_nav_bar{position:sticky;top:0;z-index:998;background:var(--surface);
+  border-bottom:1px solid var(--border);padding:10px 6px 14px;margin:2px -4px 20px;
+  box-shadow:0 8px 22px rgba(0,0,0,.10)}
+.st-key-ca_nav_bar [data-testid="stRadio"]>div{flex-wrap:nowrap!important;overflow-x:auto!important;
+  scrollbar-width:none!important;-ms-overflow-style:none!important;gap:7px!important;padding:2px 2px 6px}
+.st-key-ca_nav_bar [data-testid="stRadio"]>div::-webkit-scrollbar{display:none!important}
+.st-key-ca_nav_bar [data-testid="stRadio"] label{flex-shrink:0!important;white-space:nowrap!important;
+  padding:9px 17px!important;font-size:12.5px!important;background:rgba(var(--accent2-rgb),.07)!important;
+  border:1px solid var(--border)!important}
+.st-key-ca_nav_bar [data-testid="stRadio"] label:hover{background:rgba(var(--accent2-rgb),.14)!important;
+  border-color:var(--accent2)!important}
+.st-key-ca_nav_bar [data-testid="stRadio"] label:has(input:checked){box-shadow:0 6px 18px rgba(var(--accent-rgb),.4)!important;
+  transform:translateY(-1px)}
+@media (max-width:640px){
+  .st-key-ca_nav_bar{padding:8px 4px 10px}
+  .st-key-ca_nav_bar [data-testid="stRadio"] label{padding:7px 12px!important;font-size:11.5px!important}
+}
+
 /* ── Sliders ── */
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]{background:var(--accent)!important;border-color:var(--accent)!important;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.2)!important}
 [data-testid="stSlider"] [data-baseweb="slider"] div[class*="Track"]{background:var(--border)!important}
@@ -812,6 +834,24 @@ def page_banner(emoji, title, subtitle, ga, gb, glow):
       </div>
     </div>""", unsafe_allow_html=True)
 
+def record_card(icon, label, name, value, sub, color):
+    return f"""<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow)">
+      <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;
+        background:radial-gradient(circle,{color}22 0%,transparent 70%)"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+        letter-spacing:1px;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="font-size:15px">{icon}</span>{label}</div>
+      <div style="font-family:'Poppins',sans-serif;font-size:17px;font-weight:800;color:var(--text);
+        line-height:1.25">{name}</div>
+      <div style="font-family:var(--font-data);font-size:24px;font-weight:800;color:{color};margin-top:2px">{value}</div>
+      <div style="font-size:11px;color:var(--subtle);margin-top:2px">{sub}</div>
+    </div>"""
+
+def record_grid(cards):
+    st.markdown(f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px">{"".join(cards)}</div>',
+                unsafe_allow_html=True)
+
 # ── Name aliases ──────────────────────────────────────────────────────────────
 NAME_ALIASES={
     "steve smith":"SPD Smith","smith":"SPD Smith","hazelwood":"JR Hazlewood",
@@ -1336,7 +1376,12 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
 # ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
 PAGES=["🏠 Home","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
        "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
-       "🏆 Leaderboard","🤖 Similar Players","🔥 Form & Ratings"]
+       "🏆 Leaderboard","🏅 League Records","🤖 Similar Players","🔥 Form & Ratings"]
+
+# Domestic T20 leagues only — the "which league had the highest score / most
+# fours / most sixes" question doesn't make sense for ODI/Test/T20I (those are
+# international, not a single league), so League Records is scoped to these.
+LEAGUE_FMTS=[f for f in ["IPL","PSL","BBL","CPL","WPL"] if f in FORMATS]
 
 if "page" not in st.session_state: st.session_state["page"]="🏠 Home"
 if "nav_history" not in st.session_state: st.session_state["nav_history"]=[]
@@ -1372,25 +1417,27 @@ status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 # debugging an unreliable custom nav, this replaces it with a native
 # st.radio(horizontal=True) — guaranteed to render every time, since
 # it's a real Streamlit widget rather than raw HTML we're hoping survives.
-navcol1, navcol2, navcol3 = st.columns([5,1,1])
-with navcol1:
-    st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-      <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
-      <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
-        <span class="ca-live"></span>{status_txt}</span>
-    </div>""", unsafe_allow_html=True)
-with navcol2:
-    # The app caches data for up to an hour for speed — if you just pushed
-    # fresh data from the notebook and it's not showing yet, this clears
-    # the cache immediately instead of waiting.
-    if st.button("🔄 Refresh", help="Force-reload the latest data now"):
-        st.cache_data.clear()
-        st.rerun()
-with navcol3:
-    st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
-              help="Switch between dark and light mode")
+nav_bar = st.container(key="ca_nav_bar")
+with nav_bar:
+    navcol1, navcol2, navcol3 = st.columns([5,1,1])
+    with navcol1:
+        st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
+          <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
+          <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
+            <span class="ca-live"></span>{status_txt}</span>
+        </div>""", unsafe_allow_html=True)
+    with navcol2:
+        # The app caches data for up to an hour for speed — if you just pushed
+        # fresh data from the notebook and it's not showing yet, this clears
+        # the cache immediately instead of waiting.
+        if st.button("🔄 Refresh", help="Force-reload the latest data now"):
+            st.cache_data.clear()
+            st.rerun()
+    with navcol3:
+        st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
+                  help="Switch between dark and light mode")
 
-section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
+    section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
 
 render_cricket_chat()
 
@@ -1461,6 +1508,7 @@ if section=="🏠 Home":
         ("🤜","Batter vs Bowler","Ball-by-ball matchup data","🤜 Batter vs Bowler"),
         ("📈","Career Timeline","Year-by-year performance charts","📈 Over Years"),
         ("🏆","Leaderboard","Top players ranked by format & stat","🏆 Leaderboard"),
+        ("🏅","League Records","Highest score, most fours & sixes — PSL, IPL & more","🏅 League Records"),
         ("🤖","Similar Players","ML-powered player comparisons","🤖 Similar Players"),
         ("🔥","Form & Ratings","Who's hot, who's cold right now","🔥 Form & Ratings"),
     ]
@@ -2546,6 +2594,76 @@ elif section=="🏆 Leaderboard":
             st.plotly_chart(fig_sc2,**CFG)
         show_cols2=[c for c in ["Rank","bowler","matches","wickets","economy","average","five_wkts","best_bowling"] if c in lb2.columns]
         st.dataframe(lb2[show_cols2].reset_index(drop=True))
+
+# ══ LEAGUE RECORDS ════════════════════════════════════════════════════════════
+elif section=="🏅 League Records":
+    page_banner("🏅","League Records","The all-time record book — one league at a time",
+                "#140c1e","#241436","#b25de0")
+    lg_opts = LEAGUE_FMTS if LEAGUE_FMTS else ["IPL"]
+    league = st.radio("League", lg_opts, horizontal=True, key="lr_league")
+    icon, c1, c2 = FORMAT_META.get(league, ("🏏", ACCENT, ACCENT))
+
+    lbs = bat_fmt[bat_fmt["format"]==league]
+    lws = bowl_fmt[bowl_fmt["format"]==league]
+
+    if lbs.empty and lws.empty:
+        st.info(f"No {league} data available yet.")
+    else:
+        st.markdown(f"#### {icon} {league} — Headline Records")
+        cards = []
+        if not lbs.empty:
+            top_runs = lbs.loc[lbs["runs"].idxmax()]
+            top_hs   = lbs.loc[lbs["highest"].idxmax()]
+            top_4s   = lbs.loc[lbs["fours"].idxmax()]
+            top_6s   = lbs.loc[lbs["sixes"].idxmax()]
+            cards += [
+                record_card("🏃","Most Runs", top_runs["striker"], f'{int(top_runs["runs"]):,}',
+                            f'in {int(top_runs["matches"])} matches', c1),
+                record_card("💯","Highest Individual Score", top_hs["striker"], f'{top_hs["highest"]:.0f}',
+                            "best single innings", c1),
+                record_card("🍀","Most Fours", top_4s["striker"], f'{int(top_4s["fours"]):,}',
+                            "career 4s in this league", c1),
+                record_card("🚀","Most Sixes", top_6s["striker"], f'{int(top_6s["sixes"]):,}',
+                            "career 6s in this league", c1),
+            ]
+        if not lws.empty:
+            top_wkts = lws.loc[lws["wickets"].idxmax()]
+            top_best = lws.loc[lws["best_wkts"].idxmax()] if "best_wkts" in lws.columns else None
+            cards.append(record_card("🎯","Most Wickets", top_wkts["bowler"], f'{int(top_wkts["wickets"]):,}',
+                                      f'in {int(top_wkts["matches"])} matches', c2))
+            if top_best is not None:
+                bb = str(top_best.get("best_bowling","—")).replace(".0","")
+                cards.append(record_card("🔥","Best Bowling Figures", top_best["bowler"],
+                                          bb, "single-innings haul", c2))
+        record_grid(cards)
+
+        tab1, tab2 = st.tabs(["🏏 Batting Records", "🎳 Bowling Records"])
+        with tab1:
+            if lbs.empty:
+                st.caption("No batting data for this league yet.")
+            else:
+                bcol1, bcol2 = st.columns(2)
+                with bcol1:
+                    ch(bar_h(lbs.nlargest(10,"runs"),"runs","striker","runs","Blues",f"Top 10 Run Scorers — {league}"))
+                    ch(bar_h(lbs.nlargest(10,"fours"),"fours","striker","fours","Teal",f"Most Fours — {league}"))
+                with bcol2:
+                    ch(bar_h(lbs.nlargest(10,"highest"),"highest","striker","highest","Oranges",f"Highest Individual Scores — {league}"))
+                    ch(bar_h(lbs.nlargest(10,"sixes"),"sixes","striker","sixes","Purples",f"Most Sixes — {league}"))
+        with tab2:
+            if lws.empty:
+                st.caption("No bowling data for this league yet.")
+            else:
+                wcol1, wcol2 = st.columns(2)
+                with wcol1:
+                    ch(bar_h(lws.nlargest(10,"wickets"),"wickets","bowler","wickets","Reds",f"Most Wickets — {league}"))
+                with wcol2:
+                    min_ov = st.slider("Min overs (for economy record)", 5, 50, 15, key="lr_min_ov")
+                    econ_pool = lws[lws["overs"]>=min_ov]
+                    if not econ_pool.empty:
+                        ch(bar_h(econ_pool.nsmallest(10,"economy"),
+                                 "economy","bowler","economy","Greens",f"Best Economy — {league} (min {min_ov} overs)"))
+                    else:
+                        st.caption("No bowlers meet that overs threshold yet — lower the slider.")
 
 # ══ SIMILAR PLAYERS ═══════════════════════════════════════════════════════════
 elif section=="🤖 Similar Players":
