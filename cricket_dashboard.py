@@ -26,14 +26,10 @@ if IS_LIGHT:
     SHADOW="0 6px 22px rgba(15,30,80,.08)"
     ACCENT="#ff5a1f"; ACCENT2="#2557e8"
 else:
-    # "Match Day" dark — softened broadcast-navy (lighter than before, still
-    # dark) with bold blue + punchy orange. The old values (#0a1024 bg,
-    # heavy .5-alpha shadows) read as very dense/heavy on a big dashboard —
-    # lifting the lightness of bg/card/surface and easing the shadows keeps
-    # the same identity but feels noticeably airier.
-    BG="#141c38"; CARD="#1d2749"; TEXT="#f3f6ff"; GRID="#33416c"
-    SURFACE="#18213f"; BORDER="#37456f"; MUTED="#9aa1c9"; SUBTLE="#d3d8f0"
-    SHADOW="0 8px 26px rgba(6,12,40,.32)"
+    # "Match Day" dark — deep broadcast-navy with bold blue + punchy orange
+    BG="#0a1024"; CARD="#131b3a"; TEXT="#f3f6ff"; GRID="#28345f"
+    SURFACE="#0d1430"; BORDER="#28345f"; MUTED="#8189b3"; SUBTLE="#c7cdea"
+    SHADOW="0 10px 32px rgba(0,6,30,.5)"
     ACCENT="#ff6a2e"; ACCENT2="#3d7bff"
 FC={"ODI":"#3f7a52","Test":"#8a95a8","T20I":"#ff6a2e",
     "IPL":"#3d7bff","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0"}
@@ -61,13 +57,13 @@ CFG=dict(config={"displayModeBar":False,"scrollZoom":False,"doubleClick":False,"
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{
-  --bg:#141c38;--surface:#18213f;--card:#1d2749;--border:#37456f;
+  --bg:#0a1024;--surface:#0d1430;--card:#131b3a;--border:#28345f;
   --accent:#ff6a2e;--accent2:#3d7bff;--warn:#ff6a2e;--gold:#ff6a2e;
   --accent-rgb:255,106,46;--accent2-rgb:61,123,255;
-  --text:#f3f6ff;--muted:#9aa1c9;--subtle:#d3d8f0;
+  --text:#f3f6ff;--muted:#8189b3;--subtle:#c7cdea;
   --radius:18px;--radius-sm:12px;--radius-pill:999px;
   --font-head:'Poppins',sans-serif;--font-body:'Inter',sans-serif;--font-data:'JetBrains Mono',monospace;
-  --shadow:0 8px 26px rgba(6,12,40,.32);
+  --shadow:0 10px 32px rgba(0,6,30,.5);
 }
 html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color:var(--text)}
 .stApp{
@@ -89,6 +85,11 @@ h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(
 [data-testid="stSidebar"]{background:var(--surface)!important;border-right:1px solid var(--border)!important}
 [data-testid="stSidebar"]>div{padding-top:8px!important}
 [data-testid="stSidebarContent"]{padding:4px 14px 30px!important}
+/* Streamlit auto-injects a built-in page-nav widget at the top of the
+   sidebar (titled from the script filename, e.g. "cricket dashboard") any
+   time the sidebar is used — even with no pages/ folder. That's a
+   duplicate of our own custom nav below it, so hide it. */
+[data-testid="stSidebarNav"]{display:none!important}
 .ca-brand{display:flex;align-items:center;gap:10px;padding:6px 4px 14px;margin-bottom:6px;border-bottom:1px solid var(--border)}
 .ca-brand-mark{font-size:26px;line-height:1}
 .ca-brand-text{font-family:'Poppins',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.2px;color:var(--text)}
