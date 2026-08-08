@@ -1026,22 +1026,20 @@ def render_cricket_chat():
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
 
-    col1, col2 = st.columns([10, 1])
-    with col2:
-        with st.popover("🤖 Ask", use_container_width=True):
-            st.markdown("**🏏 Cricket Chat**")
-            chat_box = st.container(height=320)
-            with chat_box:
-                for m in st.session_state.chat_messages:
-                    with st.chat_message(m["role"]):
-                        st.markdown(m["content"])
+    with st.popover("🤖 Ask the Cricket Bot", use_container_width=True):
+        st.markdown("**🏏 Cricket Chat**")
+        chat_box = st.container(height=320)
+        with chat_box:
+            for m in st.session_state.chat_messages:
+                with st.chat_message(m["role"]):
+                    st.markdown(m["content"])
 
-            with st.form(key="cricket_chat_form", clear_on_submit=True):
-                user_q = st.text_input(
-                    "Ask about any player or cricket in general...",
-                    label_visibility="collapsed",
-                )
-                submitted = st.form_submit_button("Send")
+        with st.form(key="cricket_chat_form", clear_on_submit=True):
+            user_q = st.text_input(
+                "Ask about any player or cricket in general...",
+                label_visibility="collapsed",
+            )
+            submitted = st.form_submit_button("Send")
 
             if submitted and user_q:
                 st.session_state.chat_messages.append({"role": "user", "content": user_q})
@@ -1483,7 +1481,8 @@ with st.sidebar:
                     st.session_state["_go"] = p
                     st.rerun()
 
-render_cricket_chat()
+    st.markdown('<div class="ca-nav-group">🤖 Ask Anything</div>', unsafe_allow_html=True)
+    render_cricket_chat()
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
 
