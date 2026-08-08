@@ -110,6 +110,22 @@ h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(
   justify-content:center!important}
 .ca-sidebar-utility [data-testid="stButton"] button:hover{border-color:var(--accent)!important;color:var(--accent)!important}
 
+/* ── Floating "Ask the Cricket Bot" launcher — fixed to the top-right
+   corner so it's in the same spot on every page, regardless of scroll. ── */
+.st-key-ca_chat_corner{position:fixed;top:14px;right:24px;z-index:1000;width:auto}
+.st-key-ca_chat_corner [data-testid="stPopover"]{width:auto!important}
+.st-key-ca_chat_corner [data-testid="stPopover"]>button,
+.st-key-ca_chat_corner [data-testid="stPopoverButton"]{
+  background:linear-gradient(120deg,var(--accent2),var(--accent))!important;color:#fff!important;
+  border:none!important;border-radius:var(--radius-pill)!important;font-weight:700!important;
+  font-size:12.5px!important;padding:8px 18px!important;box-shadow:0 6px 18px rgba(var(--accent-rgb),.35)!important;
+  white-space:nowrap!important}
+@media (max-width:640px){
+  .st-key-ca_chat_corner{top:8px;right:10px}
+  .st-key-ca_chat_corner [data-testid="stPopover"]>button,
+  .st-key-ca_chat_corner [data-testid="stPopoverButton"]{padding:6px 12px!important;font-size:11px!important}
+}
+
 /* ── Metrics: rounded broadcast score-bug ── */
 [data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;padding:16px 18px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
 [data-testid="stMetric"]:hover{border-color:var(--accent)!important;transform:translateY(-3px)}
@@ -1026,7 +1042,7 @@ def render_cricket_chat():
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = []
 
-    with st.popover("🤖 Ask the Cricket Bot", use_container_width=True):
+    with st.popover("🤖 Ask the Cricket Bot", use_container_width=False):
         st.markdown("**🏏 Cricket Chat**")
         chat_box = st.container(height=320)
         with chat_box:
@@ -1481,7 +1497,12 @@ with st.sidebar:
                     st.session_state["_go"] = p
                     st.rerun()
 
-    st.markdown('<div class="ca-nav-group">🤖 Ask Anything</div>', unsafe_allow_html=True)
+# Floating chat launcher, pinned to the top-right corner via fixed
+# positioning so it stays in the same spot on every page and even while
+# scrolling — rather than living inline in the content flow where it can
+# get lost as pages get long.
+chat_corner = st.container(key="ca_chat_corner")
+with chat_corner:
     render_cricket_chat()
 
 st.markdown('<div class="ca-content">', unsafe_allow_html=True)
