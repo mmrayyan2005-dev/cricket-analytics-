@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from groq import Groq
 
 st.set_page_config(page_title="Cricket Analytics", layout="wide", page_icon="🏏",
-                   initial_sidebar_state="collapsed")
+                   initial_sidebar_state="expanded")
 
 # ── Theme (light/dark) ─────────────────────────────────────────────────────────
 # Read the saved choice before the toggle widget itself is drawn further down
@@ -75,8 +75,35 @@ html,body,[class*="css"]{font-family:var(--font-body);background:var(--bg);color
   background-attachment:fixed;
 }
 .block-container{padding:0 !important;max-width:100% !important}
-[data-testid="stSidebar"]{display:none !important}
 h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(--font-head)!important;letter-spacing:.2px}
+
+/* ── Sidebar navigation (V14) — replaces the old horizontal pill-radio bar.
+   A vertical grouped sidebar reads as "an app with sections" rather than a
+   loose row of buttons, works identically on desktop and mobile (Streamlit
+   auto-collapses it behind a hamburger on narrow screens), and every page
+   is reachable in one glance instead of scrolling a wrapped pill row. ── */
+[data-testid="stSidebar"]{background:var(--surface)!important;border-right:1px solid var(--border)!important}
+[data-testid="stSidebar"]>div{padding-top:8px!important}
+[data-testid="stSidebarContent"]{padding:4px 14px 30px!important}
+.ca-brand{display:flex;align-items:center;gap:10px;padding:6px 4px 14px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.ca-brand-mark{font-size:26px;line-height:1}
+.ca-brand-text{font-family:'Poppins',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.2px;color:var(--text)}
+.ca-brand-text span{background:linear-gradient(120deg,var(--accent2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ca-brand-status{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--accent);font-family:var(--font-data);margin:0 0 14px 2px}
+.ca-nav-group{font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:16px 4px 6px;display:flex;align-items:center;gap:6px}
+[data-testid="stSidebar"] [data-testid="stButton"] button{width:100%!important;text-align:left!important;justify-content:flex-start!important;
+  background:transparent!important;border:1px solid transparent!important;border-radius:10px!important;color:var(--subtle)!important;
+  font-weight:600!important;font-size:13px!important;padding:9px 12px!important;margin-bottom:3px!important;box-shadow:none!important;
+  transition:all .15s!important}
+[data-testid="stSidebar"] [data-testid="stButton"] button:hover{background:rgba(var(--accent2-rgb),.10)!important;color:var(--text)!important;
+  border-color:rgba(var(--accent2-rgb),.25)!important;transform:none!important}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"]{background:linear-gradient(120deg,var(--accent2),var(--accent))!important;
+  color:#fff!important;font-weight:700!important;box-shadow:0 4px 14px rgba(var(--accent-rgb),.28)!important;border:none!important}
+[data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"]:hover{transform:none!important}
+.ca-sidebar-utility [data-testid="stButton"] button{background:var(--card)!important;border:1px solid var(--border)!important;
+  border-radius:var(--radius-pill)!important;font-size:11.5px!important;padding:6px 10px!important;text-align:center!important;
+  justify-content:center!important}
+.ca-sidebar-utility [data-testid="stButton"] button:hover{border-color:var(--accent)!important;color:var(--accent)!important}
 
 /* ── Metrics: rounded broadcast score-bug ── */
 [data-testid="stMetric"]{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;padding:16px 18px!important;position:relative;overflow:hidden;transition:border-color .25s,transform .2s;box-shadow:var(--shadow)}
@@ -1373,10 +1400,19 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
             if short_bio:
                 st.caption(short_bio)
 
-# ── TOP NAVIGATION BAR (V13) ──────────────────────────────────────────────────
-PAGES=["🏠 Home","📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue",
-       "🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years",
-       "🏆 Leaderboard","🏅 League Records","🤖 Similar Players","🔥 Form & Ratings"]
+# ── SIDEBAR NAVIGATION (V14) ───────────────────────────────────────────────────
+# Grouped vertical sidebar: every page in view at once, organised into
+# sections instead of one long wrapped row of pills. This is the nav pattern
+# people already know from every other dashboard app, so it needs no
+# explanation — you scan the group label, then the page.
+PAGE_GROUPS=[
+    (None, ["🏠 Home"]),
+    ("📊 Predictions Lab", ["📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability"]),
+    ("🔍 Player Tools", ["🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue","🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years"]),
+    ("🏆 Records & Rankings", ["🏆 Leaderboard","🏅 League Records"]),
+    ("🤖 Insights", ["🤖 Similar Players","🔥 Form & Ratings"]),
+]
+PAGES=[p for _,grp in PAGE_GROUPS for p in grp]
 
 # Domestic T20 leagues only — the "which league had the highest score / most
 # fours / most sixes" question doesn't make sense for ODI/Test/T20I (those are
@@ -1408,36 +1444,39 @@ last_upd=get_last_updated()
 pkt=datetime.now(timezone(timedelta(hours=5)))
 status_txt=f"Updated {last_upd}" if last_upd else f"{pkt.strftime('%H:%M')} PKT"
 
-# NOTE: the previous top nav was a hand-built HTML/JS bar with onclick
-# handlers that reached into the sidebar's radio buttons via JS. On
-# Streamlit Community Cloud this silently failed to render at all for
-# this app — the whole bar was just missing, with no error, because
-# Streamlit's sandboxing can drop injected <script>/<button> markup in
-# ways that don't show up as a Python exception. Rather than keep
-# debugging an unreliable custom nav, this replaces it with a native
-# st.radio(horizontal=True) — guaranteed to render every time, since
-# it's a real Streamlit widget rather than raw HTML we're hoping survives.
-nav_bar = st.container(key="ca_nav_bar")
-with nav_bar:
-    navcol1, navcol2, navcol3 = st.columns([5,1,1])
-    with navcol1:
-        st.markdown(f"""<div style="display:flex;align-items:center;gap:10px;padding:8px 4px 4px">
-          <span style="font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;color:{TEXT}">🏏 Cricket<span style="color:var(--accent)">Analytics</span></span>
-          <span style="margin-left:auto;font-size:10px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px">
-            <span class="ca-live"></span>{status_txt}</span>
-        </div>""", unsafe_allow_html=True)
-    with navcol2:
+section = st.session_state["page"]
+
+with st.sidebar:
+    st.markdown(f"""<div class="ca-brand">
+      <span class="ca-brand-mark">🏏</span>
+      <span class="ca-brand-text">Cricket<span>Analytics</span></span>
+    </div>
+    <div class="ca-brand-status"><span class="ca-live"></span>{status_txt}</div>""", unsafe_allow_html=True)
+
+    st.markdown('<div class="ca-sidebar-utility">', unsafe_allow_html=True)
+    ucol1, ucol2 = st.columns(2)
+    with ucol1:
         # The app caches data for up to an hour for speed — if you just pushed
         # fresh data from the notebook and it's not showing yet, this clears
         # the cache immediately instead of waiting.
-        if st.button("🔄 Refresh", help="Force-reload the latest data now"):
+        if st.button("🔄 Refresh", help="Force-reload the latest data now", key="_refresh_btn"):
             st.cache_data.clear()
             st.rerun()
-    with navcol3:
+    with ucol2:
         st.toggle("☀️ Light" if not IS_LIGHT else "🌙 Dark", key="is_light_mode",
                   help="Switch between dark and light mode")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    section=st.radio("",PAGES,key="page",horizontal=True,label_visibility="collapsed")
+    for group_label, group_pages in PAGE_GROUPS:
+        if group_label:
+            st.markdown(f'<div class="ca-nav-group">{group_label}</div>', unsafe_allow_html=True)
+        for p in group_pages:
+            is_active = (section == p)
+            if st.button(p, key=f"navbtn_{p}", use_container_width=True,
+                         type="primary" if is_active else "secondary"):
+                if not is_active:
+                    st.session_state["_go"] = p
+                    st.rerun()
 
 render_cricket_chat()
 
