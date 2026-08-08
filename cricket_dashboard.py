@@ -112,7 +112,7 @@ h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(
 
 /* ── Floating "Ask the Cricket Bot" launcher — fixed to the top-right
    corner so it's in the same spot on every page, regardless of scroll. ── */
-.st-key-ca_chat_corner{position:fixed;top:14px;right:24px;z-index:1000;width:auto}
+.st-key-ca_chat_corner{position:fixed;top:58px;right:24px;z-index:999999;width:auto}
 .st-key-ca_chat_corner [data-testid="stPopover"]{width:auto!important}
 .st-key-ca_chat_corner [data-testid="stPopover"]>button,
 .st-key-ca_chat_corner [data-testid="stPopoverButton"]{
@@ -121,7 +121,7 @@ h1,h2,h3,h4,.ca-section-title,.ca-feature-title,.ca-player-name{font-family:var(
   font-size:12.5px!important;padding:8px 18px!important;box-shadow:0 6px 18px rgba(var(--accent-rgb),.35)!important;
   white-space:nowrap!important}
 @media (max-width:640px){
-  .st-key-ca_chat_corner{top:8px;right:10px}
+  .st-key-ca_chat_corner{top:50px;right:10px}
   .st-key-ca_chat_corner [data-testid="stPopover"]>button,
   .st-key-ca_chat_corner [data-testid="stPopoverButton"]{padding:6px 12px!important;font-size:11px!important}
 }
