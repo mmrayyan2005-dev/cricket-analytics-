@@ -1,8 +1,7 @@
 name: Update Cricket Data
 
-# Runs automatically every Sunday at 03:00 UTC, and can also be triggered
-# manually from the GitHub Actions tab ("Run workflow" button) whenever you
-# want fresh data immediately — no Colab required either way.
+# Runs automatically every day at 03:00 UTC, and can also be triggered
+# manually from the GitHub Actions tab ("Run workflow" button).
 on:
   schedule:
     - cron: "0 3 * * *"
@@ -38,3 +37,10 @@ jobs:
         with:
           name: pipeline-run-log
           path: pipeline_run.log
+
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1
