@@ -584,9 +584,9 @@ GLOSSARY = {
     "consistency": "How steady a player's scores are match to match — higher means fewer big dips.",
     "player score": "0–100 percentile blend of a player's stats, ranked inside the same format and men's/women's pool. 50 = typical qualified player, 90+ = elite.",
     "similarity": "How closely two players' statistical profiles match, from 0% to 100%.",
-    "win probability": "The modeled chance a team wins, from Elo strength, recent form, head-to-head and toss.",
-    "elo": "A team-strength rating (starts at 1500). Beat strong teams and it rises; lose to weak teams and it falls.",
-    "acwr": "Acute:Chronic Workload Ratio — overs in the last 3 matches vs the average of the last 12. Around 1.0 is normal; above 1.3 is a spike.",
+    "win probability": "A model-estimated probability for the supplied match inputs. It is not a guarantee and depends on the model training data and supplied context.",
+    "elo": "A historical team-strength rating used as one model input; it is not a forecast by itself.",
+    "acwr": "An ACWR-style workload reference ratio. It is a workload monitor, not an injury diagnosis.",
     "clutch": "Performance specifically in tight, high-pressure situations.",
     "peak": "The best stretch of form in a player's career so far.",
 }
@@ -690,6 +690,52 @@ def mval(df, model, metric):
     r = df[(df["model"]==model)&(df["metric"]==metric)]
     return float(r["value"].iloc[0]) if not r.empty else None
 
+def _first_existing(df, names):
+    if df is None or df.empty:
+        return None
+    for n in names:
+        if n in df.columns:
+            return n
+    return None
+
+def prediction_context_box(title, target, horizon, cutoff=None, scope=None, assumptions=None, note=None):
+    cutoff_txt = str(cutoff)[:19] if cutoff is not None and pd.notna(cutoff) else "Published dataset cutoff"
+    assumptions = assumptions or []
+    items = "".join("<li>"+str(x)+"</li>" for x in assumptions)
+    note_html = ('<div style="margin-top:8px;font-size:11px;color:var(--muted)">'+str(note)+'</div>') if note else ''
+    html = (
+        '<div class="ca-section-card" style="padding:14px 16px;margin-bottom:14px">'
+        '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">'
+        '<div><div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:var(--accent);text-transform:uppercase">Prediction contract</div>'
+        '<div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-top:3px">'+str(title)+'</div></div>'
+        '<span class="ca-pill">CUT-OFF: '+str(cutoff_txt)+'</span></div>'
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px">'
+        '<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Target</div><div style="font-size:12px;color:var(--text);font-weight:700">'+str(target)+'</div></div>'
+        '<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Horizon</div><div style="font-size:12px;color:var(--text);font-weight:700">'+str(horizon)+'</div></div>'
+        '<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Scope</div><div style="font-size:12px;color:var(--text);font-weight:700">'+str(scope or GENDER_PICK+' pool')+'</div></div></div>'
+        '<div style="margin-top:10px;font-size:11px;color:var(--subtle);line-height:1.55"><b>Assumptions:</b><ul style="margin:4px 0 0 18px;padding:0">'+items+'</ul></div>'
+        +note_html+'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+def infer_cutoff(*dfs):
+    vals=[]
+    for df in dfs:
+        if df is None or df.empty:
+            continue
+        for c in ("date","start_date","match_date","latest_date","data_cutoff","prediction_cutoff"):
+            if c in df.columns:
+                s=pd.to_datetime(df[c],errors="coerce")
+                if s.notna().any():
+                    vals.append(s.max())
+    return max(vals) if vals else None
+
+def safe_float(v):
+    try:
+        return float(v)
+    except Exception:
+        return np.nan
+
 # ── Win-probability engine (ported from notebook Step 11 predict_match) ──────
 WP_FEATURES = ['elo_diff','form_diff','team1_h2h_rate','venue_diff',
                'toss_advantage','toss_field','toss_x_field','min_matches_played']
@@ -703,7 +749,7 @@ def _wp_mirror(X):
     M["team1_h2h_rate"], M["toss_advantage"], M["toss_x_field"] = 1-X["team1_h2h_rate"], 1-X["toss_advantage"], -X["toss_x_field"]
     return M
 
-def predict_match_wp(team1, team2, fmt, gender, ratings, matches, toss_winner=None, toss_decision=None):
+def predict_match_wp(team1, team2, fmt, gender, ratings, matches, toss_winner=None, toss_decision=None, venue=None):
     """P(team1 wins). Uses the trained model when loadable, else a transparent Elo blend."""
     def info(t):
         r = ratings[(ratings["team"]==t)&(ratings["format"]==fmt)]
@@ -720,8 +766,22 @@ def predict_match_wp(team1, team2, fmt, gender, ratings, matches, toss_winner=No
     h2h_rate = (w1 + 1) / (n_pair + 2)                     # Laplace-smoothed, as in training
 
     tw = (toss_winner == team1); tf = str(toss_decision).lower() == "field"
+    venue_diff = 0.0
+    venue_note = "No venue supplied; venue effect is neutral."
+    if venue and "venue" in matches.columns:
+        vm = matches[matches["venue"].astype(str).str.casefold() == str(venue).casefold()]
+        if "gender" in vm.columns:
+            vm = vm[vm["gender"]==gender]
+        if not vm.empty:
+            a = vm[vm["team1"].eq(team1) | vm["team2"].eq(team1)]
+            b = vm[vm["team1"].eq(team2) | vm["team2"].eq(team2)]
+            aw = (a["winner"]==team1).mean() if len(a) else np.nan
+            bw = (b["winner"]==team2).mean() if len(b) else np.nan
+            if pd.notna(aw) and pd.notna(bw):
+                venue_diff=float(aw-bw)
+                venue_note=f"Venue evidence: {len(vm):,} recorded matches at {venue}."
     row = pd.DataFrame([{
-        "elo_diff": ea-eb, "form_diff": fa-fb, "team1_h2h_rate": h2h_rate, "venue_diff": 0.0,
+        "elo_diff": ea-eb, "form_diff": fa-fb, "team1_h2h_rate": h2h_rate, "venue_diff": venue_diff,
         "toss_advantage": int(tw) if toss_winner else 0.5,
         "toss_field": int(tf) if toss_decision else 0.5,
         "toss_x_field": (2*int(tw)-1)*(2*int(tf)-1) if (toss_winner and toss_decision) else 0.0,
@@ -738,7 +798,8 @@ def predict_match_wp(team1, team2, fmt, gender, ratings, matches, toss_winner=No
     if prob is None:
         elo_p = 1/(1+10**(-(ea-eb)/400)); form_p = fa/(fa+fb) if (fa+fb)>0 else 0.5
         prob = 0.70*elo_p + 0.15*form_p + 0.15*h2h_rate
-    return dict(prob=float(min(max(prob,0.02),0.98)), mode=mode, elo_a=ea, elo_b=eb, form_a=fa, form_b=fb,
+    return dict(prob=float(min(max(prob,0.02),0.98)), mode=mode, venue_note=venue_note, venue_diff=venue_diff,
+                elo_a=ea, elo_b=eb, form_a=fa, form_b=fb,
                 n_a=na, n_b=nb, h2h_a=w1, h2h_n=n_pair)
 
 # ── Similar players: nearest neighbours on standardized stats ────────────────
@@ -1181,7 +1242,7 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
 # ── SIDEBAR NAVIGATION ─────────────────────────────────────────────────────────
 PAGE_GROUPS=[
     (None, ["🏠 Home"]),
-    ("📊 Predictions Lab", ["📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability"]),
+    ("📊 Predictions Lab", ["📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🧭 Prediction Guide"]),
     ("🔍 Player Tools", ["🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue","🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years"]),
     ("🏆 Records & Rankings", ["🏆 Leaderboard","🏅 League Records"]),
     ("🤖 Insights", ["🤖 Similar Players","🔥 Form & Ratings"]),
@@ -1288,7 +1349,7 @@ if section=="🏠 Home":
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px">{fmt_pills}</div>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(61,123,255,.06);border:1px solid rgba(61,123,255,.15);border-radius:20px;padding:6px 14px;width:fit-content">
         <span class="ca-live"></span>
-        <span style="font-size:11px;font-weight:600;color:var(--accent)">Auto-updated daily · Cricsheet (2-3 day lag)</span>
+        <span style="font-size:11px;font-weight:600;color:var(--accent)">Published dataset · see Prediction Guide for cutoff and scope</span>
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -1313,8 +1374,8 @@ if section=="🏠 Home":
 
     st.markdown("#### Explore")
     features=[
-        ("🎯","Win Probability","Elo-based match predictor for any two teams","🎯 Win Probability"),
-        ("🔮","Player Forecast","Projected runs next season, with the 'why'","🔮 Player Forecast"),
+        ("🎯","Win Probability","Conditional match estimate with team, venue and toss context","🎯 Win Probability"),
+        ("🔮","Player Forecast","Projected future-season runs with explicit scope and cutoff","🔮 Player Forecast"),
         ("⚔️","Head to Head","Compare any two players side by side","⚔️ Head to Head"),
         ("🏟️","Player vs Venue","How a player performs at each ground","🏟️ vs Venue"),
         ("🌍","vs Opponent","Dominance stats against each team","🌍 vs Opponent"),
@@ -1324,7 +1385,8 @@ if section=="🏠 Home":
         ("🏅","League Records","Highest score, most fours & sixes by league","🏅 League Records"),
         ("🤖","Similar Players","Statistical look-alikes for any player","🤖 Similar Players"),
         ("🔥","Form & Ratings","Who's hot, who's cold right now","🔥 Form & Ratings"),
-        ("🧪","Model Accuracy","How good are the predictions, honestly?","🧪 Model Accuracy"),
+        ("🧪","Model Accuracy","Held-out future-period validation and baseline comparisons","🧪 Model Accuracy"),
+        ("🧭","Prediction Guide","What every prediction means, and what it does not","🧭 Prediction Guide"),
     ]
     cols=st.columns(4)
     for i,(emoji,title,desc,target) in enumerate(features):
@@ -1418,291 +1480,240 @@ elif section=="📋 Match Results":
 
 # ══ PLAYER FORECAST ═══════════════════════════════════════════════════════════
 elif section=="🔮 Player Forecast":
-    page_banner("🔮","Player Forecast","Projected runs next season — plus how the model did on a season it hadn't seen","#1a1408","#2e2410","#ff6a2e")
-    pf = load_player_forecast()          # real forward projections (Step 16)
-    rf_out = load_run_forecast()         # held-out season: predicted vs actual + SHAP (Step 17)
-    mm = load_model_metrics()
-
+    page_banner("🔮","Player Forecast","Forward run projection with explicit target period, cutoff and assumptions","#1a1408","#2e2410","#ff6a2e")
+    pf=load_player_forecast(); rf_out=load_run_forecast(); mm=load_model_metrics()
+    cutoff=infer_cutoff(pf,rf_out,bat_yr,bat_fmt)
+    prediction_context_box(
+        "Projected batter runs",
+        "One batter's total runs in the published future season/window",
+        "The projection year / target period published by the notebook",
+        cutoff=cutoff,
+        scope=f"{GENDER_PICK} • selected format • qualified active batters",
+        assumptions=[
+            "The batter is available and selected for the target period.",
+            "The batter receives broadly comparable batting opportunity.",
+            "Future injuries, selection, schedule and batting-order changes are not known.",
+            "This is a forward total, not a next-match score."
+        ],
+        note="The dashboard displays the notebook's published forecast; it does not silently recompute a different forecast."
+    )
     if pf.empty and rf_out.empty:
-        st.info("Forecast data isn't available yet — this page reads `cricket_player_forecast.csv` (Step 16) and "
-                "`cricket_run_forecast.csv` (Step 17). Check that the notebook's pushes succeeded.")
+        st.info("Forecast data isn't available yet. Publish the forecast files from the notebook.")
     else:
-        st.markdown('<div class="ca-insight">A random-forest model reads a player\'s <strong>last three complete seasons</strong> '
-                    '(runs, average, strike rate, matches, balls faced) plus their format and men\'s/women\'s pool. '
-                    'It answers <strong>"how many runs <em>if</em> he plays next season"</strong> — so only players active in the '
-                    'latest complete season appear. It is a trend estimate, <strong>not a guarantee</strong>; the '
-                    '<em>How Good Is It?</em> tab shows honestly whether it beats simple baselines.</div>', unsafe_allow_html=True)
-
-        tab1, tab2, tab3 = st.tabs(["🔍 Look Up a Player", "📈 Who's Trending", "🧪 How Good Is It?"])
-
-        # Gender for forecast rows comes from the batting-by-format table (the forecast file has none)
-        _gmap = bat_fmt[["striker","format","gender"]].drop_duplicates(["striker","format"]) if ("gender" in bat_fmt.columns and not bat_fmt.empty) else None
-        pf_g = pf.merge(_gmap, on=["striker","format"], how="left") if (_gmap is not None and not pf.empty) else pf
-        pf_g = gf(pf_g)
-
+        tab1,tab2,tab3=st.tabs(["🔍 Look Up a Player","📈 Who's Trending","🧪 Held-out Validation"])
+        _gmap=bat_fmt[["striker","format","gender"]].drop_duplicates(["striker","format"]) if ("gender" in bat_fmt.columns and not bat_fmt.empty) else None
+        pf_g=pf.merge(_gmap,on=["striker","format"],how="left") if (_gmap is not None and not pf.empty) else pf
+        pf_g=gf(pf_g)
         with tab1:
-            if pf.empty:
-                st.info("`cricket_player_forecast.csv` isn't available yet.")
+            if pf.empty: st.info("`cricket_player_forecast.csv` isn't available yet.")
             else:
-                pname = player_input("Player name", resolve("Kohli"), key="forecast_player")
-                sname = resolve(pname) if pname else ""
-                prow = find_rows(pf, "striker", sname) if sname else pd.DataFrame()
+                pname=player_input("Player name",resolve("Kohli"),key="forecast_player")
+                prow=find_rows(pf,"striker",resolve(pname)) if pname else pd.DataFrame()
                 if prow.empty:
-                    st.info(f"No next-season projection for '{pname}' — a projection needs at least 3 matches in the "
-                            f"latest complete season in that format (retired or inactive players get none, on purpose).")
+                    st.info(f"No published projection for '{pname}'. This usually means the notebook's eligibility/history rule was not met.")
                 else:
-                    fmts_p = order_fmts(prow["format"].dropna().unique().tolist())
-                    pick_fmt = st.radio("Format", fmts_p, horizontal=True, key="pf_fmt")
-                    r = prow[prow["format"]==pick_fmt].iloc[0]
-                    last_y, proj_y = int(r["last_season_year"]), int(r["projection_year"])
-                    actual, pred = float(r["last_season_runs"]), float(r["projected_next_season_runs"])
-                    diff = pred - actual
-                    direction = "📈 projected to score more" if diff > 0 else ("📉 projected to score fewer" if diff < 0 else "➡️ projected to stay about the same")
+                    fmts=order_fmts(prow["format"].dropna().unique().tolist())
+                    pick_fmt=st.radio("Format",fmts,horizontal=True,key="pf_fmt")
+                    r=prow[prow["format"]==pick_fmt].iloc[0]
+                    last_y=int(r["last_season_year"]) if pd.notna(r.get("last_season_year",np.nan)) else None
+                    proj_y=int(r["projection_year"]) if pd.notna(r.get("projection_year",np.nan)) else None
+                    actual=safe_float(r.get("last_season_runs",np.nan)); pred=safe_float(r.get("projected_next_season_runs",np.nan))
                     st.markdown(f"### {r['striker']} — {pick_fmt}")
-                    st.caption(f"{direction} in {proj_y} than in {last_y}, based on the recent trend.")
-                    metrics({f"{last_y} runs": f"{actual:.0f}", f"{proj_y} projected": f"{pred:.0f}", "Change": f"{diff:+.0f}"})
-                    fig = go.Figure()
-                    fig.add_trace(go.Bar(x=[f"{last_y} (actual)", f"{proj_y} (projected)"], y=[actual, pred],
-                        marker_color=[FC.get(pick_fmt,"#3d7bff"), "#a29bfe"],
-                        text=[f"{actual:.0f}", f"{pred:.0f}"], textposition="outside",
-                        textfont=dict(size=16, color=TEXT)))
-                    fig.update_layout(**BASE, height=340, showlegend=False, margin=dict(l=20,r=20,t=20,b=20), yaxis_title="Runs")
-                    st.plotly_chart(fig, **CFG)
-
+                    st.caption(f"Projection target: **{proj_y if proj_y else 'defined future period'}** • reference season: **{last_y if last_y else '—'}**")
+                    if pd.notna(pred):
+                        delta=pred-actual if pd.notna(actual) else np.nan
+                        metrics({"Reference-season runs":f"{actual:.0f}" if pd.notna(actual) else "—","Projected runs":f"{pred:.0f}","Change vs reference":f"{delta:+.0f}" if pd.notna(delta) else "—"})
+                        lo=safe_float(r.get("prediction_low",r.get("lower_bound",np.nan))); hi=safe_float(r.get("prediction_high",r.get("upper_bound",np.nan)))
+                        if pd.notna(lo) and pd.notna(hi):
+                            st.info(f"Published forecast interval: **{lo:.0f}–{hi:.0f} runs**. This is an uncertainty interval, not a guarantee.")
+                        fig=go.Figure(go.Bar(x=[f"{last_y} actual" if last_y else "Reference",f"{proj_y} projected" if proj_y else "Projection"],
+                                             y=[actual if pd.notna(actual) else 0,pred],
+                                             text=[f"{actual:.0f}" if pd.notna(actual) else "—",f"{pred:.0f}"],textposition="outside",
+                                             marker_color=[FC.get(pick_fmt,ACCENT2),ACCENT]))
+                        fig.update_layout(**BASE,height=340,showlegend=False,margin=dict(l=20,r=30,t=20,b=20),yaxis_title="Runs")
+                        st.plotly_chart(fig,**CFG)
+                    prov=[c for c in ["training_start","training_end","prediction_cutoff","projection_year","target_period","model","model_name","training_seasons","history_seasons","eligible"] if c in r.index]
+                    if prov:
+                        with st.expander("🔎 Forecast provenance"):
+                            st.dataframe(pd.DataFrame({"Field":prov,"Value":[str(r[c]) for c in prov]}),hide_index=True)
         with tab2:
-            if pf_g is None or pf_g.empty:
-                st.info(f"No {GENDER_PICK.lower()} projections available.")
+            if pf_g is None or pf_g.empty: st.info(f"No {GENDER_PICK.lower()} projections available.")
             else:
-                fmt2 = st.radio("Format", order_fmts(pf_g["format"].dropna().unique().tolist()), horizontal=True, key="forecast_fmt")
-                how = st.radio("Rank by", ["Most projected runs","Biggest projected rise","Biggest projected drop"], horizontal=True, key="forecast_rank")
-                ff = pf_g[pf_g["format"]==fmt2].dropna(subset=["projected_next_season_runs","last_season_runs"]).copy()
-                py = int(ff["projection_year"].iloc[0]) if not ff.empty else ""
-                ff["change"] = ff["projected_next_season_runs"] - ff["last_season_runs"]
-                if how == "Most projected runs":
-                    top_n = ff.nlargest(15, "projected_next_season_runs")
-                    ch(bar_h(top_n,"projected_next_season_runs","striker","projected_next_season_runs","Purples",f"Top 15 projected run-scorers — {fmt2} {py}"))
-                elif how == "Biggest projected rise":
-                    top_n = ff[(ff["last_season_runs"]>=100)].assign(rise=lambda d: d["change"]).nlargest(15,"rise")
-                    ch(bar_h(top_n,"rise","striker","rise","Greens",f"Biggest projected rise in runs — {fmt2} {py}"))
-                    st.caption("Players with 100+ runs in their last complete season, so a small base doesn't dominate.")
+                fmt2=st.radio("Format",order_fmts(pf_g["format"].dropna().unique().tolist()),horizontal=True,key="forecast_fmt")
+                how=st.radio("Rank by",["Most projected runs","Biggest projected rise","Biggest projected drop"],horizontal=True,key="forecast_rank")
+                ff=pf_g[pf_g["format"]==fmt2].dropna(subset=["projected_next_season_runs","last_season_runs"]).copy()
+                py=int(ff["projection_year"].iloc[0]) if not ff.empty and pd.notna(ff["projection_year"].iloc[0]) else ""
+                ff["change"]=ff["projected_next_season_runs"]-ff["last_season_runs"]
+                if how=="Most projected runs":
+                    top_n=ff.nlargest(15,"projected_next_season_runs"); ch(bar_h(top_n,"projected_next_season_runs","striker","projected_next_season_runs","Purples",f"Top projected run totals — {fmt2} {py}"))
+                elif how=="Biggest projected rise":
+                    top_n=ff[ff["last_season_runs"]>=100].nlargest(15,"change"); ch(bar_h(top_n,"change","striker","change","Greens",f"Largest projected increase — {fmt2} {py}"))
                 else:
-                    top_n = ff[(ff["last_season_runs"]>=100)].assign(drop=lambda d: -d["change"]).nlargest(15,"drop")
-                    ch(bar_h(top_n,"drop","striker","drop","Reds",f"Biggest projected drop in runs — {fmt2} {py}"))
-                    st.caption("Often 'regression to the mean' after an unusually big season, not a prediction of decline in ability.")
-
+                    top_n=ff[ff["last_season_runs"]>=100].assign(drop=lambda d:-d["change"]).nlargest(15,"drop"); ch(bar_h(top_n,"drop","striker","drop","Reds",f"Largest projected decrease — {fmt2} {py}"))
+                st.caption("Conditional projections from the published forecast file; not a ranking of overall player quality.")
         with tab3:
-            if rf_out.empty:
-                st.info("`cricket_run_forecast.csv` isn't available yet.")
-            else:
-                held_year = int(rf_out["year"].max()) if "year" in rf_out.columns else "—"
-                st.markdown(f"**Held-out test season: {held_year}** — the model was trained on earlier seasons only, then asked to "
-                            f"predict this one. Below, its guesses against what actually happened.")
-                m_mae, m_r2 = mval(mm,"run_forecast_rf","MAE"), mval(mm,"run_forecast_rf","R2")
-                n_mae, r_mae = mval(mm,"run_forecast_naive","MAE"), mval(mm,"run_forecast_roll3","MAE")
-                if m_mae is not None:
-                    metrics({"Model error (MAE)": f"{m_mae:.1f} runs", "'Same as last year'": f"{n_mae:.1f} runs" if n_mae is not None else "—",
-                             "'3-season average'": f"{r_mae:.1f} runs" if r_mae is not None else "—"})
-                    base_best = min([x for x in (n_mae, r_mae) if x is not None], default=None)
-                    if base_best is not None:
-                        if m_mae < base_best: st.success(f"✅ The model beats the best simple baseline by {base_best-m_mae:.1f} runs per player-season.")
-                        else: st.warning("⚠️ The model is NOT beating a simple baseline on this test season — treat projections as rough.")
-                    if m_r2 is not None: st.caption(f"R² = {m_r2:.2f} (1.0 would be perfect; 0 means no better than guessing the average).")
-
-                rfg = rf_out
-                if "is_women" in rfg.columns:
-                    rfg = rfg[rfg["is_women"]==(1 if GENDER=="female" else 0)]
-                if rfg.empty:
-                    st.info(f"No {GENDER_PICK.lower()} rows in the held-out season.")
-                else:
-                    fmt3 = st.radio("Format", order_fmts(rfg["format"].dropna().unique().tolist()), horizontal=True, key="rf_fmt")
-                    d3 = rfg[rfg["format"]==fmt3].dropna(subset=["runs","predicted_runs"])
-                    if not d3.empty:
-                        lim = float(max(d3["runs"].max(), d3["predicted_runs"].max()))*1.05
-                        figp = px.scatter(d3, x="runs", y="predicted_runs", hover_name="striker",
-                                          title=f"Predicted vs actual runs — {fmt3} {held_year} ({len(d3)} player-seasons)",
-                                          color_discrete_sequence=[FC.get(fmt3,"#3d7bff")])
-                        figp.add_trace(go.Scatter(x=[0,lim], y=[0,lim], mode="lines", name="Perfect prediction",
-                                                  line=dict(color=MUTED, dash="dash")))
-                        figp.update_traces(marker=dict(size=8, opacity=0.8), selector=dict(mode="markers"))
-                        figp.update_layout(**BASE, height=420, margin=dict(l=50,r=20,t=48,b=50),
-                                           xaxis_title="Actual runs", yaxis_title="Predicted runs", showlegend=False)
-                        st.plotly_chart(figp, **CFG)
-                        st.caption("Dots on the dashed line = perfect. Above it = model was too optimistic; below = too cautious.")
-
-                    FEAT_NAMES = {"lag1_runs":"Runs last season","lag1_avg":"Average last season","lag1_sr":"Strike rate last season",
-                        "lag1_matches":"Matches last season","career_runs_to_date":"Career runs so far","lag1_balls":"Balls faced last season",
-                        "lag1_rpm":"Runs per match last season","lag2_runs":"Runs two seasons ago","roll3_runs":"3-season average runs",
-                        "seasons_before":"Seasons played","is_women":"Women's cricket"}
-                    shap_cols = [c for c in rfg.columns if c.startswith("shap_") and c != "shap_base_value"]
-                    if shap_cols:
-                        imp = rfg[shap_cols].abs().mean().sort_values(ascending=False).head(10)
-                        imp_df = pd.DataFrame({"feature":[FEAT_NAMES.get(c[5:], c[5:].replace("fmt_","Format: ")) for c in imp.index],"impact":imp.values.round(1)})
-                        ch(bar_h(imp_df,"impact","feature","impact","Purples","What the model leans on most (mean runs moved by each feature)"), 420)
-                        st.markdown("#### 🔎 Why did the model predict that for one player?")
-                        ex_name = player_input("Player", resolve("Kohli"), key="forecast_explain")
-                        er = find_rows(rfg, "striker", resolve(ex_name)) if ex_name else pd.DataFrame()
-                        if er.empty:
-                            st.info("No held-out-season row for that player (they needed 3+ matches in the previous season).")
-                        else:
-                            ef = order_fmts(er["format"].dropna().unique().tolist())
-                            ex_fmt = st.radio("Format", ef, horizontal=True, key="forecast_explain_fmt") if len(ef)>1 else ef[0]
-                            row = er[er["format"]==ex_fmt].iloc[0]
-                            base = float(row.get("shap_base_value", np.nan))
-                            contrib = pd.Series({c[5:]: float(row[c]) for c in shap_cols}).sort_values(key=abs, ascending=False).head(8)
-                            metrics({"Actual runs": f"{row['runs']:.0f}", "Model predicted": f"{row['predicted_runs']:.0f}",
-                                     "Typical player (baseline)": f"{base:.0f}" if pd.notna(base) else "—"})
-                            figw = go.Figure(go.Bar(y=[FEAT_NAMES.get(k, k) for k in contrib.index][::-1], x=contrib.values[::-1], orientation="h",
-                                marker_color=["#3a7a54" if v>0 else "#d63031" for v in contrib.values[::-1]],
-                                text=[f"{v:+.0f}" for v in contrib.values[::-1]], textposition="outside", textfont=dict(color=TEXT)))
-                            figw.update_layout(**BASE, height=380, showlegend=False, margin=dict(l=20,r=60,t=48,b=20),
-                                               title=f"{row['striker']} ({ex_fmt}, {held_year}) — what pushed the prediction up or down")
-                            figw.update_yaxes(showgrid=False)
-                            st.plotly_chart(figw, **CFG)
-                            st.caption("Green bars pushed the predicted runs above the typical-player baseline; red bars pushed it below. Numbers are runs.")
-
+            if rf_out.empty: st.info("Held-out validation data isn't available yet.")
+            elif {"runs","predicted_runs"}.issubset(rf_out.columns):
+                d=rf_out.dropna(subset=["runs","predicted_runs"]).copy(); d["error"]=d["predicted_runs"]-d["runs"]
+                metrics({"Test rows":f"{len(d):,}","MAE":f"{d['error'].abs().mean():.1f} runs","Bias":f"{d['error'].mean():+.1f} runs"})
+                fig=px.scatter(d,x="runs",y="predicted_runs",hover_name="striker" if "striker" in d.columns else None,title="Held-out: actual vs predicted runs")
+                lim=max(float(d[["runs","predicted_runs"]].max().max()),1); fig.add_shape(type="line",x0=0,y0=0,x1=lim,y1=lim,line=dict(color=MUTED,dash="dash"))
+                fig.update_layout(**BASE,height=380,margin=M_DEFAULT,xaxis_title="Actual runs",yaxis_title="Predicted runs"); st.plotly_chart(fig,**CFG)
+                st.caption("This tests future-period generalization. It does not mean the model has never seen the player before.")
 # ══ BOWLER WORKLOAD ═══════════════════════════════════════════════════════════
 elif section=="💪 Bowler Workload":
-    page_banner("💪","Bowler Workload","Injury-risk check from recent bowling load (ACWR)","#1a0d08","#2e1a10","#3d7bff")
-    workload = load_bowler_workload()
+    page_banner("💪","Bowler Workload","Recent bowling load — legal-ball overs separated from delivery workload","#1a0d08","#2e1a10","#3d7bff")
+    workload=load_bowler_workload()
+    ratio_col=_first_existing(workload,["acwr","workload_ratio","acute_chronic_ratio"])
+    risk_col=_first_existing(workload,["risk_flag","load_flag","workload_flag"])
+    prediction_context_box(
+        "Bowler workload monitor",
+        "Recent bowling load relative to the notebook's defined baseline",
+        "Notebook-defined recent workload windows",
+        cutoff=infer_cutoff(workload,bowl_yr),
+        scope=f"{GENDER_PICK} • selected format • bowlers with sufficient history",
+        assumptions=[
+            "Legal balls are used to calculate overs.",
+            "Delivery-level workload follows the notebook definition.",
+            "The ratio is a workload-monitoring statistic, not a medical diagnosis.",
+            "A high/caution flag does not establish that an injury will occur.",
+            "This page does not predict selection."
+        ],
+        note="Use Data Integrity to verify the underlying ball-count and workload checks."
+    )
     if workload.empty:
-        st.info("Workload data isn't available yet — this page reads `cricket_bowler_workload.csv` (notebook Step 16). "
-                "Check that push succeeded.")
+        st.info("Workload data isn't available yet — publish `cricket_bowler_workload.csv` from the notebook.")
     else:
-        workload = workload.copy()
-        if "start_date" in workload.columns: workload["start_date"] = pd.to_datetime(workload["start_date"], errors="coerce")
-        st.markdown('<div class="ca-insight">Workload is the <strong>average overs in a bowler\'s last 3 matches</strong> divided by the '
-                    '<strong>average over his last 12</strong> — the Acute:Chronic Workload Ratio (ACWR), a sports-science metric. '
-                    'Around <strong>1.0 is normal</strong>; above <strong>1.3 is Caution</strong>, above <strong>1.6 is High injury risk</strong>, '
-                    'below 0.8 is Undertrained. It is worked out <strong>separately for each format</strong>, and bowlers with fewer than '
-                    '8 matches of history are left unrated rather than guessed at.</div>', unsafe_allow_html=True)
-        tab1, tab2 = st.tabs(["🚨 Current Risk List", "🔍 Look Up a Bowler"])
-
+        workload=workload.copy()
+        if "start_date" in workload.columns: workload["start_date"]=pd.to_datetime(workload["start_date"],errors="coerce")
+        st.markdown('<div class="ca-insight"><strong>Important:</strong> this is a workload monitor, not an injury-risk probability. Overs and delivery counts are separate quantities.</div>',unsafe_allow_html=True)
+        tab1,tab2=st.tabs(["📊 Current Load","🔍 Look Up a Bowler"])
         with tab1:
-            wl_formats = order_fmts(workload["format"].dropna().unique().tolist()) if "format" in workload.columns else []
-            wfmt = st.radio("Format", wl_formats, horizontal=True, key="wl_fmt") if wl_formats else None
-            window = st.radio("Only bowlers who played in the last", ["6 months","1 year","2 years"], index=1, horizontal=True, key="wl_window")
-            days = {"6 months":183,"1 year":365,"2 years":730}[window]
-            wr = workload[workload["format"]==wfmt] if wfmt else workload
-            wr = wr[wr["risk_flag"].notna()]
+            fmts=order_fmts(workload["format"].dropna().unique().tolist()) if "format" in workload.columns else []
+            wfmt=st.radio("Format",fmts,horizontal=True,key="wl_fmt") if fmts else None
+            window=st.radio("Show latest activity within",["6 months","1 year","2 years"],index=1,horizontal=True,key="wl_window")
+            days={"6 months":183,"1 year":365,"2 years":730}[window]
+            wr=workload[workload["format"]==wfmt] if wfmt else workload
+            if risk_col: wr=wr[wr[risk_col].notna()]
             if wr.empty or "start_date" not in wr.columns:
-                st.info("Not enough bowlers have sufficient match history yet for a reliable risk reading.")
+                st.info("Not enough rated workload records for this view.")
             else:
-                latest_per_bowler = wr.sort_values("start_date").groupby("bowler").tail(1)
-                cutoff = workload["start_date"].max() - pd.Timedelta(days=days)
-                latest_per_bowler = latest_per_bowler[latest_per_bowler["start_date"] >= cutoff]
-                if latest_per_bowler.empty:
-                    st.info(f"No rated {wfmt} bowlers played in the last {window}.")
-                else:
-                    risk_order = ["High injury risk","Caution","Safe zone","Undertrained"]
-                    counts = latest_per_bowler["risk_flag"].value_counts().reindex(risk_order).fillna(0)
-                    ch(bar_v(pd.DataFrame({"risk_flag":counts.index,"count":counts.values.astype(int)}),
-                             "risk_flag","count",f"Current risk distribution — {wfmt}, bowlers active in the last {window}","#e17055"), 320)
-                    high_risk = latest_per_bowler[latest_per_bowler["risk_flag"]=="High injury risk"]
-                    if not high_risk.empty:
-                        st.markdown("#### 🚨 Bowlers Currently Flagged High Risk")
-                        show_cols4 = [c for c in ["bowler","start_date","overs_bowled","acwr","risk_flag"] if c in high_risk.columns]
-                        st.dataframe(high_risk.sort_values("acwr", ascending=False)[show_cols4].reset_index(drop=True), hide_index=True)
-                    else:
-                        st.success("No bowlers currently flagged high risk.")
-
+                latest=wr.sort_values("start_date").groupby("bowler").tail(1); maxdate=workload["start_date"].max()
+                cutoff_date=maxdate-pd.Timedelta(days=days) if pd.notna(maxdate) else None
+                if cutoff_date is not None: latest=latest[latest["start_date"]>=cutoff_date]
+                st.caption(f"Activity window: {cutoff_date.date() if cutoff_date is not None else '—'} → {maxdate.date() if pd.notna(maxdate) else '—'}")
+                if risk_col and not latest.empty:
+                    counts=latest[risk_col].value_counts().reset_index(); counts.columns=["flag","count"]
+                    ch(bar_v(counts,"flag","count",f"Published workload flags — {wfmt}","#3d7bff"),320)
+                    flagged=latest[latest[risk_col].astype(str).str.contains("high|caution",case=False,na=False)]
+                    if flagged.empty: st.success("No high/caution workload flags in the published table.")
+                    else: st.warning("Flags describe workload state only; they are not predictions of injury.")
+                cols=[c for c in ["bowler","start_date","overs_bowled","balls_bowled","deliveries",ratio_col,risk_col] if c and c in latest.columns]
+                if cols:
+                    show=latest.sort_values(ratio_col,ascending=False)[cols] if ratio_col else latest[cols]
+                    st.dataframe(show.reset_index(drop=True),hide_index=True)
         with tab2:
-            bname = player_input("Bowler name", resolve("Bumrah"), key="workload_player")
+            bname=player_input("Bowler name",resolve("Bumrah"),key="workload_player")
             if bname and "bowler" in workload.columns:
-                sname = resolve(bname)
-                brow = find_rows(workload, "bowler", sname)
-                if brow.empty:
-                    st.warning(f"No rated workload data for '{bname}' (needs 8+ matches in a format).")
+                brow=find_rows(workload,"bowler",resolve(bname))
+                if brow.empty: st.warning(f"No published workload data for '{bname}'.")
                 else:
-                    bf = order_fmts(brow["format"].dropna().unique().tolist())
-                    bpick = st.radio("Format", bf, horizontal=True, key="wl_player_fmt") if len(bf)>1 else bf[0]
-                    brow = brow[brow["format"]==bpick].sort_values("start_date")
-                    if "acwr" in brow.columns and "start_date" in brow.columns:
-                        figa = px.line(brow, x="start_date", y="acwr", markers=True, title=f"{brow['bowler'].iloc[0]} — workload ratio over time ({bpick})")
-                        figa.update_traces(line=dict(color="#e17055",width=3), marker=dict(size=7,color="#e17055"))
-                        for yv, lab, colr in ((0.8,"0.8 undertrained","#8189b3"),(1.3,"1.3 caution","#fdcb6e"),(1.6,"1.6 high risk","#d63031")):
-                            figa.add_hline(y=yv, line_dash="dot", line_color=colr, annotation_text=lab, annotation_font=dict(size=9,color=colr))
-                        figa.update_layout(**BASE, height=340, margin=M_DEFAULT)
-                        st.plotly_chart(figa, **CFG)
-                    show_cols5 = [c for c in ["start_date","format","overs_bowled","acwr","risk_flag"] if c in brow.columns]
-                    st.dataframe(brow.sort_values("start_date", ascending=False)[show_cols5].reset_index(drop=True), hide_index=True)
-
+                    bf=order_fmts(brow["format"].dropna().unique().tolist()); bpick=st.radio("Format",bf,horizontal=True,key="wl_player_fmt") if len(bf)>1 else bf[0]
+                    brow=brow[brow["format"]==bpick].sort_values("start_date") if "format" in brow.columns else brow
+                    if ratio_col and "start_date" in brow.columns:
+                        figa=px.line(brow,x="start_date",y=ratio_col,markers=True,title=f"{brow['bowler'].iloc[0]} — workload ratio ({bpick})")
+                        figa.add_hline(y=1.0,line_dash="dot",line_color=MUTED,annotation_text="1.0 reference")
+                        figa.update_layout(**BASE,height=340,margin=M_DEFAULT,yaxis_title=ratio_col); st.plotly_chart(figa,**CFG)
+                    cols=[c for c in ["start_date","format","overs_bowled","balls_bowled","deliveries",ratio_col,risk_col] if c and c in brow.columns]
+                    if cols: st.dataframe(brow.sort_values("start_date",ascending=False)[cols].reset_index(drop=True),hide_index=True)
 # ══ WIN PROBABILITY ═══════════════════════════════════════════════════════════
 elif section=="🎯 Win Probability":
-    page_banner("🎯","Win Probability","Pick two teams — Elo strength, recent form, head-to-head and toss","#0d150d","#1a2a18","#3a7a54")
-    ratings = load_team_ratings()
-    results_wp = load_match_results()
-
+    page_banner("🎯","Win Probability","A model estimate for one explicitly defined match context","#0d150d","#1a2a18","#3a7a54")
+    ratings=load_team_ratings(); results_wp=load_match_results()
+    prediction_context_box(
+        "Match win probability",
+        "Model-estimated probability of Team A winning the supplied match",
+        "The supplied match context",
+        cutoff=infer_cutoff(ratings,results_wp),
+        scope=f"{GENDER_PICK} • selected format • teams • optional venue/toss",
+        assumptions=[
+            "Team A, Team B and format are fixed inputs.",
+            "Venue is used when supplied and supported by loaded historical data.",
+            "An unknown toss remains unknown; it is not invented.",
+            "The output is a model probability, not a certainty.",
+            "Small historical samples can make the estimate unstable."
+        ],
+        note="Changing format, gender, teams, venue or toss context can change the result."
+    )
     if ratings.empty or results_wp.empty or "elo" not in ratings.columns:
-        st.info("Win-probability data isn't available yet — this page reads `cricket_team_ratings.csv` and "
-                "`cricket_matches_info.csv` (notebook Step 17). Check that push succeeded.")
+        st.info("Win-probability data isn't available yet — publish team ratings and match-result files from the notebook.")
     else:
-        rg = ratings[ratings["gender"]==GENDER] if "gender" in ratings.columns else ratings
-        wp_formats = order_fmts(rg["format"].dropna().unique().tolist())
-        if not wp_formats:
-            st.info(f"No {GENDER_PICK.lower()} team ratings available.")
+        rg=ratings[ratings["gender"]==GENDER] if "gender" in ratings.columns else ratings
+        fmts=order_fmts(rg["format"].dropna().unique().tolist())
+        if not fmts: st.info(f"No {GENDER_PICK.lower()} team ratings available.")
         else:
-            wp_fmt = st.radio("Format", wp_formats, horizontal=True, key="wp_fmt")
-            pool = rg[(rg["format"]==wp_fmt) & (rg["matches_played"]>=5)]
-            if wp_fmt in INTERNATIONAL_FORMATS:
-                pool = pool[pool["team"].apply(is_real_country)]
-            pool = pool.sort_values("elo", ascending=False)
-            avail_teams = pool["team"].tolist()
-
-            if len(avail_teams) < 2:
-                st.info("Not enough rated teams in this format yet.")
+            wp_fmt=st.radio("Format",fmts,horizontal=True,key="wp_fmt")
+            pool=rg[(rg["format"]==wp_fmt)&(rg["matches_played"]>=5)].sort_values("elo",ascending=False)
+            if wp_fmt in INTERNATIONAL_FORMATS: pool=pool[pool["team"].apply(is_real_country)]
+            teams=pool["team"].tolist()
+            if len(teams)<2: st.info("Not enough rated teams in this format.")
             else:
-                c1, c2 = st.columns(2)
-                team_a = c1.selectbox("Team A", avail_teams, index=0, key="wp_team_a")
-                team_b = c2.selectbox("Team B", avail_teams, index=1, key="wp_team_b")
-                toss_pick = st.radio("Who won the toss?", ["Unknown / doesn't matter", team_a, team_b], horizontal=True, key="wp_toss")
-                toss_dec = None
-                if toss_pick != "Unknown / doesn't matter":
-                    toss_dec = st.radio("…and chose to", ["bat","field"], horizontal=True, key="wp_toss_dec")
-
-                if team_a == team_b:
-                    st.warning("Pick two different teams.")
+                c1,c2=st.columns(2); team_a=c1.selectbox("Team A",teams,index=0,key="wp_team_a"); team_b=c2.selectbox("Team B",teams,index=1,key="wp_team_b")
+                if "venue" in results_wp.columns:
+                    vv=results_wp.loc[results_wp["format"].eq(wp_fmt),"venue"].dropna().astype(str).unique().tolist() if "format" in results_wp.columns else []
+                    venue_opts=["No venue / neutral"]+sorted(vv)
+                else: venue_opts=["No venue / neutral"]
+                venue=st.selectbox("Venue",venue_opts,key="wp_venue")
+                toss_pick=st.radio("Toss winner",["Unknown / doesn't matter",team_a,team_b],horizontal=True,key="wp_toss")
+                toss_dec=None
+                if toss_pick!="Unknown / doesn't matter": toss_dec=st.radio("Toss decision",["bat","field"],horizontal=True,key="wp_toss_dec")
+                if team_a==team_b: st.warning("Pick two different teams.")
                 else:
-                    res = predict_match_wp(team_a, team_b, wp_fmt, GENDER, ratings, results_wp,
-                                           toss_winner=None if toss_pick.startswith("Unknown") else toss_pick, toss_decision=toss_dec)
-                    prob_a = round(res["prob"]*100, 1); prob_b = round(100-prob_a, 1)
-
-                    st.markdown(f"### 🎯 Estimated Win Probability — {wp_fmt} ({GENDER_PICK})")
-                    fig = go.Figure(go.Bar(
-                        x=[prob_a, prob_b], y=[team_a, team_b], orientation="h",
-                        marker_color=[FC["ODI"], FC["Test"]],
-                        text=[f"{prob_a}%", f"{prob_b}%"], textposition="outside",
-                        textfont=dict(size=16, color=TEXT)))
-                    fig.update_layout(**BASE, height=220, showlegend=False, margin=dict(l=20,r=60,t=20,b=20))
-                    fig.update_xaxes(range=[0,105])
-                    st.plotly_chart(fig, **CFG)
-
-                    tbl = pd.DataFrame({
-                        "": ["Elo rating (strength)", "Recent form (last 10, smoothed)", "Head-to-head wins", "Matches in record"],
-                        team_a: [f"{res['elo_a']:.0f}", f"{res['form_a']*100:.0f}%", f"{res['h2h_a']} of {res['h2h_n']}", res["n_a"]],
-                        team_b: [f"{res['elo_b']:.0f}", f"{res['form_b']*100:.0f}%", f"{res['h2h_n']-res['h2h_a']} of {res['h2h_n']}", res["n_b"]],
-                    })
-                    st.dataframe(tbl, hide_index=True)
-
-                    if res["mode"] == "model":
-                        st.caption("Computed by the trained model from the notebook (Elo + smoothed form + head-to-head + toss), averaged over both team orders so it never matters which side is 'Team A'.")
-                    else:
-                        st.caption("The trained model file couldn't be loaded here (needs `scikit-learn` in requirements.txt), so this is a plain "
-                                   "estimate: 70% Elo, 15% recent form, 15% head-to-head. Treat it as a rough guide.")
-                    if min(res["n_a"], res["n_b"]) < 15:
-                        st.caption("⚠️ One of these teams has under 15 rated matches, so its Elo is still settling — lean less on this number.")
-                    if wp_fmt in FRANCHISE_FORMATS:
-                        st.caption("ℹ️ T20 leagues are close to coin-flips by nature — even the best model only edges 50%. See the Model Accuracy page for how much.")
-
-                with st.expander(f"📊 Elo ladder — top teams in {wp_fmt} ({GENDER_PICK})"):
-                    top_elo = pool.head(15)[["team","elo"]].rename(columns={"team":"Team","elo":"Elo"})
-                    top_elo["Elo"] = top_elo["Elo"].round(0)
-                    fig_e = px.bar(top_elo, x="Elo", y="Team", orientation="h", color="Elo", color_continuous_scale="Teal", text="Elo")
-                    fig_e.update_traces(textposition="outside", textfont=dict(color=TEXT), cliponaxis=False)
-                    fig_e.update_layout(**BASE, height=max(320, len(top_elo)*34+80), coloraxis_showscale=False, margin=dict(l=20,r=60,t=20,b=20))
-                    fig_e.update_yaxes(categoryorder="total ascending", showgrid=False)
-                    fig_e.update_xaxes(range=[min(1300, float(top_elo["Elo"].min())-50), float(top_elo["Elo"].max())+60])
-                    st.plotly_chart(fig_e, **CFG)
-
+                    res=predict_match_wp(team_a,team_b,wp_fmt,GENDER,ratings,results_wp,
+                                         toss_winner=None if toss_pick.startswith("Unknown") else toss_pick,toss_decision=toss_dec,
+                                         venue=None if venue.startswith("No venue") else venue)
+                    pa=round(res["prob"]*100,1); pb=round(100-pa,1)
+                    st.markdown(f"### {team_a} **{pa}%**  vs  {team_b} **{pb}%**")
+                    fig=go.Figure(go.Bar(x=[pa,pb],y=[team_a,team_b],orientation="h",marker_color=[FC.get(wp_fmt,ACCENT2),ACCENT],text=[f"{pa}%",f"{pb}%"],textposition="outside"))
+                    fig.update_layout(**BASE,height=220,showlegend=False,margin=dict(l=20,r=60,t=20,b=20)); fig.update_xaxes(range=[0,105]); st.plotly_chart(fig,**CFG)
+                    tbl=pd.DataFrame({"Input / evidence":["Elo rating","Recent form","Head-to-head","Matches in rating history","Venue context"],
+                                      team_a:[f"{res['elo_a']:.0f}",f"{res['form_a']*100:.0f}%",f"{res['h2h_a']} of {res['h2h_n']}",res["n_a"],res["venue_note"]],
+                                      team_b:[f"{res['elo_b']:.0f}",f"{res['form_b']*100:.0f}%",f"{res['h2h_n']-res['h2h_a']} of {res['h2h_n']}",res["n_b"],"Same supplied context"]})
+                    st.dataframe(tbl,hide_index=True); st.caption(f"Model mode: {res['mode']} • {res['venue_note']}")
+                    if min(res["n_a"],res["n_b"])<15: st.warning("At least one team has fewer than 15 rated matches; the estimate may be unstable.")
+# ══ PREDICTION GUIDE ═══════════════════════════════════════════════════════════
+elif section=="🧭 Prediction Guide":
+    page_banner("🧭","Prediction Guide","What every number means before you use it","#0b1020","#18264a","#3d7bff")
+    st.markdown("""
+    <div class="ca-section-card">
+      <h3 style="margin-top:0">The dashboard's prediction contract</h3>
+      <p style="color:var(--subtle);line-height:1.7">
+      A prediction is only meaningful when its <b>target, time horizon, data cutoff, population and assumptions</b> are visible.
+      </p>
+    </div>
+    """,unsafe_allow_html=True)
+    rows=[
+        ["Projected runs","Batter's total runs in the published future season/window","Future season/window","Selected format + gender + qualified active batters","Not a next-match score"],
+        ["Win probability","Model-estimated probability Team A wins","Supplied match context","Selected teams + format + optional venue/toss","Not a certainty"],
+        ["Bowler workload","Published recent bowling-load statistic","Notebook-defined recent window","Selected format + gender + sufficient history","Not an injury diagnosis or selection forecast"],
+        ["Player Score","0–100 descriptive percentile-style score","Current published data","Same format/gender qualified pool","Not a future-performance probability"],
+        ["Form Rating","Recent performance relative to career reference","Published recent form window","Selected format/gender","Not a guarantee of next-match performance"]
+    ]
+    st.dataframe(pd.DataFrame(rows,columns=["Metric","What it measures","Time horizon","Population","What it does NOT mean"]),hide_index=True)
+    st.markdown("### 🔬 Data provenance")
+    cutoff=infer_cutoff(bat_yr,bowl_yr,bat_fmt,bowl_fmt,load_match_results(),load_player_forecast(),load_bowler_workload(),load_team_ratings())
+    metrics({"Published cutoff":str(cutoff.date()) if cutoff is not None else "Not available","Gender pool":GENDER_PICK,"Formats loaded":len(ALL_FMT_G),
+             "Prediction tables loaded":sum(not d.empty for d in [load_player_forecast(),load_bowler_workload(),load_team_ratings()])})
+    with st.expander("⚠️ Interpretation rules"):
+        st.markdown("""
+        - **Projected runs are totals**, not next-match scores.
+        - **A workload flag is not an injury probability.**
+        - **Win probability is conditional on the supplied match context.**
+        - **Unknown toss is not a guessed toss.**
+        - **Player Score is descriptive, not predictive.**
+        - **Held-out validation must be separated from training data.**
+        - **A prediction without a visible cutoff and horizon is incomplete.**
+        """)
 # ══ MODEL ACCURACY ════════════════════════════════════════════════════════════
 elif section=="🧪 Model Accuracy":
     page_banner("🧪","Model Accuracy","How good are the predictions — measured on matches the models never saw","#0a0d14","#141c2e","#8a95a8")
@@ -1710,9 +1721,9 @@ elif section=="🧪 Model Accuracy":
     if mm.empty and wpt.empty:
         st.info("Model metrics aren't available yet — this page reads `cricket_model_metrics.csv` and `cricket_win_prob_test.csv` (notebook Step 17).")
     else:
-        st.markdown('<div class="ca-insight">Both models are tested on the <strong>newest 20% of matches</strong>, which they were never trained on — '
-                    'the honest way to judge a predictor. A model only counts as good if it beats the <strong>simple baselines</strong> '
-                    '("higher Elo wins", "same as last year").</div>', unsafe_allow_html=True)
+        st.markdown('<div class="ca-insight"><strong>Evaluation uses the held-out future period defined by the notebook.</strong> '
+                    'The test rows are not used to fit the evaluated model. For run forecasts this is a future-period test, '
+                    'not a claim that the model has never seen the player before. Baseline comparisons are shown alongside model error.</div>', unsafe_allow_html=True)
 
         st.markdown("#### 🎯 Win-probability model")
         acc = mval(mm,"win_probability_best","Accuracy"); auc = mval(mm,"win_probability_best","AUC")
