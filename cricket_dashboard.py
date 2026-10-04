@@ -21,12 +21,12 @@ IS_LIGHT = st.session_state.get("is_light_mode", False)
 # v9 notebook tags every player/match/team with gender ('male'/'female'). This is the
 # global switch so women never show up inside men's leaderboards (and vice versa).
 GENDER_MAP = {"Men's": "male", "Women's": "female"}
-GENDER_PICK = st.session_state.get("gender_pick", "Men's")
-GENDER = GENDER_MAP.get(GENDER_PICK, "male")
+GENDER_PICK = "All"
+GENDER = None
 
 def gf(df):
     """Filter a table to the chosen men's/women's pool. Tables without a gender column pass through."""
-    if df is None or df.empty or "gender" not in df.columns:
+    if df is None or df.empty or "gender" not in df.columns or GENDER is None:
         return df
     return df[df["gender"] == GENDER]
 
@@ -43,20 +43,19 @@ else:
     SHADOW="0 10px 32px rgba(0,6,30,.5)"
     ACCENT="#ff6a2e"; ACCENT2="#3d7bff"
 
-# v9 pipeline covers 10 competitions (SA20 + NT20 are new)
+# Pipeline-aligned format scope: exactly the 8 competitions loaded by pipeline.py
 FC={"ODI":"#3f7a52","Test":"#8a95a8","T20I":"#ff6a2e",
     "IPL":"#3d7bff","PSL":"#2f8f5b","WPL":"#b2557a","BBL":"#d9772b","CPL":"#2f9aa0",
-    "SA20":"#c9a227","NT20":"#7b68ee"}
-FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL","SA20","NT20"]
+}
+FORMATS=["ODI","Test","T20I","IPL","PSL","WPL","BBL","CPL"]
 FORMAT_META={
     "ODI":("🌐","#3f7a52","#529a68"),"Test":("🏛️","#8a95a8","#a8b2c2"),
     "T20I":("⚡","#ff6a2e","#ff8c5c"),"IPL":("🏏","#3d7bff","#6d9bff"),
     "PSL":("🟢","#2f8f5b","#3fae72"),"WPL":("🌹","#b2557a","#c97694"),
     "BBL":("🔥","#d9772b","#e8974f"),"CPL":("🌊","#2f9aa0","#45bcc2"),
-    "SA20":("🦁","#c9a227","#dcb840"),"NT20":("🏆","#7b68ee","#9a8cf2"),
 }
 INTERNATIONAL_FORMATS = {"ODI","Test","T20I"}
-FRANCHISE_FORMATS = {"IPL","PSL","BBL","CPL","WPL","SA20","NT20"}
+FRANCHISE_FORMATS = {"IPL","PSL","BBL","CPL","WPL"}
 
 def order_fmts(lst):
     return sorted(lst, key=lambda x: FORMATS.index(x) if x in FORMATS else 99)
@@ -355,7 +354,7 @@ def load_live_matches():
     except Exception:
         return pd.DataFrame()
 
-# ── Prediction-layer files written by notebook Steps 10-17 ────────────────────
+# ── Optional legacy prediction files (not produced by the current pipeline) ──
 # Each returns an empty DataFrame on any failure so a missing push never crashes the app.
 def _try_load(filename):
     try:
@@ -379,6 +378,8 @@ def load_win_prob_test():      return _try_load("cricket_win_prob_test.csv")    
 def load_model_metrics():      return _try_load("cricket_model_metrics.csv")    # Step 17: model, metric, value
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_integrity_report():   return _try_load("cricket_data_integrity_report.csv")  # Step 16: check, count
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_match_info():         return _try_load("cricket_match_info.csv")
 @st.cache_data(ttl=3600, show_spinner=False)
 def load_coverage_gaps():      return _try_load("cricket_coverage_gaps.csv")
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -443,21 +444,55 @@ with st.spinner("Loading cricket data..."):
     (batting,bowling,bat_fmt,bowl_fmt,bat_yr,bowl_yr,bat_ven,bat_opp,
      bowl_ven,bowl_opp,bvb,wvb,bat_form,bowl_form,bat_sim,bowl_sim,bat_inn,bowl_inn,
      load_errors) = load()
+match_info = load_match_info()
 
 if load_errors:
     with st.expander(f"⚠️ {len(load_errors)} data file(s) failed to load — click for details", expanded=False):
         for name, err in load_errors:
             st.caption(f"**{name}**: {err}")
 
+def latest_matches_for_player(player_name, fmt=None, limit=5):
+    """Return actual match-level recent appearances for a player.
+
+    Unlike vs-opponent aggregates, this uses match_id + date, so the latest
+    opponent is determined chronologically rather than by lifetime totals.
+    """
+    parts=[]
+    if not bat_inn.empty and "striker" in bat_inn.columns:
+        q=find_rows(bat_inn,"striker",player_name)
+        if not q.empty:
+            q=q.copy(); q["player_team"]=q.get("batting_team",""); parts.append(q[[c for c in ["match_id","format","start_date","player_team"] if c in q.columns]])
+    if not bowl_inn.empty and "bowler" in bowl_inn.columns:
+        q=find_rows(bowl_inn,"bowler",player_name)
+        if not q.empty:
+            q=q.copy(); q["player_team"]=q.get("bowling_team",""); parts.append(q[[c for c in ["match_id","format","start_date","player_team"] if c in q.columns]])
+    if not parts or match_info.empty:
+        return pd.DataFrame()
+    p=pd.concat(parts,ignore_index=True).drop_duplicates(subset=["match_id","format","player_team"])
+    if fmt is not None: p=p[p["format"]==fmt]
+    p["start_date"]=pd.to_datetime(p["start_date"],errors="coerce")
+    mi=match_info.copy(); mi["date"]=pd.to_datetime(mi["date"],errors="coerce")
+    p=p.merge(mi,on=["match_id","format"],how="left",suffixes=("","_match"))
+    p["date"]=p["date"].fillna(p["start_date"])
+    def opp(r):
+        teams=[str(r.get("team1","")),str(r.get("team2",""))]
+        mine=str(r.get("player_team",""))
+        others=[x for x in teams if x and x != "nan" and x != mine]
+        return others[0] if others else "Unknown"
+    p["opponent"]=p.apply(opp,axis=1)
+    return p.sort_values(["date","match_id"],ascending=False).head(limit)
+
+
 def get_all_formats(df,col="format"):
     if df.empty or col not in df.columns: return ["ODI","Test","T20I","IPL","PSL"]
     return order_fmts(df[col].dropna().unique().tolist())
 
 ALL_FMT = get_all_formats(bat_fmt)
+# The uploaded pipeline loads exactly these eight formats; keep the UI driven by the data actually published.
 _bf_g = gf(bat_fmt)
 # Formats that actually have data for the chosen men's/women's pool (e.g. WPL only exists for women)
 ALL_FMT_G = get_all_formats(_bf_g) if (_bf_g is not None and not _bf_g.empty) else ALL_FMT
-LEAGUE_FMTS = [f for f in ["IPL","PSL","BBL","CPL","SA20","NT20","WPL"] if f in ALL_FMT_G]
+LEAGUE_FMTS = [f for f in ["IPL","PSL","BBL","CPL","WPL"] if f in ALL_FMT_G]
 
 def avail(df,col):
     return order_fmts(df[col].dropna().unique().tolist())
@@ -1242,11 +1277,10 @@ def show_player_card(cricsheet_name, search_name, fmt="ODI", compact=False):
 # ── SIDEBAR NAVIGATION ─────────────────────────────────────────────────────────
 PAGE_GROUPS=[
     (None, ["🏠 Home"]),
-    ("📊 Predictions Lab", ["📋 Match Results","🔮 Player Forecast","💪 Bowler Workload","🎯 Win Probability","🧭 Prediction Guide"]),
     ("🔍 Player Tools", ["🔍 Player Search","⚔️ Head to Head","🏟️ vs Venue","🌍 vs Opponent","🤜 Batter vs Bowler","📈 Over Years"]),
     ("🏆 Records & Rankings", ["🏆 Leaderboard","🏅 League Records"]),
     ("🤖 Insights", ["🤖 Similar Players","🔥 Form & Ratings"]),
-    ("🧪 Under the Hood", ["🧪 Model Accuracy","🛡️ Data Integrity"]),
+    ("🛡️ Data Quality", ["🛡️ Data Integrity"]),
 ]
 PAGES=[p for _,grp in PAGE_GROUPS for p in grp]
 
@@ -1294,10 +1328,7 @@ with st.sidebar:
                   help="Switch between dark and light mode")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Men's / women's switch — the v9 pipeline tags every player, match and team with a gender.
-    st.radio("Show", list(GENDER_MAP.keys()), horizontal=True, key="gender_pick",
-             help="Leaderboards, records, forecasts, form lists and win probability show one pool at a time. "
-                  "Player Search always finds anyone.")
+    st.caption("📦 Source: current Cricsheet pipeline · 8 loaded competitions")
 
     for group_label, group_pages in PAGE_GROUPS:
         if group_label:
@@ -1349,7 +1380,7 @@ if section=="🏠 Home":
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px">{fmt_pills}</div>
       <div style="display:flex;align-items:center;gap:8px;background:rgba(61,123,255,.06);border:1px solid rgba(61,123,255,.15);border-radius:20px;padding:6px 14px;width:fit-content">
         <span class="ca-live"></span>
-        <span style="font-size:11px;font-weight:600;color:var(--accent)">Published dataset · see Prediction Guide for cutoff and scope</span>
+        <span style="font-size:11px;font-weight:600;color:var(--accent)">Published dataset · refreshed by the Cricsheet pipeline</span>
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -1360,6 +1391,19 @@ if section=="🏠 Home":
         st.session_state["_go"]="🔍 Player Search"
         st.session_state["ps_name"]=qname
         st.rerun()
+
+    # Match-level freshness: never infer the latest match from lifetime opponent totals.
+    if not match_info.empty:
+        odi_recent=match_info[match_info["format"]=="ODI"].copy()
+        odi_recent["date"]=pd.to_datetime(odi_recent["date"],errors="coerce")
+        odi_recent=odi_recent.sort_values(["date","match_id"],ascending=False).drop_duplicates("match_id").head(3)
+        if not odi_recent.empty:
+            st.markdown("#### 🆕 Latest ODI Matches")
+            st.caption("These are selected by actual match date from the pipeline's match-level table — not by lifetime opponent statistics.")
+            show=odi_recent[["date","team1","team2","venue"]].copy()
+            show["date"]=show["date"].dt.strftime("%d %b %Y")
+            show.columns=["Date","Team 1","Team 2","Venue"]
+            st.dataframe(show,hide_index=True,use_container_width=True)
 
     with st.expander("📖 New to cricket stats? Quick glossary — what the numbers mean"):
         st.caption("Every stat card in this app also has a small **?** you can hover over for its definition. Here's the full list:")
@@ -1374,8 +1418,8 @@ if section=="🏠 Home":
 
     st.markdown("#### Explore")
     features=[
-        ("🎯","Win Probability","Conditional match estimate with team, venue and toss context","🎯 Win Probability"),
-        ("🔮","Player Forecast","Projected future-season runs with explicit scope and cutoff","🔮 Player Forecast"),
+        ("📊","Career Statistics","Batting and bowling records from the published ball-by-ball dataset","🏆 Leaderboard"),
+        ("🔎","Player Search","Explore one player's statistics across every loaded format","🔍 Player Search"),
         ("⚔️","Head to Head","Compare any two players side by side","⚔️ Head to Head"),
         ("🏟️","Player vs Venue","How a player performs at each ground","🏟️ vs Venue"),
         ("🌍","vs Opponent","Dominance stats against each team","🌍 vs Opponent"),
@@ -1385,8 +1429,6 @@ if section=="🏠 Home":
         ("🏅","League Records","Highest score, most fours & sixes by league","🏅 League Records"),
         ("🤖","Similar Players","Statistical look-alikes for any player","🤖 Similar Players"),
         ("🔥","Form & Ratings","Who's hot, who's cold right now","🔥 Form & Ratings"),
-        ("🧪","Model Accuracy","Held-out future-period validation and baseline comparisons","🧪 Model Accuracy"),
-        ("🧭","Prediction Guide","What every prediction means, and what it does not","🧭 Prediction Guide"),
     ]
     cols=st.columns(4)
     for i,(emoji,title,desc,target) in enumerate(features):
@@ -1787,7 +1829,7 @@ elif section=="🧪 Model Accuracy":
 
 # ══ DATA INTEGRITY ════════════════════════════════════════════════════════════
 elif section=="🛡️ Data Integrity":
-    page_banner("🛡️","Data Integrity","Automatic checks that catch double-counting and impossible numbers","#0a1510","#122a1e","#3a7a54")
+    page_banner("🛡️","Data Integrity","Live checks on the CSV tables produced by the current Cricsheet pipeline","#0a1510","#122a1e","#3a7a54")
     rep = load_integrity_report()
     CHECK_INFO = {
         "duplicate_batting_rows":("Duplicate batting rows","Same batter listed twice in one innings — would double their runs.",True),
@@ -1799,7 +1841,7 @@ elif section=="🛡️ Data Integrity":
         "extreme_strike_rate_innings":("Extreme strike-rate innings","Statistical outliers (4+ standard deviations). Often real — e.g. 20 off 4 balls — so this is for review, not an error.",False),
     }
     if rep.empty or not {"check","count"}.issubset(rep.columns):
-        st.info("Integrity report isn't available yet — this page reads `cricket_data_integrity_report.csv` (notebook Step 16).")
+        st.info("The current pipeline does not publish a separate integrity-report CSV. The live checks below are run directly on the same CSV tables this dashboard loads.")
     else:
         rows = []
         for _, r in rep.iterrows():
@@ -1834,6 +1876,22 @@ elif section=="🛡️ Data Integrity":
         st.dataframe(pd.DataFrame(lrows), hide_index=True)
         if all(v==0 for v in live.values()):
             st.caption(f"Checked {len(bat_inn):,} batting innings and {len(bowl_inn):,} bowling innings.")
+
+    st.markdown("#### 🌐 International coverage-gap report")
+    gaps = load_coverage_gaps()
+    if gaps.empty:
+        st.caption("No published coverage-gap rows are available. The pipeline cross-checks established international players against Wikipedia and Cricsheet's documented missing-match list.")
+    else:
+        show = gaps.copy()
+        if "flagged" in show.columns:
+            show = show[show["flagged"] == True].copy()
+        cols = [c for c in ["player","format","cricsheet_matches","wiki_matches","gap_matches","gap_pct","documented_missing_candidates","possible_name_fragments"] if c in show.columns]
+        if show.empty:
+            st.success("✅ No international player/format coverage gaps crossed the pipeline's flag threshold.")
+        elif cols:
+            st.warning(f"{len(show):,} player/format row(s) are flagged as potentially under-covered. This is a coverage warning, not fabricated missing data.")
+            st.dataframe(show[cols].sort_values("gap_pct", ascending=False).reset_index(drop=True), hide_index=True)
+            st.caption("The pipeline does not invent missing matches. It reports the tracked Cricsheet total alongside the external reference and documented missing-match candidates.")
 
 # ══ PLAYER SEARCH ═════════════════════════════════════════════════════════════
 elif section=="🔍 Player Search":
@@ -1896,6 +1954,15 @@ elif section=="🔍 Player Search":
         display_name=bat["striker"].iloc[0] if len(bat)>0 else (bowl["bowler"].iloc[0] if len(bowl)>0 else sname)
         show_player_card(display_name,name,fmt)
 
+        recent_player=latest_matches_for_player(display_name,fmt,limit=5)
+        if not recent_player.empty:
+            st.markdown("#### 🆕 Recent Matches")
+            st.caption("Chronological match history from match-level data. The opponent is derived from the teams in that actual match.")
+            rshow=recent_player[["date","player_team","opponent","venue"]].copy()
+            rshow["date"]=pd.to_datetime(rshow["date"],errors="coerce").dt.strftime("%d %b %Y")
+            rshow.columns=["Date","Player team","Opponent","Venue"]
+            st.dataframe(rshow,hide_index=True,use_container_width=True)
+
         lu=get_last_updated()
         if lu:
             st.markdown(f"""<div style="background:rgba(61,123,255,.06);border:1px solid rgba(61,123,255,.2);
@@ -1906,9 +1973,9 @@ elif section=="🔍 Player Search":
             st.markdown("""<div style="background:rgba(255,106,46,.07);border:1px solid rgba(255,106,46,.25);
               border-radius:8px;padding:8px 14px;margin:0 0 14px;display:flex;align-items:center;gap:8px">
               <span>⚠️</span>
-              <span style="font-size:11px;color:#fbbf24">Stats reflect Cricsheet's latest data. Very recent matches (last 2-3 days) may not yet be included.</span>
+              <span style="font-size:11px;color:#fbbf24">Stats reflect the latest full archives plus the pipeline's rolling 30-day Cricsheet recent-match feed. Newly played matches can still appear only after Cricsheet publishes them.</span>
             </div>""", unsafe_allow_html=True)
-        st.caption("ℹ️ Stats reflect matches Cricsheet has ball-by-ball data for. Cricsheet is a community-maintained "
+        st.caption("ℹ️ Stats reflect the eight competitions actually downloaded and processed by the current pipeline. Cricsheet is a community-maintained "
                    "open archive and doesn't have complete coverage of every officially recognized match, especially "
                    "older ones — so totals here may be lower than official career records for veteran players.")
 
@@ -2376,7 +2443,7 @@ elif section=="📈 Over Years":
 # ══ LEADERBOARD ═══════════════════════════════════════════════════════════════
 elif section=="🏆 Leaderboard":
     page_banner("🏆","Leaderboard","The greatest — ranked by format and stat","#1a1608","#2e2610","#ff6a2e")
-    st.caption(f"Showing the {GENDER_PICK.lower()} pool — switch in the sidebar.")
+    st.caption(f"Showing the {GENDER_PICK.lower()} pool — the published dataset.")
     fmt=st.radio("Format",ALL_FMT_G,horizontal=True)
     tab1,tab2=st.tabs(["🏏 Batting","🎳 Bowling"])
     with tab1:
