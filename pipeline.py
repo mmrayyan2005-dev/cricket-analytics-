@@ -390,6 +390,13 @@ def load_format(folder, label):
     return df
 
 
+# Dismissal types that are NOT credited to the bowler (run-outs etc.), and
+# types that don't mean the batter is actually out (retired hurt / not out).
+NOT_BOWLER_WICKET = {"run out", "retired hurt", "retired out", "retired not out",
+                     "obstructing the field"}
+NOT_A_DISMISSAL = {"retired hurt", "retired not out"}
+
+
 def clean_and_validate(df):
     """Same cleaning logic as the original notebook, but every drop is now
     counted AND logged with a reason, so 'some scores are missing' becomes
@@ -419,7 +426,22 @@ def clean_and_validate(df):
 
     df["over"] = df["ball"].astype(str).str.split(".").str[0].astype(int)
     df["total_runs"] = df["runs_off_bat"] + df["extras"]
-    df["is_wicket"] = df["wicket_type"].notna().astype(int)
+
+    # FIX: previously is_wicket = "wicket_type is not null", used for BOTH
+    # batting dismissals and bowling wickets. That wrongly (a) charged the
+    # striker with a dismissal when his partner was run out at the other end,
+    # and (b) credited run-outs to the bowler as wickets.
+    #   is_wicket -> wicket credited to the BOWLER (excludes run outs, retirements)
+    #   bat_out   -> the STRIKER himself was actually dismissed on this ball
+    wt = df["wicket_type"].fillna("").astype(str).str.strip().str.lower()
+    df["is_wicket"] = ((wt != "") & ~wt.isin(NOT_BOWLER_WICKET)).astype(int)
+    if "player_dismissed" in df.columns:
+        df["bat_out"] = ((wt != "") & ~wt.isin(NOT_A_DISMISSAL)
+                         & (df["player_dismissed"] == df["striker"])).astype(int)
+    else:
+        log.warning("No player_dismissed column found — bat_out falls back to is_wicket")
+        df["bat_out"] = df["is_wicket"]
+
     df["is_wide"] = (df["wides"] > 0).astype(int)
     df["is_noball"] = (df["noballs"] > 0).astype(int)
     df["is_dot"] = ((df["runs_off_bat"] == 0) & (df["is_wide"] == 0) & (df["is_noball"] == 0)).astype(int)
@@ -442,7 +464,7 @@ def build_innings_tables(df):
         balls_faced=("runs_off_bat", "count"),
         fours=("runs_off_bat", lambda x: (x == 4).sum()),
         sixes=("runs_off_bat", lambda x: (x == 6).sum()),
-        dismissed=("is_wicket", "max"),
+        dismissed=("bat_out", "max"),
     ).reset_index()
     bat_innings["strike_rate"] = ((bat_innings["runs"] / bat_innings["balls_faced"].replace(0, 1)) * 100).round(2)
     bat_innings["year"] = pd.to_datetime(bat_innings["start_date"]).dt.year
@@ -468,7 +490,7 @@ def build_batting(data, group_cols=["striker"]):
         matches=("match_id", "nunique"),
         runs=("runs_off_bat", "sum"),
         balls_faced=("is_wide", lambda x: (x == 0).sum()),
-        dismissals=("is_wicket", "sum"),
+        dismissals=("bat_out", "sum"),
         dot_balls=("is_dot", "sum"),
         fours=("runs_off_bat", lambda x: (x == 4).sum()),
         sixes=("runs_off_bat", lambda x: (x == 6).sum()),
@@ -533,7 +555,7 @@ def build_career_and_milestones(df, bat_innings, bowl_innings):
 def build_yearly_venue_opponent_matchup(df):
     batting_yearly = df.groupby(["striker", "year", "format"]).agg(
         runs=("runs_off_bat", "sum"), balls_faced=("is_wide", lambda x: (x == 0).sum()),
-        dismissals=("is_wicket", "sum"), matches=("match_id", "nunique"),
+        dismissals=("bat_out", "sum"), matches=("match_id", "nunique"),
         fours=("runs_off_bat", lambda x: (x == 4).sum()), sixes=("runs_off_bat", lambda x: (x == 6).sum()),
     ).reset_index()
     batting_yearly["average"] = (batting_yearly["runs"] / batting_yearly["dismissals"].replace(0, 1)).round(2)
@@ -550,7 +572,7 @@ def build_yearly_venue_opponent_matchup(df):
 
     batting_venue = df.groupby(["striker", "venue", "format"]).agg(
         innings=("match_id", "nunique"), runs=("runs_off_bat", "sum"),
-        balls_faced=("is_wide", lambda x: (x == 0).sum()), dismissals=("is_wicket", "sum"),
+        balls_faced=("is_wide", lambda x: (x == 0).sum()), dismissals=("bat_out", "sum"),
         fours=("runs_off_bat", lambda x: (x == 4).sum()), sixes=("runs_off_bat", lambda x: (x == 6).sum()),
     ).reset_index()
     batting_venue["average"] = (batting_venue["runs"] / batting_venue["dismissals"].replace(0, 1)).round(2)
@@ -558,7 +580,7 @@ def build_yearly_venue_opponent_matchup(df):
 
     batting_opponent = df.groupby(["striker", "bowling_team", "format"]).agg(
         innings=("match_id", "nunique"), runs=("runs_off_bat", "sum"),
-        balls_faced=("is_wide", lambda x: (x == 0).sum()), dismissals=("is_wicket", "sum"),
+        balls_faced=("is_wide", lambda x: (x == 0).sum()), dismissals=("bat_out", "sum"),
         fours=("runs_off_bat", lambda x: (x == 4).sum()), sixes=("runs_off_bat", lambda x: (x == 6).sum()),
     ).reset_index()
     batting_opponent["average"] = (batting_opponent["runs"] / batting_opponent["dismissals"].replace(0, 1)).round(2)
@@ -582,6 +604,9 @@ def build_yearly_venue_opponent_matchup(df):
     bowling_opponent["dot_pct"] = ((bowling_opponent["dot_balls"] / bowling_opponent["balls"].replace(0, 1)) * 100).round(2)
     bowling_opponent.rename(columns={"batting_team": "opponent"}, inplace=True)
 
+    # Batter-vs-bowler: "dismissals" here means dismissed BY that bowler, so it
+    # stays on is_wicket (bowler-credited wickets only — caught, bowled, lbw,
+    # stumped, hit wicket — which are always the striker).
     batter_vs_bowler = df.groupby(["striker", "bowler", "format"]).agg(
         balls_faced=("is_wide", lambda x: (x == 0).sum()), runs=("runs_off_bat", "sum"),
         dismissals=("is_wicket", "sum"), fours=("runs_off_bat", lambda x: (x == 4).sum()),
@@ -990,7 +1015,9 @@ def apply_name_aliases(df, registered_players):
         variant, canonical = row["variant_name"], row["canonical_name"]
         fmt = row.get("format")
         fmt_mask = (df["format"] == fmt) if pd.notna(fmt) and fmt else pd.Series(True, index=df.index)
-        for col in ["striker", "bowler", "non_striker"]:
+        # player_dismissed must be renamed too, otherwise bat_out (which compares
+        # player_dismissed to striker) would stop matching for aliased players.
+        for col in ["striker", "bowler", "non_striker", "player_dismissed"]:
             if col in df.columns:
                 hit = (df[col] == variant) & fmt_mask
                 if hit.any():
